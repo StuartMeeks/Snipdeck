@@ -32,9 +32,9 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="1"
-              Padding="24">
-            <!-- Phase 3 fills this in with the NavigationView shell. -->
-        </Grid>
+        <ContentControl x:Name="ShellHost"
+                        Grid.Row="1"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
     </Grid>
 </Window>

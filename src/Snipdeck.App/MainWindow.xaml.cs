@@ -1,19 +1,23 @@
 using Microsoft.UI.Xaml;
 
+using Snipdeck.App.Views;
 using Snipdeck.Core.Models;
 
 namespace Snipdeck.App
 {
     public sealed partial class MainWindow : Window
     {
-        public MainWindow(AppConfig config)
+        public MainWindow(AppConfig config, ShellPage shellPage)
         {
             ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(shellPage);
 
             InitializeComponent();
 
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
+
+            ShellHost.Content = shellPage;
 
             ApplyTheme(config.Theme);
         }

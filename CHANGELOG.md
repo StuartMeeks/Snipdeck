@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 3: Shell + read-only browse
+- `ShellViewModel` owns the cross-cutting shell state: CLI switcher choices,
+  current search text, selected tag (with an "All" sentinel for clean
+  filter-off semantics), and the active content view model.
+- `HomeViewModel` builds the home view's CLI cards (alphabetical, with snip
+  counts) and the most-used Snips list (top 6 by `UsageCount`, then
+  `LastUsedAt` desc; hidden when nothing's been used yet).
+- `CliViewModel` exposes the filtered Snip list for a single CLI, favourites
+  bubbled to the top.
+- `SettingsViewModel` stub — populates the About expander; real settings UI
+  arrives in Phase 6.
+- `SnipFilter` pure helpers: case-insensitive search across title / template /
+  tags, tag filter, trash exclusion, `DistinctTagsFor` for the pane tag list.
+- `IdenticonService` (Jdenticon-net) — generates deterministic identicon PNG
+  bytes seeded off `Cli.Id` so renaming a CLI doesn't change its icon.
+- `ShellPage` (WinUI): `NavigationView` with a custom pane header
+  (`AutoSuggestBox` search + CLI switcher `ComboBox`), pane body tag list,
+  pane footer Settings button, content area driven by a
+  `ShellContentTemplateSelector` that picks the right `DataTemplate` based on
+  the current content view-model type.
+- Custom user controls: `Identicon` (dependency-property-driven, lazy image
+  load), `CliCard` (identicon + name + snip count), `SnipCard` (title,
+  monospace template preview, tag chips, favourite star, disabled
+  Copy/Edit/Delete buttons with "Phase 4/5" tooltips).
+- Settings page stub uses `SettingsCard` / `SettingsExpander` with About as the
+  last expander; About shows app name, copyright, and version (the version
+  string falls back to the assembly's `InformationalVersion` until Phase 6
+  wires Nerdbank.GitVersioning).
+- `MainWindow` now hosts the `ShellPage` in its content row; the custom title
+  bar and Mica backdrop carry over from Phase 2.
+- Converters: `BoolToVisibilityConverter`, `CountToVisibilityConverter`.
+
 ### Added — Phase 2: App lifecycle skeleton
 - Explicit `Program.cs` entry point that runs the Velopack hook → initialises
   WinRT COM wrappers → checks single-instance via Windows App SDK
