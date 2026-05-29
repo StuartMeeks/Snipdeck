@@ -50,3 +50,32 @@ locally on a Snip when something one-off is needed.
   from shared scope.
 
 This is the single biggest content-quality-of-life feature after v1 ships.
+
+---
+
+## Carried over from the phase stack
+
+These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
+load-bearing for the v1 demo, but they're the obvious next-pulls.
+
+- **Hotkey rebinding UI.** The setting is editable in `AppConfig` already;
+  what's missing is a key-capture control on the Settings page and the call
+  to `IHotkeyService.TryRegister` after the change. Tooling: a small custom
+  `Control` that listens for a single key chord then displays it formatted.
+- **Storage path: move / adopt / warn-on-conflict.** Per `CLAUDE.md`, when
+  the user changes the storage path we need three flows: move the existing
+  store to the new path; adopt a store already at the new path; warn when
+  both exist. UI: a "Change…" button next to the read-only path display.
+- **Backup retention configurable.** Plumbing: `BackupService` takes
+  retention at construction time today; either re-create it on the relevant
+  config change or have it read from `AppConfig` lazily.
+- **CLI delete.** Settle cascade semantics — must-be-empty vs trash-all-child-snips —
+  before wiring the UI.
+- **Nerdbank.GitVersioning.** Right now `InformationalVersion` falls back to
+  the assembly's compile-time version. NBGV would give us a real git-tag-derived
+  string at build time (`v1.2.3+gabcdef0`).
+- **Markdown rendering for Snip descriptions.** Stored as plain text right
+  now; render via a markdown control on the parameter-fill / detail view.
+- **Trash UI.** Soft-deleted Snips currently just vanish from the views.
+  Need a "Trash" entry in the pane footer that lists trashed Snips with a
+  restore action and a hard-delete option.
