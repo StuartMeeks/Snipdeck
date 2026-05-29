@@ -1,9 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using Snipdeck.App.Services;
+using Snipdeck.App.Views;
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
 using Snipdeck.Core.Services;
+using Snipdeck.Core.ViewModels;
 
 namespace Snipdeck.App
 {
@@ -40,6 +42,8 @@ namespace Snipdeck.App
                 .AddSingleton<ISnipStore>(snipStore)
                 .AddSingleton<IBackupService>(backupService)
                 .AddSingleton(config)
+                .AddSingleton<ShellViewModel>()
+                .AddSingleton<ShellPage>()
                 .AddSingleton<MainWindow>();
 
             return services.BuildServiceProvider();
