@@ -36,5 +36,29 @@ namespace Snipdeck.App.Views
                 ViewModel.SelectedTag = tag;
             }
         }
+
+        private void OnNewCliClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.NewCliCommand.CanExecute(null))
+            {
+                ViewModel.NewCliCommand.Execute(null);
+            }
+        }
+
+        private void OnNewSnipClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.NewSnipCommand.CanExecute(null))
+            {
+                ViewModel.NewSnipCommand.Execute(null);
+            }
+        }
+
+        private void OnEditCliClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.EditCurrentCliCommand.CanExecute(null))
+            {
+                ViewModel.EditCurrentCliCommand.Execute(null);
+            }
+        }
     }
 }

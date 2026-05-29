@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Snipdeck.App.Views.ParameterFillDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Snipdeck.App.Converters"
+    xmlns:vm="using:Snipdeck.Core.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Fill parameters"
+    PrimaryButtonText="Copy"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <ContentDialog.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    </ContentDialog.Resources>
+
+    <StackPanel MinWidth="480" Spacing="12">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.Inputs}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="8" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ParameterInputViewModel">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{x:Bind Name}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                        <TextBox Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{x:Bind IsText, Converter={StaticResource BoolToVisibility}}" />
+                        <ComboBox ItemsSource="{x:Bind Options}"
+                                  SelectedItem="{x:Bind Value, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  Visibility="{x:Bind IsChoice, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Preview"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                    CornerRadius="4"
+                    Padding="8,6">
+                <TextBlock Text="{x:Bind ViewModel.Preview, Mode=OneWay}"
+                           FontFamily="Cascadia Mono, Consolas, Courier New"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           IsTextSelectionEnabled="True" />
+            </Border>
+        </StackPanel>
+    </StackPanel>
+</ContentDialog>

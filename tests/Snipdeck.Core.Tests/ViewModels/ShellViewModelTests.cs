@@ -1,5 +1,6 @@
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
+using Snipdeck.Core.Tests.Support;
 using Snipdeck.Core.ViewModels;
 
 namespace Snipdeck.Core.Tests.ViewModels
@@ -20,6 +21,21 @@ namespace Snipdeck.Core.Tests.ViewModels
                 _document = document;
                 return Task.CompletedTask;
             }
+        }
+
+        private static ShellViewModel NewShellViewModel(
+            ISnipStore store,
+            FakeClipboardService? clipboard = null,
+            FakeShellInteractions? interactions = null,
+            FakeIconAssetStorage? icons = null,
+            FakeClock? clock = null)
+        {
+            return new ShellViewModel(
+                store,
+                clipboard ?? new FakeClipboardService(),
+                clock ?? new FakeClock(DateTimeOffset.UtcNow),
+                interactions ?? new FakeShellInteractions(),
+                icons ?? new FakeIconAssetStorage());
         }
 
         private static SnipStoreDocument SampleDocument(out Guid plAppId, out Guid mptAppId)
@@ -48,7 +64,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task After_LoadAsync_home_choice_is_selected_and_content_is_a_HomeViewModel()
         {
             var doc = SampleDocument(out _, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
 
             await vm.LoadAsync();
 
@@ -61,7 +77,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task CliChoices_contains_home_followed_by_cli_choices_in_alphabetical_order()
         {
             var doc = SampleDocument(out _, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
 
             await vm.LoadAsync();
 
@@ -75,7 +91,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task Selecting_a_cli_swaps_content_to_a_CliViewModel_and_rebuilds_tags()
         {
             var doc = SampleDocument(out var plAppId, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
@@ -93,7 +109,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task Selecting_home_clears_tags_and_resets_to_home_content()
         {
             var doc = SampleDocument(out var plAppId, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
@@ -107,7 +123,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task Changing_search_text_rebuilds_content()
         {
             var doc = SampleDocument(out _, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             var first = vm.CurrentContent;
@@ -121,7 +137,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task OpenSettings_swaps_content_for_a_SettingsViewModel()
         {
             var doc = SampleDocument(out _, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             vm.OpenSettings();
@@ -133,7 +149,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         public async Task Changing_cli_after_OpenSettings_returns_to_shell_content()
         {
             var doc = SampleDocument(out var plAppId, out _);
-            var vm = new ShellViewModel(new InMemorySnipStore(doc));
+            var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             vm.OpenSettings();

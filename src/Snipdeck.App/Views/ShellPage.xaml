@@ -10,18 +10,31 @@
     xmlns:vm="using:Snipdeck.Core.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    x:Name="ShellRoot">
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <converters:BoolToVisibilityConverter x:Key="InvertedBoolToVisibility" Invert="True" />
         <converters:CountToVisibilityConverter x:Key="CountToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Padding="24" Spacing="24">
-                    <TextBlock Text="CLIs"
-                               Style="{ThemeResource SubtitleTextBlockStyle}"
-                               Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="CLIs"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="New CLI"
+                                Click="OnNewCliClicked"
+                                Style="{ThemeResource AccentButtonStyle}" />
+                    </Grid>
 
                     <GridView ItemsSource="{x:Bind CliCards}"
                               SelectionMode="None"
@@ -29,7 +42,10 @@
                               Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="vm:CliCardViewModel">
-                                <controls:CliCard ViewModel="{x:Bind}" Margin="0,0,12,12" />
+                                <controls:CliCard
+                                    ViewModel="{x:Bind}"
+                                    NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}"
+                                    Margin="0,0,12,12" />
                             </DataTemplate>
                         </GridView.ItemTemplate>
                     </GridView>
@@ -46,7 +62,12 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SnipCardViewModel">
-                                    <controls:SnipCard ViewModel="{x:Bind}" />
+                                    <controls:SnipCard
+                                        ViewModel="{x:Bind}"
+                                        CopyCommand="{Binding ElementName=ShellRoot, Path=ViewModel.CopySnipCommand}"
+                                        EditCommand="{Binding ElementName=ShellRoot, Path=ViewModel.EditSnipCommand}"
+                                        DeleteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSnipCommand}"
+                                        FavouriteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.ToggleFavouriteCommand}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -54,11 +75,11 @@
 
                     <StackPanel Spacing="8"
                                 HorizontalAlignment="Center"
-                                Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
+                                Visibility="{x:Bind HasCliCards, Converter={StaticResource InvertedBoolToVisibility}}">
                         <TextBlock Text="Welcome to Snipdeck"
                                    Style="{ThemeResource TitleTextBlockStyle}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="No CLIs yet. Authoring lands in Phase 4."
+                        <TextBlock Text="Start by adding a CLI."
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
@@ -70,8 +91,25 @@
         <DataTemplate x:Key="CliContentTemplate" x:DataType="vm:CliViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Padding="24" Spacing="16">
-                    <TextBlock Text="{x:Bind Name}"
-                               Style="{ThemeResource TitleTextBlockStyle}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{x:Bind Name}"
+                                   Style="{ThemeResource TitleTextBlockStyle}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Margin="0,0,8,0"
+                                Content="Edit CLI"
+                                Click="OnEditCliClicked" />
+                        <Button Grid.Column="2"
+                                Content="New snip"
+                                Click="OnNewSnipClicked"
+                                Style="{ThemeResource AccentButtonStyle}" />
+                    </Grid>
 
                     <TextBlock Text="No snips match the current filter."
                                Style="{ThemeResource BodyTextBlockStyle}"
@@ -86,7 +124,12 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:SnipCardViewModel">
-                                <controls:SnipCard ViewModel="{x:Bind}" />
+                                <controls:SnipCard
+                                    ViewModel="{x:Bind}"
+                                    CopyCommand="{Binding ElementName=ShellRoot, Path=ViewModel.CopySnipCommand}"
+                                    EditCommand="{Binding ElementName=ShellRoot, Path=ViewModel.EditSnipCommand}"
+                                    DeleteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSnipCommand}"
+                                    FavouriteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.ToggleFavouriteCommand}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
