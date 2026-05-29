@@ -17,13 +17,19 @@ namespace Snipdeck.App.Services
     {
         private readonly IServiceProvider _services;
         private readonly IIconNormaliser _iconNormaliser;
+        private readonly IFilePickerService _filePicker;
 
-        public WindowsShellInteractions(IServiceProvider services, IIconNormaliser iconNormaliser)
+        public WindowsShellInteractions(
+            IServiceProvider services,
+            IIconNormaliser iconNormaliser,
+            IFilePickerService filePicker)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(iconNormaliser);
+            ArgumentNullException.ThrowIfNull(filePicker);
             _services = services;
             _iconNormaliser = iconNormaliser;
+            _filePicker = filePicker;
         }
 
         public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel")
@@ -59,8 +65,7 @@ namespace Snipdeck.App.Services
         {
             ArgumentNullException.ThrowIfNull(cli);
             var editor = new CliEditorViewModel(cli);
-            var hwnd = GetMainWindowHandle();
-            var dialog = new CliEditorDialog(editor, _iconNormaliser, hwnd)
+            var dialog = new CliEditorDialog(editor, _iconNormaliser, _filePicker)
             {
                 XamlRoot = GetXamlRoot(),
             };
@@ -92,10 +97,5 @@ namespace Snipdeck.App.Services
             return ((FrameworkElement)content).XamlRoot;
         }
 
-        private IntPtr GetMainWindowHandle()
-        {
-            var mainWindow = (MainWindow)_services.GetService(typeof(MainWindow))!;
-            return WinRT.Interop.WindowNative.GetWindowHandle(mainWindow);
-        }
     }
 }

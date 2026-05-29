@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 5: Platform services
+- **Global hotkey** via Win32 `RegisterHotKey`. Default Ctrl+Alt+S; pressed
+  anywhere brings the existing Snipdeck window to the foreground.
+  `WindowsHotkeyService` subclasses the main window's WndProc with
+  `SetWindowSubclass` to catch `WM_HOTKEY`. `HotkeyModifiers` map straight
+  through to `MOD_*` constants (intentional alignment from Phase 1).
+- **Tray icon** via `H.NotifyIcon`. Left-click brings the window forward,
+  right-click shows a context menu with **Show Snipdeck** and **Exit**.
+- **Close-to-tray** behaviour: when `AppConfig.CloseBehaviour` is
+  `HideToTray`, `AppWindow.Closing` is cancelled and the window hides. The
+  tray's **Exit** flips an internal flag and lets the next close pass
+  through cleanly.
+- **`IFilePickerService`** abstraction (App-side `WindowsFilePickerService`)
+  centralises file-picker setup. `CliEditorDialog` no longer pokes Win32 itself
+  — it consumes the abstraction.
+- **CLI cards now render uploaded icons** (when `Cli.IconRef` is set), falling
+  back to identicons when not. `Identicon` control gains an `IconRef`
+  dependency property and resolves the absolute path via
+  `IIconAssetStorage`.
+
 ### Added — Phase 4: Authoring + parameter-fill flyout
 - Snip card actions are now live: **Copy** opens a parameter-fill
   `ContentDialog` (or copies the template directly when the Snip has no
