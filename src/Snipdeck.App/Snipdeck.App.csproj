@@ -14,8 +14,12 @@
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 		<Platforms>x64</Platforms>
 		<!-- Use the explicit entry point in Program.cs instead of the
-		     XAML-generated Main, so Velopack + single-instance run first. -->
+		     XAML-generated Main, so Velopack + single-instance run first.
+		     EnableDefaultXamlGeneratedMain doesn't suppress the generated
+		     Main in WindowsAppSDK 2.1.0 — the auto-generated Program class
+		     is gated on the C# define instead, so set both. -->
 		<EnableDefaultXamlGeneratedMain>false</EnableDefaultXamlGeneratedMain>
+		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
