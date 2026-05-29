@@ -26,6 +26,7 @@
         <controls:Identicon
             Grid.Row="0"
             Seed="{x:Bind ViewModel.Id, Mode=OneWay}"
+            IconRef="{x:Bind ViewModel.IconRef, Mode=OneWay}"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Width="96"

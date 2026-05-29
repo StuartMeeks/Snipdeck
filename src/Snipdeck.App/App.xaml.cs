@@ -3,13 +3,18 @@ using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 
 using Snipdeck.Core.Abstractions;
+using Snipdeck.Core.Models;
 using Snipdeck.Core.Services;
 
 namespace Snipdeck.App
 {
     public partial class App : Application
     {
-        private Window? _mainWindow;
+        private MainWindow? _mainWindow;
+        private IHotkeyService? _hotkey;
+        private ITrayService? _tray;
+        private AppConfig? _config;
+        private bool _allowClose;
 
         public App()
         {
@@ -32,8 +37,13 @@ namespace Snipdeck.App
 
             await SeedFirstRunIfEmptyAsync();
 
+            _config = Services.GetRequiredService<AppConfig>();
             _mainWindow = Services.GetRequiredService<MainWindow>();
             _mainWindow.Activate();
+
+            WireCloseToTray(_mainWindow, _config);
+            InitialiseTray();
+            InitialiseHotkey(_config);
         }
 
         private static async Task SeedFirstRunIfEmptyAsync()
@@ -49,10 +59,53 @@ namespace Snipdeck.App
         private void OnInstanceActivated(object? sender, AppActivationArguments e)
         {
             var dispatcher = Services.GetRequiredService<IDispatcher>();
-            dispatcher.Enqueue(() =>
+            dispatcher.Enqueue(() => BringToFront());
+        }
+
+        private void WireCloseToTray(MainWindow window, AppConfig config)
+        {
+            // AppWindow.Closing fires before the actual close happens and is
+            // cancellable. In hide-to-tray mode we hide the window and keep
+            // the process alive; the tray "Exit" command flips _allowClose
+            // and lets the next close pass through.
+            window.AppWindow.Closing += (_, args) =>
             {
-                _mainWindow?.Activate();
-            });
+                if (_allowClose || config.CloseBehaviour == CloseBehaviour.Exit)
+                {
+                    return;
+                }
+                args.Cancel = true;
+                window.AppWindow.Hide();
+            };
+        }
+
+        private void InitialiseTray()
+        {
+            _tray = Services.GetRequiredService<ITrayService>();
+            _tray.ShowRequested += (_, _) => BringToFront();
+            _tray.ExitRequested += (_, _) =>
+            {
+                _allowClose = true;
+                _mainWindow?.Close();
+            };
+            _tray.Initialise();
+        }
+
+        private void InitialiseHotkey(AppConfig config)
+        {
+            _hotkey = Services.GetRequiredService<IHotkeyService>();
+            _hotkey.Pressed += (_, _) => BringToFront();
+            _ = _hotkey.TryRegister(config.Hotkey);
+        }
+
+        private void BringToFront()
+        {
+            if (_mainWindow is null)
+            {
+                return;
+            }
+            _mainWindow.AppWindow.Show();
+            _mainWindow.Activate();
         }
     }
 }
