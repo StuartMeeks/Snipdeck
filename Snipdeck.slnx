@@ -1,2 +1,8 @@
 <Solution>
+  <Project Path="src/Snipdeck.App/Snipdeck.App.csproj" Id="520cd706-6a92-48da-93b1-fb003a814359">
+    <Platform Project="x64" />
+    <Deploy />
+  </Project>
+  <Project Path="src/Snipdeck.Core/Snipdeck.Core.csproj" />
+  <Project Path="tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj" />
 </Solution>
