@@ -10,7 +10,7 @@ using Windows.Storage.Streams;
 
 namespace Snipdeck.App.Services
 {
-    internal sealed class HNotifyIconTrayService : ITrayService
+    internal sealed partial class HNotifyIconTrayService : ITrayService
     {
         // Stable seed so the tray icon never changes between runs of Snipdeck.
         private static readonly Guid _iconSeed = Guid.Parse("5147DEC0-0000-0000-0000-000000000001");
@@ -39,8 +39,8 @@ namespace Snipdeck.App.Services
                 IconSource = image,
                 ContextFlyout = BuildContextMenu(),
                 NoLeftClickDelay = true,
+                LeftClickCommand = new RelayCommand(RaiseShowRequested),
             };
-            _icon.LeftClickCommand = new RelayCommand(() => ShowRequested?.Invoke(this, EventArgs.Empty));
             _icon.ForceCreate();
         }
 
@@ -57,19 +57,36 @@ namespace Snipdeck.App.Services
 
         private MenuFlyout BuildContextMenu()
         {
-            var menu = new MenuFlyout();
-
             var showItem = new MenuFlyoutItem { Text = "Show Snipdeck" };
-            showItem.Click += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
-            menu.Items.Add(showItem);
-
-            menu.Items.Add(new MenuFlyoutSeparator());
+            showItem.Click += OnShowItemClick;
 
             var exitItem = new MenuFlyoutItem { Text = "Exit" };
-            exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
-            menu.Items.Add(exitItem);
+            exitItem.Click += OnExitItemClick;
 
-            return menu;
+            return new MenuFlyout
+            {
+                Items =
+                {
+                    showItem,
+                    new MenuFlyoutSeparator(),
+                    exitItem,
+                },
+            };
+        }
+
+        private void OnShowItemClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            RaiseShowRequested();
+        }
+
+        private void OnExitItemClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            ExitRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void RaiseShowRequested()
+        {
+            ShowRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private static async Task<BitmapImage> BuildTrayBitmapAsync()
@@ -86,22 +103,15 @@ namespace Snipdeck.App.Services
             return image;
         }
 
-        private sealed class RelayCommand : System.Windows.Input.ICommand
+        private sealed partial class RelayCommand(Action execute) : System.Windows.Input.ICommand
         {
-            private readonly Action _execute;
-
-            public RelayCommand(Action execute)
-            {
-                _execute = execute;
-            }
-
 #pragma warning disable CS0067 // 'CanExecuteChanged' is never used — relay never changes.
             public event EventHandler? CanExecuteChanged;
 #pragma warning restore CS0067
 
             public bool CanExecute(object? parameter) => true;
 
-            public void Execute(object? parameter) => _execute();
+            public void Execute(object? parameter) => execute();
         }
     }
 }

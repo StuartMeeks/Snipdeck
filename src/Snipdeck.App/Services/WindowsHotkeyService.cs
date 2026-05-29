@@ -175,15 +175,22 @@ namespace Snipdeck.App.Services
         [return: MarshalAs(UnmanagedType.Bool)]
         private static partial bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        [DllImport("comctl32.dll", CharSet = CharSet.Auto)]
+        [LibraryImport("comctl32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetWindowSubclass(IntPtr hWnd, SubclassProc pfnSubclass, uint uIdSubclass, IntPtr dwRefData);
+        private static partial bool SetWindowSubclass(
+            IntPtr hWnd,
+            [MarshalAs(UnmanagedType.FunctionPtr)] SubclassProc pfnSubclass,
+            uint uIdSubclass,
+            IntPtr dwRefData);
 
-        [DllImport("comctl32.dll", CharSet = CharSet.Auto)]
+        [LibraryImport("comctl32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool RemoveWindowSubclass(IntPtr hWnd, SubclassProc pfnSubclass, uint uIdSubclass);
+        private static partial bool RemoveWindowSubclass(
+            IntPtr hWnd,
+            [MarshalAs(UnmanagedType.FunctionPtr)] SubclassProc pfnSubclass,
+            uint uIdSubclass);
 
-        [DllImport("comctl32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("comctl32.dll")]
+        private static partial IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
     }
 }

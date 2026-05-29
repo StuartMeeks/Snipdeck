@@ -59,15 +59,11 @@ namespace Snipdeck.App
         private void OnInstanceActivated(object? sender, AppActivationArguments e)
         {
             var dispatcher = Services.GetRequiredService<IDispatcher>();
-            dispatcher.Enqueue(() => BringToFront());
+            dispatcher.Enqueue(BringToFront);
         }
 
         private void WireCloseToTray(MainWindow window, AppConfig config)
         {
-            // AppWindow.Closing fires before the actual close happens and is
-            // cancellable. In hide-to-tray mode we hide the window and keep
-            // the process alive; the tray "Exit" command flips _allowClose
-            // and lets the next close pass through.
             window.AppWindow.Closing += (_, args) =>
             {
                 if (_allowClose || config.CloseBehaviour == CloseBehaviour.Exit)
@@ -82,21 +78,27 @@ namespace Snipdeck.App
         private async Task InitialiseTrayAsync()
         {
             _tray = Services.GetRequiredService<ITrayService>();
-            _tray.ShowRequested += (_, _) => BringToFront();
-            _tray.ExitRequested += (_, _) =>
-            {
-                _allowClose = true;
-                _mainWindow?.Close();
-            };
+            _tray.ShowRequested += OnTrayShowRequested;
+            _tray.ExitRequested += OnTrayExitRequested;
             await _tray.InitialiseAsync();
         }
 
         private void InitialiseHotkey(AppConfig config)
         {
             _hotkey = Services.GetRequiredService<IHotkeyService>();
-            _hotkey.Pressed += (_, _) => BringToFront();
+            _hotkey.Pressed += OnHotkeyPressed;
             _ = _hotkey.TryRegister(config.Hotkey);
         }
+
+        private void OnTrayShowRequested(object? sender, EventArgs e) => BringToFront();
+
+        private void OnTrayExitRequested(object? sender, EventArgs e)
+        {
+            _allowClose = true;
+            _mainWindow?.Close();
+        }
+
+        private void OnHotkeyPressed(object? sender, EventArgs e) => BringToFront();
 
         private void BringToFront()
         {
