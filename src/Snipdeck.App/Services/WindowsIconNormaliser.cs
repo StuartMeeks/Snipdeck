@@ -29,12 +29,12 @@ namespace Snipdeck.App.Services
 
             var decoder = await BitmapDecoder.CreateAsync(sourceStream);
 
-            var sourceWidth = (uint)decoder.PixelWidth;
-            var sourceHeight = (uint)decoder.PixelHeight;
+            var sourceWidth = decoder.PixelWidth;
+            var sourceHeight = decoder.PixelHeight;
             var edge = Math.Min(sourceWidth, sourceHeight);
             var offsetX = (sourceWidth - edge) / 2u;
             var offsetY = (sourceHeight - edge) / 2u;
-            var targetEdge = (uint)Math.Min((uint)maxEdgePixels, edge);
+            var targetEdge = Math.Min((uint)maxEdgePixels, edge);
 
             var transform = new BitmapTransform
             {
