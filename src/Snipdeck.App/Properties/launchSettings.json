@@ -1,9 +1,6 @@
 {
   "profiles": {
-    "Snipdeck.App (Package)": {
-      "commandName": "MsixPackage"
-    },
-    "Snipdeck.App (Unpackaged)": {
+    "Snipdeck.App": {
       "commandName": "Project"
     }
   }
