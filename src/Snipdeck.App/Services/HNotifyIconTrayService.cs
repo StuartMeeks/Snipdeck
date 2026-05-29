@@ -1,14 +1,20 @@
 using H.NotifyIcon;
 
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 using Snipdeck.Core.Abstractions;
+using Snipdeck.Core.Services;
+
+using Windows.Storage.Streams;
 
 namespace Snipdeck.App.Services
 {
     internal sealed class HNotifyIconTrayService : ITrayService
     {
+        // Stable seed so the tray icon never changes between runs of Snipdeck.
+        private static readonly Guid _iconSeed = Guid.Parse("5147DEC0-0000-0000-0000-000000000001");
+
         private TaskbarIcon? _icon;
         private bool _disposed;
 
@@ -16,7 +22,7 @@ namespace Snipdeck.App.Services
 
         public event EventHandler? ExitRequested;
 
-        public void Initialise()
+        public async Task InitialiseAsync()
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -25,14 +31,12 @@ namespace Snipdeck.App.Services
                 return;
             }
 
+            var image = await BuildTrayBitmapAsync();
+
             _icon = new TaskbarIcon
             {
                 ToolTipText = "Snipdeck",
-                IconSource = new FontIconSource
-                {
-                    Glyph = "",
-                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                },
+                IconSource = image,
                 ContextFlyout = BuildContextMenu(),
                 NoLeftClickDelay = true,
             };
@@ -66,6 +70,20 @@ namespace Snipdeck.App.Services
             menu.Items.Add(exitItem);
 
             return menu;
+        }
+
+        private static async Task<BitmapImage> BuildTrayBitmapAsync()
+        {
+            var bytes = IdenticonService.GeneratePng(_iconSeed, size: 32);
+            var image = new BitmapImage();
+            using var stream = new InMemoryRandomAccessStream();
+            var writer = new DataWriter(stream);
+            writer.WriteBytes(bytes);
+            _ = await writer.StoreAsync();
+            _ = writer.DetachStream();
+            stream.Seek(0);
+            await image.SetSourceAsync(stream);
+            return image;
         }
 
         private sealed class RelayCommand : System.Windows.Input.ICommand

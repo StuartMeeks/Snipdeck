@@ -42,7 +42,7 @@ namespace Snipdeck.App
             _mainWindow.Activate();
 
             WireCloseToTray(_mainWindow, _config);
-            InitialiseTray();
+            await InitialiseTrayAsync();
             InitialiseHotkey(_config);
         }
 
@@ -79,7 +79,7 @@ namespace Snipdeck.App
             };
         }
 
-        private void InitialiseTray()
+        private async Task InitialiseTrayAsync()
         {
             _tray = Services.GetRequiredService<ITrayService>();
             _tray.ShowRequested += (_, _) => BringToFront();
@@ -88,7 +88,7 @@ namespace Snipdeck.App
                 _allowClose = true;
                 _mainWindow?.Close();
             };
-            _tray.Initialise();
+            await _tray.InitialiseAsync();
         }
 
         private void InitialiseHotkey(AppConfig config)

@@ -6,6 +6,6 @@ namespace Snipdeck.Core.Abstractions
 
         event EventHandler? ExitRequested;
 
-        void Initialise();
+        Task InitialiseAsync();
     }
 }

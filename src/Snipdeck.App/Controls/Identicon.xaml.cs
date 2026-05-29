@@ -52,7 +52,7 @@ namespace Snipdeck.App.Controls
         private async Task UpdateImageAsync()
         {
             // Prefer the uploaded icon if present.
-            var storage = App.Services.GetService(typeof(IIconAssetStorage)) as IIconAssetStorage;
+            var storage = Snipdeck.App.App.Services.GetService(typeof(IIconAssetStorage)) as IIconAssetStorage;
             var absolute = storage?.ResolveAbsolutePath(IconRef);
             if (!string.IsNullOrEmpty(absolute) && System.IO.File.Exists(absolute))
             {
