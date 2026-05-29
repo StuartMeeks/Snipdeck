@@ -71,9 +71,10 @@ namespace Snipdeck.Core.ViewModels
             SelectedCliChoice = CliChoices.FirstOrDefault();
         }
 
-        public void OpenSettings()
+        public void OpenSettings(SettingsViewModel settings)
         {
-            CurrentContent = new SettingsViewModel();
+            ArgumentNullException.ThrowIfNull(settings);
+            CurrentContent = settings;
         }
 
         public void GoHome()

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -24,7 +25,8 @@ namespace Snipdeck.App.Views
 
         private void OnSettingsClicked(object sender, RoutedEventArgs e)
         {
-            ViewModel.OpenSettings();
+            var settings = App.Services.GetRequiredService<SettingsViewModel>();
+            ViewModel.OpenSettings(settings);
         }
 
         private void OnNavigationSelectionChanged(
