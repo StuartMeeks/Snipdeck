@@ -144,25 +144,51 @@
                                Style="{ThemeResource TitleTextBlockStyle}"
                                Margin="0,0,0,8" />
 
-                    <tk:SettingsCard Header="Storage location"
-                                     Description="Where snipdeck keeps your snips. Configurable in Phase 6."
-                                     IsEnabled="False" />
-
-                    <tk:SettingsCard Header="Backups"
-                                     Description="Backup directory and retention. Configurable in Phase 6."
-                                     IsEnabled="False" />
-
                     <tk:SettingsCard Header="Theme"
-                                     Description="Light, Dark, or System. Live switching in Phase 6."
-                                     IsEnabled="False" />
-
-                    <tk:SettingsCard Header="Global hotkey"
-                                     Description="Default Ctrl+Alt+S. Rebinding in Phase 6."
-                                     IsEnabled="False" />
+                                     Description="Applies immediately. System follows your Windows preference.">
+                        <ComboBox SelectedIndex="{x:Bind ThemeIndex, Mode=TwoWay}" MinWidth="160">
+                            <x:String>System</x:String>
+                            <x:String>Light</x:String>
+                            <x:String>Dark</x:String>
+                        </ComboBox>
+                    </tk:SettingsCard>
 
                     <tk:SettingsCard Header="Close behaviour"
-                                     Description="Hide-to-tray vs exit. Configurable in Phase 6."
-                                     IsEnabled="False" />
+                                     Description="Hide-to-tray keeps the hotkey live. Exit closes the process.">
+                        <ComboBox SelectedIndex="{x:Bind CloseBehaviourIndex, Mode=TwoWay}" MinWidth="200">
+                            <x:String>Hide to tray</x:String>
+                            <x:String>Exit on close</x:String>
+                        </ComboBox>
+                    </tk:SettingsCard>
+
+                    <tk:SettingsCard Header="Global hotkey"
+                                     Description="Rebinding lands in a future phase.">
+                        <TextBlock Text="{x:Bind HotkeyDisplay}"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    </tk:SettingsCard>
+
+                    <tk:SettingsCard Header="Storage location"
+                                     Description="Where snips and backups live. Move support lands in a future phase.">
+                        <TextBlock Text="{x:Bind StorageDirectory}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="320" />
+                    </tk:SettingsCard>
+
+                    <tk:SettingsCard Header="Updates"
+                                     Description="Check the GitHub releases feed for a newer build.">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{x:Bind UpdateStatusMessage, Mode=OneWay}"
+                                       VerticalAlignment="Center"
+                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                            <Button Content="Check for updates"
+                                    Command="{x:Bind CheckForUpdatesCommand}" />
+                            <Button Content="Apply &amp; restart"
+                                    Command="{x:Bind ApplyUpdateCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Visibility="{x:Bind UpdateAvailable, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </tk:SettingsCard>
 
                     <tk:SettingsExpander Header="About">
                         <tk:SettingsExpander.Items>

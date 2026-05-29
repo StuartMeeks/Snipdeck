@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 6: Settings page + Velopack updater
+- **Settings page becomes editable.** Theme switches live (System/Light/Dark
+  apply immediately via `IThemeApplier` → `MainWindow`'s content tree). Close
+  behaviour (Hide-to-tray vs Exit) persists to `AppConfig` as you change it.
+  Global hotkey is shown read-only for now — rebinding lands later.
+- **About expander** is populated from real assembly metadata: name,
+  `InformationalVersion`, and copyright (from `Directory.Build.props`).
+- **Manual update check** via `IUpdateService` (Velopack-backed,
+  `WindowsUpdateService`). Points at the GitHub releases for this repo,
+  catches dev-build / network-failure cases, and exposes a Check / Apply
+  pair on the Settings page.
+- `SettingsViewModel` now lives in the DI container as transient — a fresh
+  instance is resolved each time the Settings entry is clicked so reading
+  config state is always current.
+
 ### Added — Phase 5: Platform services
 - **Global hotkey** via Win32 `RegisterHotKey`. Default Ctrl+Alt+S; pressed
   anywhere brings the existing Snipdeck window to the foreground.

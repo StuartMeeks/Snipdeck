@@ -23,6 +23,16 @@ namespace Snipdeck.Core.Tests.ViewModels
             }
         }
 
+        private static SettingsViewModel NewSettingsViewModel()
+        {
+            return new SettingsViewModel(
+                new FakeSettingsStore(),
+                new FakeThemeApplier(),
+                new FakeUpdateService(),
+                new FakePathProvider(),
+                new AppConfig());
+        }
+
         private static ShellViewModel NewShellViewModel(
             ISnipStore store,
             FakeClipboardService? clipboard = null,
@@ -140,7 +150,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
-            vm.OpenSettings();
+            vm.OpenSettings(NewSettingsViewModel());
 
             _ = Assert.IsType<SettingsViewModel>(vm.CurrentContent);
         }
@@ -152,7 +162,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
-            vm.OpenSettings();
+            vm.OpenSettings(NewSettingsViewModel());
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
 
             _ = Assert.IsType<CliViewModel>(vm.CurrentContent);
