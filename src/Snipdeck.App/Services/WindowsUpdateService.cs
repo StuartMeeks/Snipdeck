@@ -39,14 +39,11 @@ namespace Snipdeck.App.Services
                 return new UpdateCheckResult(UpdateAvailable: false, AvailableVersion: null);
             }
 
-            if (_pendingUpdate is null)
-            {
-                return new UpdateCheckResult(UpdateAvailable: false, AvailableVersion: null);
-            }
-
-            return new UpdateCheckResult(
-                UpdateAvailable: true,
-                AvailableVersion: _pendingUpdate.TargetFullRelease.Version.ToString());
+            return _pendingUpdate is null
+                ? new UpdateCheckResult(UpdateAvailable: false, AvailableVersion: null)
+                : new UpdateCheckResult(
+                    UpdateAvailable: true,
+                    AvailableVersion: _pendingUpdate.TargetFullRelease.Version.ToString());
         }
 
         public async Task<bool> ApplyUpdateAndRestartAsync(CancellationToken cancellationToken = default)
@@ -58,7 +55,7 @@ namespace Snipdeck.App.Services
 
             try
             {
-                await _manager.DownloadUpdatesAsync(_pendingUpdate).ConfigureAwait(false);
+                await _manager.DownloadUpdatesAsync(_pendingUpdate, cancelToken: cancellationToken).ConfigureAwait(false);
                 _manager.ApplyUpdatesAndRestart(_pendingUpdate);
                 return true;
             }
