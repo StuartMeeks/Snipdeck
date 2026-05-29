@@ -1,0 +1,103 @@
+name: release
+
+# Triggered by tags of the form vMAJOR.MINOR.PATCH (stable) or
+# vMAJOR.MINOR.PATCH-suffix (pre-release; the hyphen marks it as a pre-release
+# on GitHub and feeds Velopack's channel).
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  PACK_ID: "Snipdeck"
+  PACK_AUTHORS: "Stuart Meeks"
+  PACK_TITLE: "Snipdeck"
+
+jobs:
+  release:
+    name: Build + publish Velopack release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/*.csproj
+
+      - name: Derive version + channel from tag
+        id: meta
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          $isPrerelease = $version.Contains('-')
+          if ($isPrerelease) {
+            $channel = ($version -split '-', 2)[1] -replace '\..*$', ''
+            if ([string]::IsNullOrWhiteSpace($channel)) { $channel = 'beta' }
+          } else {
+            $channel = 'stable'
+          }
+          "version=$version"           >> $env:GITHUB_OUTPUT
+          "isPrerelease=$isPrerelease" >> $env:GITHUB_OUTPUT
+          "channel=$channel"           >> $env:GITHUB_OUTPUT
+          Write-Host "Tag         : $tag"
+          Write-Host "Version     : $version"
+          Write-Host "Pre-release : $isPrerelease"
+          Write-Host "Channel     : $channel"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Run Core tests
+        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore
+
+      - name: Publish Snipdeck.App (win-x64)
+        run: dotnet publish src/Snipdeck.App/Snipdeck.App.csproj --configuration Release --runtime win-x64 --self-contained true --output publish
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Pack with Velopack
+        shell: pwsh
+        run: |
+          $version = "${{ steps.meta.outputs.version }}"
+          $channel = "${{ steps.meta.outputs.channel }}"
+          vpk pack `
+            --packId "${{ env.PACK_ID }}" `
+            --packVersion $version `
+            --packDir publish `
+            --mainExe Snipdeck.App.exe `
+            --packTitle "${{ env.PACK_TITLE }}" `
+            --packAuthors "${{ env.PACK_AUTHORS }}" `
+            --channel $channel `
+            --outputDir Releases
+
+      - name: Upload Velopack artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: snipdeck-${{ steps.meta.outputs.version }}
+          path: Releases/
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: ${{ steps.meta.outputs.isPrerelease }}
+          generate_release_notes: true
+          files: |
+            Releases/*

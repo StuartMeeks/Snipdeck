@@ -1,0 +1,85 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  core-tests:
+    name: Core build + tests (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/*.csproj
+
+      - name: Restore Core projects
+        run: |
+          dotnet restore src/Snipdeck.Core/Snipdeck.Core.csproj
+          dotnet restore tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj
+
+      - name: Build Core
+        run: dotnet build src/Snipdeck.Core/Snipdeck.Core.csproj --configuration Release --no-restore
+
+      - name: Build + run Core tests
+        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore --logger "trx;LogFileName=core-tests.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-test-results
+          path: TestResults/
+
+  app-build:
+    name: App build (windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/*.csproj
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run Core tests (sanity check on Windows)
+        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=core-tests-windows.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-results
+          path: TestResults/

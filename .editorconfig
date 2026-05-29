@@ -1,0 +1,103 @@
+root = true
+
+# -------------------------------
+# General
+# -------------------------------
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# -------------------------------
+# C# files
+# -------------------------------
+[*.cs]
+
+indent_size = 4
+
+# New lines & braces
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:warning
+
+# Using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# var usage (Spectre-style: pragmatic)
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Expression-bodied members (used where clean)
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+
+# Pattern matching / modern C#
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+
+# Nullability helpers
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+
+# Readonly fields
+dotnet_style_readonly_field = true:suggestion
+
+# -------------------------------
+# Naming
+# -------------------------------
+
+# Private fields: _camelCase
+dotnet_naming_rule.private_fields_should_be_camel_case.severity = suggestion
+dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_camel_case.style = camel_case_with_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.camel_case_with_underscore.capitalization = camel_case
+dotnet_naming_style.camel_case_with_underscore.required_prefix = _
+
+# Interfaces: IMyInterface
+dotnet_naming_rule.interfaces_should_start_with_i.severity = suggestion
+dotnet_naming_rule.interfaces_should_start_with_i.symbols = interfaces
+dotnet_naming_rule.interfaces_should_start_with_i.style = interface_prefix
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+
+dotnet_naming_style.interface_prefix.required_prefix = I
+dotnet_naming_style.interface_prefix.capitalization = pascal_case
+
+# -------------------------------
+# Analyzers
+# -------------------------------
+
+# Keep warnings visible but not painful
+dotnet_analyzer_diagnostic.severity = warning
+
+# Unused usings
+dotnet_diagnostic.IDE0005.severity = warning
+
+# Simplification
+dotnet_diagnostic.IDE0007.severity = suggestion
+dotnet_diagnostic.IDE0008.severity = suggestion
+
+# Documentation (Spectre.Console is pragmatic here)
+dotnet_diagnostic.CS1591.severity = silent
+
+# -------------------------------
+# JSON / YAML
+# -------------------------------
+[*.json]
+indent_size = 2
+
+[*.yml]
+indent_size = 2
+
+[*.yaml]
+indent_size = 2
