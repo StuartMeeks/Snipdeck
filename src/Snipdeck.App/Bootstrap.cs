@@ -32,15 +32,20 @@ namespace Snipdeck.App
 
             var snipStore = new JsonSnipStore(snipStoreFilePath);
             var backupService = new BackupService(snipStoreFilePath, backupDirectory, clock);
+            var iconStorage = new IconAssetStorage(storageDirectory);
 
             var services = new ServiceCollection();
             _ = services
                 .AddSingleton<IPathProvider>(pathProvider)
                 .AddSingleton<IClock>(clock)
                 .AddSingleton<IDispatcher, WinUiDispatcher>()
+                .AddSingleton<IClipboardService, WindowsClipboardService>()
+                .AddSingleton<IIconNormaliser, WindowsIconNormaliser>()
+                .AddSingleton<IShellInteractions, WindowsShellInteractions>()
                 .AddSingleton<ISettingsStore>(settingsStore)
                 .AddSingleton<ISnipStore>(snipStore)
                 .AddSingleton<IBackupService>(backupService)
+                .AddSingleton<IIconAssetStorage>(iconStorage)
                 .AddSingleton(config)
                 .AddSingleton<ShellViewModel>()
                 .AddSingleton<ShellPage>()

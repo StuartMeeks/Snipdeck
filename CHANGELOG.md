@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 4: Authoring + parameter-fill flyout
+- Snip card actions are now live: **Copy** opens a parameter-fill
+  `ContentDialog` (or copies the template directly when the Snip has no
+  parameters), **Edit** opens a Snip editor, **Delete** soft-trashes after
+  confirmation, the **star** toggles favourite.
+- Copying a Snip bumps `UsageCount` and `LastUsedAt` (drives the most-used
+  list on Home).
+- New Snip / New CLI buttons on Home and the CLI view. Edit CLI button on the
+  CLI view header.
+- `SnipEditorDialog` — title, command template (monospace, multi-line),
+  description, tags (comma-separated), parameter rows with type
+  (Text / Choice), default, and options. Add/remove parameters inline.
+- `CliEditorDialog` — name + icon picker. Picked images are normalised to a
+  256² centre-square PNG via `WindowsIconNormaliser` (`Windows.Graphics.Imaging`)
+  and stored under `<data>/icons/<cli-id>.png` by `IconAssetStorage`.
+- `ParameterFillDialog` — one input per parameter (TextBox for `Text`,
+  ComboBox for `Choice`), with a live preview of the resolved command and
+  the Copy button disabled until the template is fully resolved.
+- New Core abstractions: `IClipboardService`, `IIconNormaliser`,
+  `IIconAssetStorage`, `IShellInteractions`.
+- New Core view models: `ParameterFillViewModel`, `ParameterInputViewModel`,
+  `SnipEditorViewModel`, `ParameterEditorRowViewModel`, `CliEditorViewModel`.
+- `ShellViewModel` gains `CopySnipCommand`, `EditSnipCommand`,
+  `DeleteSnipCommand`, `ToggleFavouriteCommand`, `NewSnipCommand`,
+  `NewCliCommand`, `EditCurrentCliCommand`, `SelectCliCommand`.
+- App-side implementations: `WindowsClipboardService`,
+  `WindowsIconNormaliser`, `WindowsShellInteractions`.
+- Clicking a CLI card on Home navigates into that CLI (was: switcher-only).
+- 18 new Core unit tests cover the new view models and the command flow
+  (clipboard write, usage bumping, soft-delete, favourite toggle,
+  new-CLI-with-icon).
+
 ### Added — Phase 3: Shell + read-only browse
 - `ShellViewModel` owns the cross-cutting shell state: CLI switcher choices,
   current search text, selected tag (with an "All" sentinel for clean

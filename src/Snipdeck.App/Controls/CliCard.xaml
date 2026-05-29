@@ -15,7 +15,8 @@
           CornerRadius="8"
           Padding="16"
           Width="200"
-          Height="200">
+          Height="200"
+          Tapped="OnTapped">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
