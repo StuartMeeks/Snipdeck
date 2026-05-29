@@ -32,15 +32,15 @@ namespace Snipdeck.App
             var backupService = new BackupService(snipStoreFilePath, backupDirectory, clock);
 
             var services = new ServiceCollection();
-            services.AddSingleton<IPathProvider>(pathProvider);
-            services.AddSingleton<IClock>(clock);
-            services.AddSingleton<IDispatcher, WinUiDispatcher>();
-            services.AddSingleton<ISettingsStore>(settingsStore);
-            services.AddSingleton<ISnipStore>(snipStore);
-            services.AddSingleton<IBackupService>(backupService);
-            services.AddSingleton(config);
-
-            services.AddSingleton<MainWindow>();
+            _ = services
+                .AddSingleton<IPathProvider>(pathProvider)
+                .AddSingleton<IClock>(clock)
+                .AddSingleton<IDispatcher, WinUiDispatcher>()
+                .AddSingleton<ISettingsStore>(settingsStore)
+                .AddSingleton<ISnipStore>(snipStore)
+                .AddSingleton<IBackupService>(backupService)
+                .AddSingleton(config)
+                .AddSingleton<MainWindow>();
 
             return services.BuildServiceProvider();
         }

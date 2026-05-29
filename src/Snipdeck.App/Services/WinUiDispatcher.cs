@@ -13,24 +13,27 @@ namespace Snipdeck.App.Services
     {
         private DispatcherQueue? _dispatcherQueue;
 
-        private DispatcherQueue Queue =>
-            _dispatcherQueue ??= DispatcherQueue.GetForCurrentThread()
-                ?? throw new InvalidOperationException(
-                    "WinUiDispatcher was first resolved off the UI thread; no DispatcherQueue is available.");
-
-        public bool HasUiThreadAccess => Queue.HasThreadAccess;
+        public bool HasUiThreadAccess => GetQueue().HasThreadAccess;
 
         public void Enqueue(Action action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
-            if (Queue.HasThreadAccess)
+            var queue = GetQueue();
+            if (queue.HasThreadAccess)
             {
                 action();
                 return;
             }
 
-            _ = Queue.TryEnqueue(() => action());
+            _ = queue.TryEnqueue(() => action());
+        }
+
+        private DispatcherQueue GetQueue()
+        {
+            return _dispatcherQueue ??= DispatcherQueue.GetForCurrentThread()
+                ?? throw new InvalidOperationException(
+                    "WinUiDispatcher was first resolved off the UI thread; no DispatcherQueue is available.");
         }
     }
 }

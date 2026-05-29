@@ -26,6 +26,7 @@ namespace Snipdeck.App
                 {
                     ThemePreference.Light => ElementTheme.Light,
                     ThemePreference.Dark => ElementTheme.Dark,
+                    ThemePreference.System => ElementTheme.Default,
                     _ => ElementTheme.Default,
                 };
             }

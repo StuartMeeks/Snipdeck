@@ -20,6 +20,9 @@
 		     is gated on the C# define instead, so set both. -->
 		<EnableDefaultXamlGeneratedMain>false</EnableDefaultXamlGeneratedMain>
 		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+		<!-- CsWinRT generators emit unsafe code when generic interface types
+		     (IServiceProvider, ServiceProvider) cross the WinRT ABI. -->
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
