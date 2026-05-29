@@ -7,7 +7,7 @@ namespace Snipdeck.App.Converters
     /// Visible when the bound integer is greater than zero. Used to hide
     /// sections such as "Most used" when the underlying collection is empty.
     /// </summary>
-    public sealed class CountToVisibilityConverter : IValueConverter
+    public sealed partial class CountToVisibilityConverter : IValueConverter
     {
         public bool Invert { get; set; }
 

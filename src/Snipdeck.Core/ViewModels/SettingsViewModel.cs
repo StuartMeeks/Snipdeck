@@ -21,12 +21,17 @@ namespace Snipdeck.Core.ViewModels
                 ?? "Copyright © Stuart Meeks";
         }
 
-        public static string AppName => "Snipdeck";
+        // Instance properties (not static) so x:Bind in XAML resolves them via
+        // the bound DataContext. CA1822 doesn't matter here — these are cheap
+        // and only ever live for the duration of the open Settings view.
+#pragma warning disable CA1822
+        public string AppName => "Snipdeck";
+
+        public string TaglineDisplay => "Parameterised CLI snippet manager.";
+#pragma warning restore CA1822
 
         public string VersionDisplay { get; }
 
         public string CopyrightDisplay { get; }
-
-        public static string TaglineDisplay => "Parameterised CLI snippet manager.";
     }
 }

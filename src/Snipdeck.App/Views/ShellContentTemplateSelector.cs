@@ -9,7 +9,7 @@ namespace Snipdeck.App.Views
     /// Picks the right <see cref="DataTemplate"/> for the shell's content area
     /// based on the view-model type held by <c>ShellViewModel.CurrentContent</c>.
     /// </summary>
-    public sealed class ShellContentTemplateSelector : DataTemplateSelector
+    public sealed partial class ShellContentTemplateSelector : DataTemplateSelector
     {
         public DataTemplate? HomeTemplate { get; set; }
 
