@@ -86,6 +86,11 @@ Conventions:
 
 - One JSON document (the "store") via `System.Text.Json`.
 - The storage directory and the backups directory are both user-configurable.
+- **First run** — if the store does not yet exist when the app launches, the app
+  seeds it with a single demo CLI called "Examples", containing a handful of
+  representative Snips (mix of Text and Choice parameters, tags, a favourite).
+  The user can delete it once they're oriented. Do **not** seed the store again
+  on subsequent launches.
 - **App config is stored separately from the store**, in `LocalAppData`. The store's
   own location cannot live inside the store (chicken-and-egg). The storage path,
   backup settings and theme choice all live in app config.
@@ -93,8 +98,9 @@ Conventions:
   overwrite the store in place — a crash mid-write would corrupt it.
 - When the storage path changes at runtime, decide deliberately: move the existing
   store, adopt an existing store already at the new path, or warn on conflict.
-- Backup policy (provisional default — confirm with Stu): timestamped copy of the
-  store on launch and immediately before every Velopack update; retain the last N.
+- Backup policy: timestamped snapshot of the store on **every successful write**
+  and immediately before every Velopack update; retain the last 20, pruning the
+  oldest. Backups live in the user-configurable backup directory.
 
 ## Shell & UX
 
@@ -137,7 +143,11 @@ Conventions:
 - **Single instance only** (and therefore a single tray icon). Use the Windows App
   SDK `AppInstance` keyed registration + activation redirection — **not** a named
   mutex.
-- The global hotkey summons / foregrounds the single running instance.
+- The global hotkey summons / foregrounds the single running instance. Default
+  binding is **Ctrl+Alt+S**, user-rebindable from Settings.
+- **Close-button behaviour** is configurable, defaulting to **hide-to-tray** (the
+  process keeps running so the hotkey stays live; explicit Exit lives on the tray
+  menu). The opt-out flips it to a hard exit on close.
 - **Boot order is strict**: Velopack hook (`VelopackApp.Build().Run()`) → single-instance
   check / redirect → DI container + UI. Velopack must run first so it can intercept
   install/update/uninstall invocations and handle the post-update relaunch.
@@ -149,6 +159,15 @@ Conventions:
 - British English spelling in all user-facing copy and documentation.
 - Always use curly braces in C#, even for single-line `if` / `else` / loops.
 - Enterprise-professional tone in product copy. No emojis in UI copy.
+- Licensed under **Apache 2.0** (`LICENSE` at the repo root). New source files do
+  not need per-file licence headers; the root licence covers the project.
+- When adding or updating a NuGet reference, pull the **latest stable** version
+  unless there is a documented reason not to. Don't quietly pin to an older
+  patch.
+- Every user-visible change — new feature, behaviour change, bug fix, removed
+  capability — gets a line under `## [Unreleased]` in `CHANGELOG.md` (Keep a
+  Changelog format). `README.md` is the public-facing intro and stays in sync
+  with what the app actually does today, not aspirational.
 
 ## Out of scope for v1 — do not build speculatively
 

@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Stuart Meeks</Authors>
+    <Company>Next Iteration</Company>
+    <Copyright>Copyright © $([System.DateTime]::UtcNow.Year) Stuart Meeks</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
