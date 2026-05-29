@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 2: App lifecycle skeleton
+- Explicit `Program.cs` entry point that runs the Velopack hook → initialises
+  WinRT COM wrappers → checks single-instance via Windows App SDK
+  `AppInstance.FindOrRegisterForKey("snipdeck")` and redirects activation to
+  the primary instance → starts WinUI with a `DispatcherQueueSynchronizationContext`.
+- `Bootstrap.cs` builds the DI container (`Microsoft.Extensions.DependencyInjection`):
+  loads `AppConfig` from the settings store synchronously, resolves the
+  snip-store and backup directories (config value or default), and registers
+  every Core service plus `MainWindow`.
+- App-side platform services: `WindowsPathProvider` (paths rooted at
+  `%LOCALAPPDATA%\Snipdeck`), `WinUiDispatcher` (lazy-captures the UI thread's
+  `DispatcherQueue` on first use).
+- Core abstractions: `IPathProvider`, `IDispatcher`.
+- `MainWindow` shell: Mica backdrop, `ExtendsContentIntoTitleBar` with a custom
+  draggable title bar showing the app name, theme application from `AppConfig`
+  (Light / Dark / System).
+- First-run seed: if the snip store is empty when the app launches, the
+  Examples CLI is written via `ISnipStore` before the window appears.
+- Activation redirect from a secondary instance brings the primary instance's
+  window back to the foreground.
+- `Microsoft.Extensions.DependencyInjection` (10.0.8) added to centralised
+  package versions.
+
 ### Added
 - Repository scaffold: `Snipdeck.Core` (net10.0, UI-free), `Snipdeck.App` (WinUI 3,
   net10.0-windows), `Snipdeck.Core.Tests` (xUnit).
