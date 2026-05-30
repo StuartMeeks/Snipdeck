@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- First-run crash on startup (`RPC_E_WRONG_THREAD` / `0x8001010E`):
+  `ShellViewModel.LoadAsync` resumed on a thread-pool thread after loading
+  the store and then mutated `CliChoices`, an `ObservableCollection` already
+  bound to the CLI switcher. WinRT rejects cross-thread collection-changed
+  marshalling. The await now stays on the UI thread.
+
 ### Added — Phase 6: Settings page + Velopack updater
 - **Settings page becomes editable.** Theme switches live (System/Light/Dark
   apply immediately via `IThemeApplier` → `MainWindow`'s content tree). Close
