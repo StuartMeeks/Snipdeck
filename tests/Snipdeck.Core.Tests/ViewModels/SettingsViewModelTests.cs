@@ -1,4 +1,5 @@
 using Snipdeck.Core.Models;
+using Snipdeck.Core.Services;
 using Snipdeck.Core.Tests.Support;
 using Snipdeck.Core.ViewModels;
 
@@ -11,14 +12,44 @@ namespace Snipdeck.Core.Tests.ViewModels
             out FakeSettingsStore store,
             AppConfig? config = null)
         {
-            hotkey = new FakeHotkeyService();
             store = new FakeSettingsStore();
+            hotkey = new FakeHotkeyService();
             return new SettingsViewModel(
                 store,
                 new FakeThemeApplier(),
                 new FakeUpdateService(),
                 hotkey,
+                new FakeFolderPickerService(),
+                new StorageRelocationService(),
+                new FakeAppRestartService(),
+                new FakeShellInteractions(),
                 new FakePathProvider(),
+                config ?? new AppConfig());
+        }
+
+        private static SettingsViewModel BuildForStorage(
+            string currentDirectory,
+            out FakeFolderPickerService folderPicker,
+            out FakeShellInteractions interactions,
+            out FakeAppRestartService restart,
+            out FakeSettingsStore store,
+            AppConfig? config = null)
+        {
+            folderPicker = new FakeFolderPickerService();
+            interactions = new FakeShellInteractions();
+            restart = new FakeAppRestartService();
+            store = new FakeSettingsStore();
+            var pathProvider = new FakePathProvider { DefaultStorageDirectory = currentDirectory };
+            return new SettingsViewModel(
+                store,
+                new FakeThemeApplier(),
+                new FakeUpdateService(),
+                new FakeHotkeyService(),
+                folderPicker,
+                new StorageRelocationService(),
+                restart,
+                interactions,
+                pathProvider,
                 config ?? new AppConfig());
         }
 
@@ -85,6 +116,112 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.NotNull(hotkey.LastRegistered);
             Assert.Equal(HotkeyBinding.Default.Modifiers, hotkey.LastRegistered!.Modifiers);
             Assert.Equal("S", hotkey.LastRegistered.Key);
+        }
+
+        [Fact]
+        public async Task ChangeStoragePath_moves_the_store_to_an_empty_target_then_restarts()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                _ = Directory.CreateDirectory(Path.Combine(current, "icons"));
+                await File.WriteAllTextAsync(Path.Combine(current, "icons", "a.png"), "x");
+                Directory.Delete(target); // target must not exist yet for a clean "move"
+
+                var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
+                picker.NextFolder = target;
+                ix.NextConfirmResult = true;
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                Assert.True(File.Exists(Path.Combine(target, "store.json")));
+                Assert.True(File.Exists(Path.Combine(target, "icons", "a.png")));
+                Assert.False(File.Exists(Path.Combine(current, "store.json")));
+                Assert.Equal(target, store.Current.StoragePath);
+                Assert.Equal(target, vm.StorageDirectory);
+                Assert.Equal(1, restart.RestartCount);
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+                if (Directory.Exists(target)) { Directory.Delete(target, recursive: true); }
+            }
+        }
+
+        [Fact]
+        public async Task ChangeStoragePath_adopts_an_existing_store_without_moving_the_current_one()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}"); // target already has a store
+
+                var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
+                picker.NextFolder = target;
+                ix.NextConfirmResult = true;
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                // Adopt: current store is left in place, target's store untouched.
+                Assert.True(File.Exists(Path.Combine(current, "store.json")));
+                Assert.Equal(target, store.Current.StoragePath);
+                Assert.Equal(1, restart.RestartCount);
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+                Directory.Delete(target, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task ChangeStoragePath_does_nothing_when_the_user_cancels()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+
+                var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
+                picker.NextFolder = target;
+                ix.NextConfirmResult = false; // cancelled
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                Assert.Null(store.Current.StoragePath);
+                Assert.Equal(0, restart.RestartCount);
+                Assert.True(File.Exists(Path.Combine(current, "store.json")));
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+                Directory.Delete(target, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task ChangeStoragePath_no_ops_when_the_picker_is_cancelled()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            try
+            {
+                var vm = BuildForStorage(current, out var picker, out _, out var restart, out var store);
+                picker.NextFolder = null; // user cancelled the folder picker
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                Assert.Equal(0, restart.RestartCount);
+                Assert.Equal(0, store.SaveCount);
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+            }
         }
     }
 }

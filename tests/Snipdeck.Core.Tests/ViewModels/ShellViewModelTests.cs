@@ -1,5 +1,6 @@
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
+using Snipdeck.Core.Services;
 using Snipdeck.Core.Tests.Support;
 using Snipdeck.Core.ViewModels;
 
@@ -30,6 +31,10 @@ namespace Snipdeck.Core.Tests.ViewModels
                 new FakeThemeApplier(),
                 new FakeUpdateService(),
                 new FakeHotkeyService(),
+                new FakeFolderPickerService(),
+                new StorageRelocationService(),
+                new FakeAppRestartService(),
+                new FakeShellInteractions(),
                 new FakePathProvider(),
                 new AppConfig());
         }

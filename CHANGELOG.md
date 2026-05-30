@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
 
 ### Added
+- **Change the storage location.** A "Change…" button on Settings → Storage
+  location lets you pick a new folder for your snips. If the folder already
+  contains a Snipdeck store it's adopted (your current snips are left where
+  they are); otherwise your store and icons are moved there. The choice is
+  confirmed first, and Snipdeck restarts to apply it — the storage path is
+  read at startup, so restarting keeps everything consistent and avoids
+  writing to the old location after the switch.
 - **Rebindable global hotkey.** The global hotkey is now editable from
   Settings: click the capture box and press a shortcut (at least one of
   Ctrl/Alt/Shift plus a key). The new binding registers and persists
