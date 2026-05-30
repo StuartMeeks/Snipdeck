@@ -282,18 +282,26 @@ namespace Snipdeck.Core.ViewModels
                     return;
             }
 
+            var previousPath = _config.StoragePath;
             _config.StoragePath = target;
             await PersistAsync().ConfigureAwait(true);
             StorageDirectory = target;
 
-            // On success the process terminates here; if it returns, the restart
-            // failed, so ask the user to restart manually. The old store is still
-            // intact, so the app stays consistent until they do.
+            // On success the process terminates inside Restart() and nothing below
+            // runs. If it returns false the relaunch didn't happen, so the running
+            // app is still bound to the old location — roll the persisted switch
+            // back so this session and future launches stay on the old store
+            // (otherwise edits made before a manual restart would land in the old
+            // store and vanish once the new one loads). The copied target files are
+            // left as a harmless backup.
             if (!_restart.Restart())
             {
+                _config.StoragePath = previousPath;
+                await PersistAsync().ConfigureAwait(true);
+                StorageDirectory = previousPath ?? _pathProvider.DefaultStorageDirectory;
                 await _interactions.NotifyAsync(
-                    "Restart needed",
-                    "Snipdeck couldn't restart automatically. Please restart it to start using the new storage location.").ConfigureAwait(true);
+                    "Couldn't change storage location",
+                    "Snipdeck couldn't restart, so the storage location is unchanged. Please try again.").ConfigureAwait(true);
             }
         }
 

@@ -221,8 +221,10 @@ namespace Snipdeck.Core.Tests.ViewModels
 
                 await vm.ChangeStoragePathCommand.ExecuteAsync(null);
 
-                // Path still persisted, but the user is told to restart manually.
-                Assert.Equal(target, store.Current.StoragePath);
+                // Restart failed, so the switch is rolled back: config stays on the
+                // old location (here: unset/default) and the user is notified.
+                Assert.Null(store.Current.StoragePath);
+                Assert.Equal(current, vm.StorageDirectory);
                 Assert.Equal(1, restart.RestartCount);
                 Assert.Equal(1, ix.NotifyCount);
             }
