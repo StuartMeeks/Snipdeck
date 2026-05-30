@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Markdown rendering for snip descriptions.** A snip's description is now
+  rendered as Markdown (headings, bold/italic, inline and block code, links,
+  ordered/unordered lists) in the copy flyout, instead of being hidden. The
+  Markdown is parsed in Core (`MarkdownParser`, backed by Markdig) into a
+  UI-free model that the WinUI head maps onto native text; the editor labels
+  the field as Markdown. A snip with a description but no parameters now opens
+  the flyout too, so its description is always visible before copying.
 - **Git-derived version numbers (Nerdbank.GitVersioning).** Every build now
   stamps a real version (`0.1.0-alpha.<git-height>+<commit>`) into all
   assemblies from a single `version.json`, so the About page shows a meaningful

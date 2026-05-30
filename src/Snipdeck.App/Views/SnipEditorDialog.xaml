@@ -24,7 +24,8 @@
                      AcceptsReturn="True"
                      TextWrapping="Wrap" />
 
-            <TextBox Header="Description"
+            <TextBox Header="Description (Markdown)"
+                     PlaceholderText="Supports Markdown — **bold**, `code`, lists, links"
                      Text="{x:Bind ViewModel.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True"
                      TextWrapping="Wrap"

@@ -29,6 +29,10 @@ namespace Snipdeck.Core.ViewModels
 
         public Snip Snip { get; }
 
+        public string? Description => Snip.Description;
+
+        public bool HasDescription => !string.IsNullOrWhiteSpace(Snip.Description);
+
         public ObservableCollection<ParameterInputViewModel> Inputs { get; }
 
         [ObservableProperty]
