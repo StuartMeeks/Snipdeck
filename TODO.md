@@ -442,19 +442,6 @@ load-bearing for the v1 demo, but they're the obvious next-pulls.
   the user changes the storage path we need three flows: move the existing
   store to the new path; adopt a store already at the new path; warn when
   both exist. UI: a "Change…" button next to the read-only path display.
-- **Backup retention configurable.** Plumbing: `BackupService` takes
-  retention at construction time today; either re-create it on the relevant
-  config change or have it read from `AppConfig` lazily.
-- **CLI delete.** Settle cascade semantics — must-be-empty vs trash-all-child-snips —
-  before wiring the UI.
-- **Nerdbank.GitVersioning.** Right now `InformationalVersion` falls back to
-  the assembly's compile-time version. NBGV would give us a real git-tag-derived
-  string at build time (`v1.2.3+gabcdef0`).
-- **Markdown rendering for Snip descriptions.** Stored as plain text right
-  now; render via a markdown control on the parameter-fill / detail view.
-- **Trash UI.** Soft-deleted Snips currently just vanish from the views.
-  Need a "Trash" entry in the pane footer that lists trashed Snips with a
-  restore action and a hard-delete option.
 - **Re-enable `PublishTrimmed` once JSON serialisation is trim-safe.**
   Disabled in `Snipdeck.App.csproj` to unblock the first release. To
   turn it back on:
