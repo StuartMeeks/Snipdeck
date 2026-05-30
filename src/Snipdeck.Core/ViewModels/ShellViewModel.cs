@@ -66,7 +66,10 @@ namespace Snipdeck.Core.ViewModels
 
         public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
-            _document = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+            // Stay on the UI thread after the await — RebuildCliChoices mutates
+            // an ObservableCollection that XAML is already bound to, and WinRT
+            // collection-change marshalling requires the original thread.
+            _document = await _store.LoadAsync(cancellationToken).ConfigureAwait(true);
             RebuildCliChoices();
             SelectedCliChoice = CliChoices.FirstOrDefault();
         }
