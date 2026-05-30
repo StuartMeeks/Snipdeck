@@ -11,5 +11,7 @@ namespace Snipdeck.Core.Tests.Support
         public string DefaultStorageDirectory { get; init; } = "/data/store";
 
         public string DefaultBackupDirectory { get; init; } = "/data/backups";
+
+        public string LogsDirectory { get; init; } = "/data/logs";
     }
 }

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Unhandled-exception logging.** Exceptions that previously vanished into
+  WinUI's "Continue?" debugger dialog (and would have crashed the process
+  outside the debugger) are now captured to
+  `%LOCALAPPDATA%\Snipdeck\logs\unhandled.log`. The handlers cover XAML
+  `Application.UnhandledException`, unobserved `Task` exceptions, and
+  `AppDomain.UnhandledException` for completeness. `IPathProvider` gains
+  `LogsDirectory`. The log rotates at 5 MB.
+
 ### Fixed
 - First-run crash on startup (`RPC_E_WRONG_THREAD` / `0x8001010E`):
   `ShellViewModel.LoadAsync` resumed on a thread-pool thread after loading
