@@ -398,6 +398,26 @@ done forever); then adopt the draft-PR convention.
 
 ---
 
+## Final UI polish pass
+
+A deliberate sweep of visual / interaction rough edges, done **at the end**
+once the feature surface has settled — batching the nitpicks avoids
+re-polishing the same screens after every feature lands. Known items so far:
+
+- **Snip card Copy button is too wide.** It currently stretches further than
+  it should; size it to its content (or a sensible fixed width) so the card
+  action row reads cleanly.
+- **"Delete CLI" button should be styled as a danger action.** It's a
+  destructive, hard-to-reverse operation — give it the red/danger accent
+  (e.g. a danger `Button` style / `Foreground` from the theme palette)
+  rather than the neutral default, so it visually distinguishes itself from
+  benign actions.
+
+Add to this list as other cosmetic / interaction snags turn up during
+feature work, then knock them out in one pass before a stable cut.
+
+---
+
 ## Carried over from the phase stack
 
 These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
