@@ -18,6 +18,7 @@ namespace Snipdeck.Core.ViewModels
         private readonly ISettingsStore _settingsStore;
         private readonly IThemeApplier _themeApplier;
         private readonly IUpdateService _updateService;
+        private readonly IHotkeyService _hotkeyService;
         private readonly AppConfig _config;
         private bool _suppressPersist;
 
@@ -25,18 +26,21 @@ namespace Snipdeck.Core.ViewModels
             ISettingsStore settingsStore,
             IThemeApplier themeApplier,
             IUpdateService updateService,
+            IHotkeyService hotkeyService,
             IPathProvider pathProvider,
             AppConfig config)
         {
             ArgumentNullException.ThrowIfNull(settingsStore);
             ArgumentNullException.ThrowIfNull(themeApplier);
             ArgumentNullException.ThrowIfNull(updateService);
+            ArgumentNullException.ThrowIfNull(hotkeyService);
             ArgumentNullException.ThrowIfNull(pathProvider);
             ArgumentNullException.ThrowIfNull(config);
 
             _settingsStore = settingsStore;
             _themeApplier = themeApplier;
             _updateService = updateService;
+            _hotkeyService = hotkeyService;
             _config = config;
 
             _suppressPersist = true;
@@ -44,7 +48,7 @@ namespace Snipdeck.Core.ViewModels
             ThemeIndex = ThemeIndexFor(config.Theme);
             CloseBehaviour = config.CloseBehaviour;
             CloseBehaviourIndex = CloseBehaviourIndexFor(config.CloseBehaviour);
-            HotkeyDisplay = FormatHotkey(config.Hotkey);
+            HotkeyDisplay = config.Hotkey.ToDisplayString();
             StorageDirectory = config.StoragePath ?? pathProvider.DefaultStorageDirectory;
             BackupDirectory = config.BackupDirectory ?? pathProvider.DefaultBackupDirectory;
             BackupRetention = config.BackupRetention;
@@ -72,7 +76,11 @@ namespace Snipdeck.Core.ViewModels
 
         public string BackupDirectory { get; }
 
-        public string HotkeyDisplay { get; }
+        [ObservableProperty]
+        public partial string HotkeyDisplay { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string HotkeyError { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial ThemePreference Theme { get; set; }
@@ -155,6 +163,39 @@ namespace Snipdeck.Core.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void RebindHotkey(HotkeyBinding? binding)
+        {
+            if (binding is null || !binding.IsValid)
+            {
+                HotkeyError = "Use at least one modifier (Ctrl, Alt or Shift) plus a key.";
+                return;
+            }
+
+            var previous = _config.Hotkey;
+            if (_hotkeyService.TryRegister(binding))
+            {
+                _config.Hotkey = binding;
+                HotkeyDisplay = binding.ToDisplayString();
+                HotkeyError = string.Empty;
+                _ = PersistAsync();
+                return;
+            }
+
+            // TryRegister unregisters the old binding before attempting the new
+            // one, so on failure (chord already taken by another app) the old
+            // hotkey is gone — restore it so the user isn't left with nothing.
+            _ = _hotkeyService.TryRegister(previous);
+            HotkeyDisplay = previous.ToDisplayString();
+            HotkeyError = $"Couldn't set {binding.ToDisplayString()} — it may already be in use by another app.";
+        }
+
+        [RelayCommand]
+        private void ResetHotkey()
+        {
+            RebindHotkey(HotkeyBinding.Default);
+        }
+
         private async Task PersistAsync()
         {
             if (_suppressPersist)
@@ -164,6 +205,7 @@ namespace Snipdeck.Core.ViewModels
             _config.Theme = Theme;
             _config.CloseBehaviour = CloseBehaviour;
             _config.BackupRetention = BackupRetention;
+            // _config.Hotkey is set directly by RebindHotkey before this runs.
             await _settingsStore.SaveAsync(_config).ConfigureAwait(true);
         }
 
@@ -181,32 +223,5 @@ namespace Snipdeck.Core.ViewModels
             CloseBehaviour.Exit => 1,
             _ => 0,
         };
-
-        private static string FormatHotkey(HotkeyBinding binding)
-        {
-            if (binding.IsEmpty)
-            {
-                return "(unbound)";
-            }
-            var parts = new List<string>();
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Control))
-            {
-                parts.Add("Ctrl");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Alt))
-            {
-                parts.Add("Alt");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Shift))
-            {
-                parts.Add("Shift");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Windows))
-            {
-                parts.Add("Win");
-            }
-            parts.Add(binding.Key);
-            return string.Join('+', parts);
-        }
     }
 }
