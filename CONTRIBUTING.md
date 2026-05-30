@@ -107,15 +107,33 @@ project boundary.
 
 ## Releases
 
-Releases are driven by git tags:
+The version number is owned by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)
+(NBGV), not by the tag you type. `version.json` at the repo root holds the base
+(`0.1.0-alpha.{height}`); NBGV derives the full version from it plus the git
+commit height, stamps every assembly, and the workflow reads it back at release
+time. So you don't hand-pick the `-alpha.N` counter — it tracks git height.
 
-- `v1.2.3` — stable release.
-- `v1.2.3-rc.1`, `v1.2.3-beta.4`, etc. — pre-release. The hyphen in the tag
-  marks the GitHub release as a pre-release and feeds Velopack's channel name.
+Releases are still driven by git tags, but **create the tag with NBGV so its
+name matches the computed version** (install once with
+`dotnet tool install --global nbgv`):
 
-Pushing a matching tag triggers `.github/workflows/release.yml`, which builds
-`Snipdeck.App`, packs it with Velopack, and attaches the artefacts to a new
-GitHub Release. Don't push tags from feature branches — release from `master`.
+```
+git checkout master && git pull
+nbgv tag            # mints e.g. v0.1.0-alpha.7 for the current commit
+git push origin v0.1.0-alpha.7
+```
+
+Pushing a matching tag triggers `.github/workflows/release.yml`, which derives
+the version from `nbgv get-version` (asserting it's a public release per
+`publicReleaseRefSpec`), builds `Snipdeck.App`, packs it with Velopack, and
+attaches the artefacts to a new GitHub Release. The hyphen in the version
+(`-alpha`, `-beta`, …) marks the GitHub release as a pre-release and feeds
+Velopack's channel name. Don't tag from feature branches — release from
+`master`.
+
+To cut a **stable** release (or move to a new line), edit `version.json` first
+— e.g. `0.1.0-alpha.{height}` → `0.1.0` for the first stable, or bump to
+`0.2.0-alpha.{height}` — commit that on `master`, then `nbgv tag` and push.
 
 ## Asking for direction
 
