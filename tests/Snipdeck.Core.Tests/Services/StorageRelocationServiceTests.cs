@@ -72,6 +72,24 @@ namespace Snipdeck.Core.Tests.Services
         }
 
         [Fact]
+        public void Inspect_returns_Invalid_when_the_target_is_nested_inside_the_current()
+        {
+            var current = NewTempDir();
+            try
+            {
+                var nested = Path.Combine(current, "icons");
+                _ = Directory.CreateDirectory(nested);
+                Assert.Equal(StorageChangeOutcome.Invalid, new StorageRelocationService().Inspect(current, nested));
+                // ...and the reverse nesting (current inside target) is also rejected.
+                Assert.Equal(StorageChangeOutcome.Invalid, new StorageRelocationService().Inspect(nested, current));
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+            }
+        }
+
+        [Fact]
         public void MoveStore_copies_store_and_icons_then_removes_the_originals()
         {
             var current = NewTempDir();

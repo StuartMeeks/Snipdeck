@@ -205,6 +205,32 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task ChangeStoragePath_rejects_a_folder_nested_in_the_current_store()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                var nested = Path.Combine(current, "icons");
+                _ = Directory.CreateDirectory(nested);
+
+                var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
+                picker.NextFolder = nested;
+                ix.NextConfirmResult = true; // even if confirmed, the guard fires first
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                Assert.Equal(1, ix.NotifyCount);
+                Assert.Equal(0, restart.RestartCount);
+                Assert.Null(store.Current.StoragePath);
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+            }
+        }
+
+        [Fact]
         public async Task ChangeStoragePath_no_ops_when_the_picker_is_cancelled()
         {
             var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;

@@ -25,6 +25,7 @@ namespace Snipdeck.Core.Services
             ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
 
             return PathsEqual(currentDirectory, targetDirectory) ? StorageChangeOutcome.NoChange
+                : IsNested(targetDirectory, currentDirectory) || IsNested(currentDirectory, targetDirectory) ? StorageChangeOutcome.Invalid
                 : File.Exists(StorePath(targetDirectory)) ? StorageChangeOutcome.AdoptTarget
                 : File.Exists(StorePath(currentDirectory)) ? StorageChangeOutcome.MoveToTarget
                 : StorageChangeOutcome.SetEmptyTarget;
@@ -64,10 +65,19 @@ namespace Snipdeck.Core.Services
         private string StorePath(string directory) => Path.Combine(directory, StoreFileName);
 
         private static bool PathsEqual(string a, string b) =>
-            string.Equals(
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(a)),
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(b)),
-                StringComparison.OrdinalIgnoreCase);
+            string.Equals(Normalize(a), Normalize(b), StringComparison.OrdinalIgnoreCase);
+
+        // True when "descendant" is a proper subdirectory of "ancestor".
+        private static bool IsNested(string descendant, string ancestor)
+        {
+            var d = Normalize(descendant);
+            var a = Normalize(ancestor);
+            return d.Length > a.Length
+                && d.StartsWith(a + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string Normalize(string path) =>
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
 
         private static void CopyDirectory(string source, string destination)
         {

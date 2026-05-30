@@ -8,6 +8,13 @@ namespace Snipdeck.Core.Abstractions
         /// <summary>Target is the current directory — nothing to do.</summary>
         NoChange,
 
+        /// <summary>
+        /// Target is nested inside the current storage directory (or vice
+        /// versa) — relocating would copy a directory into itself / delete the
+        /// copy. Reject it.
+        /// </summary>
+        Invalid,
+
         /// <summary>Neither current nor target holds a store — just adopt the empty target.</summary>
         SetEmptyTarget,
 

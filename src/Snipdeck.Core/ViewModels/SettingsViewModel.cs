@@ -235,6 +235,12 @@ namespace Snipdeck.Core.ViewModels
                 case StorageChangeOutcome.NoChange:
                     return;
 
+                case StorageChangeOutcome.Invalid:
+                    await _interactions.NotifyAsync(
+                        "Can't use that folder",
+                        "Choose a folder that isn't inside (or a parent of) your current storage folder.").ConfigureAwait(true);
+                    return;
+
                 case StorageChangeOutcome.AdoptTarget:
                     if (!await _interactions.ConfirmAsync(
                         "Use this folder?",
