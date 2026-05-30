@@ -90,6 +90,37 @@ the Snip so the user accumulates a searchable run history.
   - The executable path is not currently used by Copy — but it's worth
     storing now because the user might reasonably expect "show me where
     `pl-app` lives" as a small affordance even before Run lands.
+- **Per-CLI environment variables.** `Cli` gains an `EnvironmentVariables`
+  collection of `(Name, Value, IsSecret)` entries; a Snip can add or
+  override entries on top of its CLI's set. The child process inherits the
+  OS environment and gets these merged on top — they're additions /
+  overrides, not a replacement.
+  - Non-secret values are stored verbatim in the JSON store and shown in
+    the editor in cleartext.
+  - Secret values flip the parked "secret / masked parameters" item from
+    `CLAUDE.md` from "park" to "needed". Store them via Windows DPAPI
+    (`ProtectedData.Protect`, current-user scope) so the ciphertext is
+    bound to the local Windows account. The editor masks the value behind
+    a "Show" toggle and never logs it.
+  - Trade-off: DPAPI-protected values won't survive a cross-machine sync
+    of the data folder — the user would need to re-enter secrets on each
+    machine. That's the right shape; the alternative (plaintext secrets
+    in a synced JSON document) is the wrong one.
+- **Labelled executions.** Each run can carry a free-form list of `Labels`
+  — short strings like `INC-4567`, `staging-rollback`, `pr-1234-debug`.
+  Labels are surfaced as chips on the history list and are fully searchable
+  (`label:INC-4567` filter, or just free-text). The Run dialog has a small
+  "labels" input next to the resolved-command preview; the history view
+  has an inline editor so the user can label a past run after the fact.
+  - **Sticky labels.** A small affordance in the shell (probably a chip in
+    the title bar) lets the user *pin* one or more labels for the current
+    investigation. While pinned, every Run pre-fills with those labels.
+    Clearing the pin reverts to the empty default. This is the
+    productivity multiplier — during an incident, the user pins
+    `INC-4567` once and every subsequent Run is automatically tagged.
+  - Labels are *not* tags on the Snip itself — they belong to the
+    execution record. A single Snip will accumulate runs labelled with
+    many different incident / ticket / deployment identifiers over time.
 - **A Run action alongside Copy.** Card overflow gains **Run**. Clicking it
   walks the same parameter-fill flow as Copy, but on submit we spawn the
   configured shell with the resolved command instead of copying to the
@@ -106,8 +137,8 @@ the Snip so the user accumulates a searchable run history.
 - **Execution history per Snip.** Each run captures: `SnipId`,
   `ResolvedCommand`, `StartedAt`, `FinishedAt`, `ExitCode`,
   `Cancelled`, `Stdout`, `Stderr` (or an interleaved stream with timestamps),
-  and the parameter values that were used. New entries append to a per-Snip
-  history log.
+  the parameter values that were used, and the `Labels` the run was
+  tagged with. New entries append to a per-Snip history log.
 - **Searchable history.** A new "History" view (probably a pane footer entry,
   next to Settings) lists executions across all Snips, newest-first, with
   full-text search over the captured output and command line. Clicking an
@@ -141,9 +172,6 @@ matching the existing backup-retention shape.
 
 **Open questions** to settle when scheduled:
 
-- **Environment variables.** Some CLIs need env (auth tokens, region pins).
-  Probably a per-CLI key/value list, masked in the UI (touches the parked
-  "secret parameters" decision).
 - **Safety / confirmation.** First-run confirmation per Snip? An allow-list?
   A "this Snip has been edited since you last ran it" warning? Worth getting
   right — Snipdeck running an unreviewed `rm -rf` is a category of incident
