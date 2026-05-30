@@ -86,6 +86,25 @@ namespace Snipdeck.Core.ViewModels
             CurrentContent = BuildTrashViewModel();
         }
 
+        public void OpenGlobalParameters()
+        {
+            CurrentContent = new GlobalParametersViewModel(_document.GlobalParameters);
+        }
+
+        [RelayCommand]
+        private async Task SaveGlobalParametersAsync()
+        {
+            if (CurrentContent is not GlobalParametersViewModel globals)
+            {
+                return;
+            }
+            // Global parameters only affect fill-time resolution (read from the
+            // document on copy), so no shell rebuild is needed — just persist.
+            _document.GlobalParameters = globals.BuildParameters();
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+            globals.StatusMessage = "Saved.";
+        }
+
         public void GoHome()
         {
             SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsHome);

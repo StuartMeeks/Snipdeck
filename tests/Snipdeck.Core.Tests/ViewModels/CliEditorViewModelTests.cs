@@ -19,9 +19,9 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
-        public void BuildUpdatedCli_preserves_shared_parameters()
+        public void Loads_and_rebuilds_shared_parameters_through_editor_rows()
         {
-            // A rename/icon edit must not drop CLI-scoped parameter definitions.
+            // Existing CLI params load into editor rows and round-trip on save.
             var cli = new Cli
             {
                 Name = "pl-app",
@@ -29,12 +29,27 @@ namespace Snipdeck.Core.Tests.ViewModels
             };
             var vm = new CliEditorViewModel(cli) { Name = "renamed" };
 
-            var updated = vm.BuildUpdatedCli();
+            Assert.Equal("env", Assert.Single(vm.Parameters).Name);
 
+            var updated = vm.BuildUpdatedCli();
             var p = Assert.Single(updated.Parameters);
             Assert.Equal("env", p.Name);
             Assert.Equal(ParameterType.Choice, p.Type);
             Assert.Equal(["dev", "prod"], p.Options);
+        }
+
+        [Fact]
+        public void Add_and_remove_parameter_rows_reflect_in_the_built_cli()
+        {
+            var vm = new CliEditorViewModel(new Cli { Name = "pl-app" });
+            Assert.Empty(vm.Parameters);
+
+            vm.AddParameter();
+            vm.Parameters[0].Name = "region";
+            Assert.Single(vm.BuildUpdatedCli().Parameters);
+
+            vm.RemoveParameter(vm.Parameters[0]);
+            Assert.Empty(vm.BuildUpdatedCli().Parameters);
         }
     }
 }

@@ -17,6 +17,7 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <converters:BoolToVisibilityConverter x:Key="InvertedBoolToVisibility" Invert="True" />
         <converters:CountToVisibilityConverter x:Key="CountToVisibility" />
+        <converters:CountToVisibilityConverter x:Key="InvertedCountToVisibility" Invert="True" />
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
@@ -316,11 +317,97 @@
             </ScrollViewer>
         </DataTemplate>
 
+        <DataTemplate x:Key="GlobalParametersContentTemplate" x:DataType="vm:GlobalParametersViewModel">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Shared parameters"
+                                       Style="{ThemeResource TitleTextBlockStyle}" />
+                            <TextBlock Text="Definitions available to every snip across all CLIs. A snip inherits one when its {token} matches and neither the snip nor its CLI defines that name."
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Margin="0,0,8,0"
+                                Content="Add parameter"
+                                Command="{x:Bind AddParameterCommand}" />
+                        <Button Grid.Column="2"
+                                Content="Save"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveGlobalParametersCommand}" />
+                    </Grid>
+
+                    <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind StatusMessage, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
+
+                    <TextBlock Text="No global parameters yet. Add one to share it across every CLI."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind Parameters.Count, Mode=OneWay, Converter={StaticResource InvertedCountToVisibility}}" />
+
+                    <ItemsControl ItemsSource="{x:Bind Parameters}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ParameterEditorRowViewModel">
+                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Header="Name"
+                                                     Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Button Grid.Column="1"
+                                                    Margin="8,24,0,0"
+                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.CurrentContent.RemoveParameterCommand}"
+                                                    CommandParameter="{x:Bind}"
+                                                    ToolTipService.ToolTip="Remove parameter">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                            </Button>
+                                        </Grid>
+                                        <ComboBox Header="Type"
+                                                  SelectedIndex="{x:Bind TypeIndex, Mode=TwoWay}"
+                                                  HorizontalAlignment="Stretch">
+                                            <x:String>Text</x:String>
+                                            <x:String>Choice</x:String>
+                                        </ComboBox>
+                                        <TextBox Header="Default"
+                                                 Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Header="Options (comma-separated, Choice only)"
+                                                 Text="{x:Bind OptionsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsEnabled="{x:Bind IsChoice, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+
         <local:ShellContentTemplateSelector x:Key="ShellContentSelector"
                                              HomeTemplate="{StaticResource HomeContentTemplate}"
                                              CliTemplate="{StaticResource CliContentTemplate}"
                                              SettingsTemplate="{StaticResource SettingsContentTemplate}"
-                                             TrashTemplate="{StaticResource TrashContentTemplate}" />
+                                             TrashTemplate="{StaticResource TrashContentTemplate}"
+                                             GlobalParametersTemplate="{StaticResource GlobalParametersContentTemplate}" />
     </UserControl.Resources>
 
     <NavigationView x:Name="ShellNavigation"
@@ -347,6 +434,17 @@
 
         <NavigationView.PaneFooter>
             <StackPanel>
+                <Button x:Name="SharedParametersButton"
+                        Click="OnSharedParametersClicked"
+                        HorizontalAlignment="Stretch"
+                        Margin="12,8,12,0"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE8EC;" FontSize="16" />
+                        <TextBlock Text="Shared parameters" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
                 <Button x:Name="TrashButton"
                         Click="OnTrashClicked"
                         HorizontalAlignment="Stretch"

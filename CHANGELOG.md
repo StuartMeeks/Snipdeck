@@ -8,15 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Shared parameter definitions — resolution groundwork.** A Snip's
-  `{token}` now resolves its parameter definition by name with precedence:
-  the Snip's own parameter overrides a CLI-scoped one, which overrides a
-  global one. A Snip can omit a parameter to inherit the shared definition
-  (e.g. an `env` Choice defined once on a CLI). Store schema is now v2
-  (additive: `Cli.Parameters` + `SnipStoreDocument.GlobalParameters`); an
-  older build refuses a v2 store rather than dropping shared definitions.
-  The UI to manage shared parameters lands next; existing snips are
-  unaffected.
 - **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
   and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
   instead of the reflection-based serializer, removing the IL2026 trim warnings.
@@ -26,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
 
 ### Added
+- **Shared parameter definitions.** Define a parameter once and reuse it
+  across snips, at two scopes: **CLI-scoped** (in the CLI editor — inherited by
+  every snip under that CLI) and **global** (a new "Shared parameters" entry in
+  the left pane — available to every snip across all CLIs). A snip's `{token}`
+  resolves its definition by name with precedence **snip-local → CLI → global**;
+  omit a parameter to inherit the shared one, or define it locally to override.
+  Existing snips are unaffected. (Store schema is now v2; an older build refuses
+  a v2 store rather than dropping shared definitions.)
 - **Change the storage location.** A "Change…" button on Settings → Storage
   location lets you pick a new folder for your snips. If the folder already
   contains a Snipdeck store it's adopted (your current snips are left where

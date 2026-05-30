@@ -335,6 +335,25 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task SaveGlobalParameters_persists_edited_rows_to_the_document()
+        {
+            var (vm, store, _, _, _) = await BuildAsync();
+
+            vm.OpenGlobalParameters();
+            var globals = Assert.IsType<GlobalParametersViewModel>(vm.CurrentContent);
+            globals.AddParameterCommand.Execute(null);
+            globals.Parameters[0].Name = "tenant";
+            globals.Parameters[0].Default = "acme";
+
+            await vm.SaveGlobalParametersCommand.ExecuteAsync(null);
+
+            var saved = Assert.Single(store.Document.GlobalParameters);
+            Assert.Equal("tenant", saved.Name);
+            Assert.Equal("acme", saved.Default);
+            Assert.Equal("Saved.", globals.StatusMessage);
+        }
+
+        [Fact]
         public async Task OpenTrash_shows_only_trashed_snips()
         {
             Cli cli = null!;
