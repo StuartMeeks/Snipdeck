@@ -72,6 +72,24 @@ the Snip so the user accumulates a searchable run history.
   `CustomShellPath` + `CustomShellArgsTemplate` for the escape hatch.
   Default for new CLIs is whatever the platform considers canonical
   (`PowerShell` on Windows). A Snip can override its CLI's shell when needed.
+- **Per-CLI executable path and working directory.** `Cli` gains optional
+  `ExecutablePath` and `WorkingDirectory` fields. The CLI editor dialog
+  gains a **Browse…** for the executable (re-using `IFilePickerService`)
+  and another for the working directory. Both are **optional** — Snipdeck
+  must remain useful as a place to author Snips for a CLI that isn't
+  installed yet on this machine, or one the user will install later. So:
+  - No validation at save time. An empty `ExecutablePath` is the default
+    and is fine.
+  - When the field *is* set, validation happens **only at Run time**: if
+    the path is missing, the Run action shows a friendly "couldn't find
+    `<path>` — has it been installed? edit the CLI to fix the path" rather
+    than throwing. Copy still works unconditionally.
+  - `WorkingDirectory` defaults at runtime to the executable's parent
+    directory when `ExecutablePath` is set, otherwise the user's home
+    directory. A Snip can override the CLI's working directory.
+  - The executable path is not currently used by Copy — but it's worth
+    storing now because the user might reasonably expect "show me where
+    `pl-app` lives" as a small affordance even before Run lands.
 - **A Run action alongside Copy.** Card overflow gains **Run**. Clicking it
   walks the same parameter-fill flow as Copy, but on submit we spawn the
   configured shell with the resolved command instead of copying to the
@@ -123,8 +141,6 @@ matching the existing backup-retention shape.
 
 **Open questions** to settle when scheduled:
 
-- **Working directory.** Per-CLI? Per-Snip override? Inherit from Snipdeck's
-  cwd? Likely per-CLI with per-Snip override, defaulting to the user's home.
 - **Environment variables.** Some CLIs need env (auth tokens, region pins).
   Probably a per-CLI key/value list, masked in the UI (touches the parked
   "secret parameters" decision).
