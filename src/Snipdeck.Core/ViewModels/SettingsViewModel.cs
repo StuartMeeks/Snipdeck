@@ -47,6 +47,7 @@ namespace Snipdeck.Core.ViewModels
             HotkeyDisplay = FormatHotkey(config.Hotkey);
             StorageDirectory = config.StoragePath ?? pathProvider.DefaultStorageDirectory;
             BackupDirectory = config.BackupDirectory ?? pathProvider.DefaultBackupDirectory;
+            BackupRetention = config.BackupRetention;
             _suppressPersist = false;
 
             var assembly = typeof(SettingsViewModel).Assembly;
@@ -80,6 +81,9 @@ namespace Snipdeck.Core.ViewModels
         public partial int ThemeIndex { get; set; }
 
         [ObservableProperty]
+        public partial int BackupRetention { get; set; }
+
+        [ObservableProperty]
         public partial CloseBehaviour CloseBehaviour { get; set; }
 
         [ObservableProperty]
@@ -103,6 +107,17 @@ namespace Snipdeck.Core.ViewModels
                 _ => ThemePreference.System,
             };
             _themeApplier.Apply(Theme);
+            _ = PersistAsync();
+        }
+
+        partial void OnBackupRetentionChanged(int value)
+        {
+            if (value < 1)
+            {
+                // Re-entrant set lands back here with a valid value, which persists.
+                BackupRetention = 1;
+                return;
+            }
             _ = PersistAsync();
         }
 
@@ -148,6 +163,7 @@ namespace Snipdeck.Core.ViewModels
             }
             _config.Theme = Theme;
             _config.CloseBehaviour = CloseBehaviour;
+            _config.BackupRetention = BackupRetention;
             await _settingsStore.SaveAsync(_config).ConfigureAwait(true);
         }
 

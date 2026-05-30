@@ -175,6 +175,16 @@
                                    MaxWidth="320" />
                     </tk:SettingsCard>
 
+                    <tk:SettingsCard Header="Backups to keep"
+                                     Description="Older backups beyond this count are pruned after each save.">
+                        <NumberBox Value="{x:Bind BackupRetention, Mode=TwoWay}"
+                                   Minimum="1"
+                                   Maximum="200"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   MinWidth="120" />
+                    </tk:SettingsCard>
+
                     <tk:SettingsCard Header="Updates"
                                      Description="Check the GitHub releases feed for a newer build.">
                         <StackPanel Orientation="Horizontal" Spacing="8">
