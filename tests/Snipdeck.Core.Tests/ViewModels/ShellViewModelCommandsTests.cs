@@ -306,6 +306,74 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task OpenTrash_shows_only_trashed_snips()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Active", CommandTemplate = "a" });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Single(trash.Snips);
+            Assert.Equal("Binned", trash.Snips[0].Title);
+        }
+
+        [Fact]
+        public async Task RestoreSnip_clears_trash_flag_saves_and_drops_it_from_the_trash_view()
+        {
+            Cli cli = null!;
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+
+            await vm.RestoreSnipCommand.ExecuteAsync(card);
+
+            Assert.False(store.Document.Snips[0].IsTrash);
+            Assert.Equal(1, store.SaveCount);
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Empty(trash.Snips);
+        }
+
+        [Fact]
+        public async Task DeleteForever_only_removes_the_snip_when_confirmed()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+
+            ix.NextConfirmResult = false;
+            await vm.DeleteForeverCommand.ExecuteAsync(card);
+            Assert.Single(store.Document.Snips);
+            Assert.Equal(0, store.SaveCount);
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteForeverCommand.ExecuteAsync(card);
+            Assert.Empty(store.Document.Snips);
+            Assert.Equal(1, store.SaveCount);
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Empty(trash.Snips);
+        }
+
+        [Fact]
         public async Task NewCli_adds_the_cli_and_writes_icon_bytes_when_provided()
         {
             var (vm, store, _, ix, _) = await BuildAsync();

@@ -29,6 +29,11 @@ namespace Snipdeck.App.Views
             ViewModel.OpenSettings(settings);
         }
 
+        private void OnTrashClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.OpenTrash();
+        }
+
         private void OnNavigationSelectionChanged(
             NavigationView sender,
             NavigationViewSelectionChangedEventArgs args)

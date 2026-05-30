@@ -80,6 +80,11 @@ namespace Snipdeck.Core.ViewModels
             CurrentContent = settings;
         }
 
+        public void OpenTrash()
+        {
+            CurrentContent = BuildTrashViewModel();
+        }
+
         public void GoHome()
         {
             SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsHome);
@@ -157,6 +162,37 @@ namespace Snipdeck.Core.ViewModels
             }
             cardVm.Snip.IsTrash = true;
             await SaveAndRefreshAsync().ConfigureAwait(true);
+        }
+
+        [RelayCommand]
+        private async Task RestoreSnipAsync(SnipCardViewModel? cardVm)
+        {
+            if (cardVm is null)
+            {
+                return;
+            }
+            cardVm.Snip.IsTrash = false;
+            await SaveAndRefreshTrashAsync().ConfigureAwait(true);
+        }
+
+        [RelayCommand]
+        private async Task DeleteForeverAsync(SnipCardViewModel? cardVm)
+        {
+            if (cardVm is null)
+            {
+                return;
+            }
+            var confirmed = await _interactions.ConfirmAsync(
+                "Delete permanently",
+                $"Permanently delete “{cardVm.Snip.Title}”? This can't be undone.",
+                "Delete",
+                "Cancel").ConfigureAwait(true);
+            if (!confirmed)
+            {
+                return;
+            }
+            _ = _document.Snips.RemoveAll(s => s.Id == cardVm.Snip.Id);
+            await SaveAndRefreshTrashAsync().ConfigureAwait(true);
         }
 
         [RelayCommand]
@@ -386,6 +422,22 @@ namespace Snipdeck.Core.ViewModels
             {
                 CurrentContent = new HomeViewModel(_document, SearchText);
             }
+        }
+
+        private TrashViewModel BuildTrashViewModel()
+        {
+            var trashed = _document.Snips.Where(s => s.IsTrash);
+            return new TrashViewModel(trashed);
+        }
+
+        // Trash actions (restore / delete-forever) don't add or remove a CLI, so
+        // the CLI switcher and tag list don't need rebuilding here — those are
+        // refreshed lazily the next time a CLI is selected. We just persist and
+        // rebuild the Trash list in place so the user stays on the Trash view.
+        private async Task SaveAndRefreshTrashAsync()
+        {
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+            CurrentContent = BuildTrashViewModel();
         }
 
         private async Task SaveAndRefreshAsync()
