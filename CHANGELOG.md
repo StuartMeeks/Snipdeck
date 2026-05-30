@@ -17,12 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `LogsDirectory`. The log rotates at 5 MB.
 
 ### Fixed
+- Tray icon initialisation crash, take two
+  (`ArgumentException: Argument 'picture' must be a picture that can be
+  used as a Icon.`): once H.NotifyIcon could read the file (PR #15) it
+  passed the bytes to `new System.Drawing.Icon(stream, size)`, which
+  only accepts ICO-format input. The tray service now wraps the
+  identicon PNG in a minimal ICO container (modern Windows accepts
+  PNG-in-ICO) and writes `%LOCALAPPDATA%\Snipdeck\tray-icon.ico`.
 - Tray icon initialisation crash (`NullReferenceException` inside
   `H.NotifyIcon.ImageExtensions.ToStream(Uri)`): H.NotifyIcon resolves
   `TaskbarIcon.IconSource` by reading `BitmapImage.UriSource`, but the
   tray service was loading the identicon via `BitmapImage.SetSourceAsync`
   from an in-memory stream — pixels populated, URI null. The service now
-  persists the identicon to `%LOCALAPPDATA%\Snipdeck\tray-icon.png` and
+  persists the identicon to `%LOCALAPPDATA%\Snipdeck\tray-icon.ico` and
   loads the `BitmapImage` from that URI, which is the shape H.NotifyIcon
   expects.
 - First-run crash on startup (`RPC_E_WRONG_THREAD` / `0x8001010E`):
