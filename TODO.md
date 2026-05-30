@@ -297,47 +297,6 @@ Reasons:
 
 ---
 
-## Tighten the iteration loop (build/CI feedback)
-
-**Problem.** During the phase build-out and post-release fixes, the
-build-and-debug cycle relied heavily on PRs as the feedback loop:
-local Linux can't build the `Snipdeck.App` project (the WinUI XAML
-compiler is Windows-only), so analyser errors / build breaks only
-surface in CI. Each round-trip is a PR, which generates churn and
-sometimes ends with main broken (PR #13 was merged with red CI).
-
-**Idea.** Three independent improvements; each is small, all three
-together would make the iteration loop tight.
-
-**Sketch.**
-
-- **`EnableWindowsTargeting=true` for local builds.** Adding this to
-  `Snipdeck.App.csproj` (or passing as `-p:EnableWindowsTargeting=true`
-  on Linux) lets the restore + compile step run on non-Windows hosts.
-  The WinUI XAML pass still requires Windows, but most analyser /
-  C# compiler rules fire under plain `dotnet build` and would catch
-  editorconfig violations (IDE0058, IDE0330, IDE0370, IDE0005 — all
-  hit in this session) before the push.
-- **Branch protection: require status checks to pass.** Add a rule to
-  the existing branch ruleset on `main` that requires the
-  `App build (windows)` and `Core build + tests (ubuntu)` checks to be
-  green before the Merge button activates. Mechanical guardrail
-  against the merged-red scenario.
-- **Draft PRs with force-push fixups during iteration.** Convention,
-  not config: open PRs as **Draft** while iterating, and amend +
-  force-push fixup commits into the original commit instead of stacking
-  "fix lint" follow-ups. The final merged history shows one clean
-  commit per change, which is what the project's commit log wants.
-  Auto-mode currently blocks `git push --force-with-lease` — would
-  need an explicit settings.json permission or a one-off approval
-  to enable. Force-push to `main` itself stays blocked.
-
-**Sequencing.** Do `EnableWindowsTargeting` first (cheapest, biggest
-quality-of-life win for me); then branch protection (one-off setup,
-done forever); then adopt the draft-PR convention.
-
----
-
 ## Final UI polish pass
 
 A deliberate sweep of visual / interaction rough edges, done **at the end**
