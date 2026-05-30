@@ -34,6 +34,9 @@ namespace Snipdeck.Core.ViewModels
                 Id = Cli.Id,
                 Name = Name.Trim(),
                 IconRef = Cli.IconRef,
+                // Carry shared parameter definitions through the rebuild so a
+                // rename/icon edit doesn't wipe CLI-scoped parameters.
+                Parameters = Cli.Parameters,
             };
         }
     }

@@ -253,6 +253,7 @@ namespace Snipdeck.Core.ViewModels
                     Id = saved.Id,
                     Name = saved.Name,
                     IconRef = await _iconStorage.SaveIconAsync(saved.Id, bytes).ConfigureAwait(true),
+                    Parameters = saved.Parameters,
                 };
             }
 
@@ -297,6 +298,7 @@ namespace Snipdeck.Core.ViewModels
                     Id = updated.Id,
                     Name = updated.Name,
                     IconRef = await _iconStorage.SaveIconAsync(updated.Id, bytes).ConfigureAwait(true),
+                    Parameters = updated.Parameters,
                 };
             }
 
