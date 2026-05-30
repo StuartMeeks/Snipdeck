@@ -13,7 +13,8 @@ namespace Snipdeck.Core.Abstractions
             string title,
             string message,
             string confirmButtonText = "Yes",
-            string cancelButtonText = "Cancel");
+            string cancelButtonText = "Cancel",
+            bool destructive = false);
 
         Task NotifyAsync(
             string title,

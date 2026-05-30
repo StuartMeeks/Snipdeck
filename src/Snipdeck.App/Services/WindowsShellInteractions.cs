@@ -32,7 +32,7 @@ namespace Snipdeck.App.Services
             _filePicker = filePicker;
         }
 
-        public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel")
+        public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel", bool destructive = false)
         {
             var dialog = new ContentDialog
             {
@@ -43,6 +43,11 @@ namespace Snipdeck.App.Services
                 DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = GetXamlRoot(),
             };
+            // Destructive confirmations (delete) get the subtle-red primary button.
+            if (destructive && Application.Current.Resources["DangerDialogPrimaryButtonStyle"] is Style dangerStyle)
+            {
+                dialog.PrimaryButtonStyle = dangerStyle;
+            }
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary;
         }

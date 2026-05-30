@@ -193,6 +193,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.DeleteSnipCommand.ExecuteAsync(card);
 
             Assert.True(store.Document.Snips[0].IsTrash);
+            Assert.True(ix.LastConfirmDestructive); // delete confirms get the danger styling
         }
 
         [Fact]

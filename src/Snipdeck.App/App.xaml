@@ -10,7 +10,38 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!-- Subtle danger: red text/icon on a normal button, for destructive actions. -->
+            <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+            </Style>
+
+            <!-- Dialog primary (Save / Copy): accent, rounded, gap from the close button. -->
+            <Style x:Key="DialogPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                <Setter Property="Margin" Value="0,0,4,0" />
+            </Style>
+
+            <!-- Dialog close (Cancel): rounded, gap from the primary. -->
+            <Style x:Key="DialogCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                <Setter Property="Margin" Value="4,0,0,0" />
+            </Style>
+
+            <!-- Destructive dialog primary (Delete): subtle red, rounded, gap. -->
+            <Style x:Key="DangerDialogPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                <Setter Property="Margin" Value="0,0,4,0" />
+            </Style>
+
+            <!-- Round every dialog and standardise its buttons (corners + spacing). -->
+            <Style TargetType="ContentDialog" BasedOn="{StaticResource DefaultContentDialogStyle}">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="PrimaryButtonStyle" Value="{StaticResource DialogPrimaryButtonStyle}" />
+                <Setter Property="CloseButtonStyle" Value="{StaticResource DialogCloseButtonStyle}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

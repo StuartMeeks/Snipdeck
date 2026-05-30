@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Home** and **Documentation** entries, followed by a **Tags** heading with an
   **All** entry and the scoped tags; the footer actions (Shared parameters,
   Tags, Trash, Settings) are left-aligned.
+- **Polished cards, dialogs and destructive actions.** Snip cards now size the
+  Copy button to its content and group Edit/Delete immediately beside it.
+  Destructive actions (Delete CLI, and the delete confirmations) use a subtle
+  red treatment. Dialogs have rounded corners, all dialog buttons share rounded
+  corners with more breathing room between them, and the snip editor is wider so
+  its content fills the available space. The snip editor's "Command template"
+  heading no longer inherits the monospace font.
 - **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
   and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
   instead of the reflection-based serializer, removing the IL2026 trim warnings.

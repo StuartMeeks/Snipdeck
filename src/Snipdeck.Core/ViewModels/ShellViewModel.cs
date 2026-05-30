@@ -295,7 +295,8 @@ namespace Snipdeck.Core.ViewModels
                 "Delete snip",
                 $"Move “{cardVm.Snip.Title}” to trash?",
                 "Delete",
-                "Cancel").ConfigureAwait(true);
+                "Cancel",
+                destructive: true).ConfigureAwait(true);
             if (!confirmed)
             {
                 return;
@@ -326,7 +327,8 @@ namespace Snipdeck.Core.ViewModels
                 "Delete permanently",
                 $"Permanently delete “{cardVm.Snip.Title}”? This can't be undone.",
                 "Delete",
-                "Cancel").ConfigureAwait(true);
+                "Cancel",
+                destructive: true).ConfigureAwait(true);
             if (!confirmed)
             {
                 return;
@@ -467,7 +469,8 @@ namespace Snipdeck.Core.ViewModels
                 "Delete CLI",
                 $"Delete “{cli.Name}”? This can't be undone.",
                 "Delete",
-                "Cancel").ConfigureAwait(true);
+                "Cancel",
+                destructive: true).ConfigureAwait(true);
             if (!confirmed)
             {
                 return;

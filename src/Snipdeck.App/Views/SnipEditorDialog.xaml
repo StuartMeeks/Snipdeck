@@ -13,16 +13,28 @@
     CloseButtonText="Cancel"
     DefaultButton="Primary">
 
-    <ScrollViewer MinWidth="520" MaxHeight="560" VerticalScrollBarVisibility="Auto">
+    <ContentDialog.Resources>
+        <!-- Let the editor grow wider than the default dialog cap so its
+             content fills the width instead of being cramped. -->
+        <x:Double x:Key="ContentDialogMaxWidth">860</x:Double>
+    </ContentDialog.Resources>
+
+    <ScrollViewer MinWidth="720" MaxHeight="560" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="12">
             <TextBox Header="Title"
                      Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-            <TextBox Header="Command template"
-                     Text="{x:Bind ViewModel.CommandTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            <TextBox Text="{x:Bind ViewModel.CommandTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      FontFamily="Cascadia Mono, Consolas, Courier New"
                      AcceptsReturn="True"
-                     TextWrapping="Wrap" />
+                     TextWrapping="Wrap">
+                <!-- Header set explicitly so it keeps the default UI font rather
+                     than inheriting the monospace family from the TextBox. -->
+                <TextBox.Header>
+                    <TextBlock Text="Command template"
+                               FontFamily="{ThemeResource ContentControlThemeFontFamily}" />
+                </TextBox.Header>
+            </TextBox>
 
             <TextBox Header="Description (Markdown)"
                      PlaceholderText="Supports Markdown — **bold**, `code`, lists, links"
