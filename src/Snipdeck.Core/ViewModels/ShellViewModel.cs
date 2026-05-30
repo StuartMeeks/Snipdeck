@@ -19,6 +19,9 @@ namespace Snipdeck.Core.ViewModels
     {
         public const string AllTagsSentinel = "All";
 
+        // Glyph for the "All" tag entry (Segoe Fluent Icons "Filter").
+        private const string _allTagsGlyph = "\uE71C";
+
         private readonly ISnipStore _store;
         private readonly IClipboardService _clipboard;
         private readonly IClock _clock;
@@ -35,6 +38,9 @@ namespace Snipdeck.Core.ViewModels
 
         [ObservableProperty]
         public partial string? SelectedTag { get; set; }
+
+        [ObservableProperty]
+        public partial TagItemViewModel? SelectedTagItem { get; set; }
 
         [ObservableProperty]
         public partial object? CurrentContent { get; set; }
@@ -61,7 +67,7 @@ namespace Snipdeck.Core.ViewModels
 
         public ObservableCollection<CliChoice> CliChoices { get; } = [];
 
-        public ObservableCollection<string> Tags { get; } = [];
+        public ObservableCollection<TagItemViewModel> Tags { get; } = [];
 
         public bool CanCreateNewSnip => SelectedCliChoice?.Cli is not null;
 
@@ -103,6 +109,36 @@ namespace Snipdeck.Core.ViewModels
             _document.GlobalParameters = globals.BuildParameters();
             await _store.SaveAsync(_document).ConfigureAwait(true);
             globals.StatusMessage = "Saved.";
+        }
+
+        public void OpenTagIcons()
+        {
+            CurrentContent = new TagIconsViewModel(SnipFilter.DistinctTagsFor(_document.Snips), _document.TagIcons);
+        }
+
+        [RelayCommand]
+        private async Task SaveTagIconsAsync()
+        {
+            if (CurrentContent is not TagIconsViewModel tags)
+            {
+                return;
+            }
+            _document.TagIcons = tags.BuildTagIcons();
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+
+            // Refresh the left-nav glyphs in place, keeping the user on this view
+            // (suppress the content swap a selection change would otherwise cause).
+            _suppressShellRefresh = true;
+            try
+            {
+                RebuildTags();
+                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
+            tags.StatusMessage = "Saved.";
         }
 
         public void GoHome()
@@ -385,7 +421,7 @@ namespace Snipdeck.Core.ViewModels
             try
             {
                 RebuildTags();
-                SelectedTag = Tags.Count > 0 ? AllTagsSentinel : null;
+                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
             }
             finally
             {
@@ -402,6 +438,13 @@ namespace Snipdeck.Core.ViewModels
                 return;
             }
             ApplyShellContent();
+        }
+
+        // The nav binds its selection to SelectedTagItem; mirror it onto the
+        // SelectedTag filter string (the "All" item maps to the sentinel).
+        partial void OnSelectedTagItemChanged(TagItemViewModel? value)
+        {
+            SelectedTag = value?.Name;
         }
 
         partial void OnSearchTextChanged(string value)
@@ -431,11 +474,14 @@ namespace Snipdeck.Core.ViewModels
                 return;
             }
             var snipsForCli = _document.Snips.Where(s => s.CliId == cli.Id);
-            Tags.Add(AllTagsSentinel);
+            Tags.Add(new TagItemViewModel(AllTagsSentinel, _allTagsGlyph, isAll: true));
             foreach (var tag in SnipFilter.DistinctTagsFor(snipsForCli)
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase))
             {
-                Tags.Add(tag);
+                var glyph = _document.TagIcons.TryGetValue(tag, out var g) && !string.IsNullOrWhiteSpace(g)
+                    ? g
+                    : TagItemViewModel.DefaultGlyph;
+                Tags.Add(new TagItemViewModel(tag, glyph));
             }
         }
 
@@ -476,7 +522,7 @@ namespace Snipdeck.Core.ViewModels
             try
             {
                 RebuildTags();
-                SelectedTag = Tags.Count > 0 ? AllTagsSentinel : null;
+                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
             }
             finally
             {
@@ -498,7 +544,7 @@ namespace Snipdeck.Core.ViewModels
                 SelectedCliChoice = CliChoices.FirstOrDefault(c => c.Cli?.Id == previousCliId)
                     ?? CliChoices.FirstOrDefault();
                 RebuildTags();
-                SelectedTag = Tags.Count > 0 ? AllTagsSentinel : null;
+                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
             }
             finally
             {

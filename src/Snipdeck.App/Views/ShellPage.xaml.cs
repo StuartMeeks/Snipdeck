@@ -39,14 +39,9 @@ namespace Snipdeck.App.Views
             ViewModel.OpenGlobalParameters();
         }
 
-        private void OnNavigationSelectionChanged(
-            NavigationView sender,
-            NavigationViewSelectionChangedEventArgs args)
+        private void OnTagsClicked(object sender, RoutedEventArgs e)
         {
-            if (args.SelectedItem is string tag)
-            {
-                ViewModel.SelectedTag = tag;
-            }
+            ViewModel.OpenTagIcons();
         }
 
         private void OnNewCliClicked(object sender, RoutedEventArgs e)

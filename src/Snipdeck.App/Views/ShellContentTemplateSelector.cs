@@ -21,6 +21,8 @@ namespace Snipdeck.App.Views
 
         public DataTemplate? GlobalParametersTemplate { get; set; }
 
+        public DataTemplate? TagIconsTemplate { get; set; }
+
         protected override DataTemplate? SelectTemplateCore(object item)
         {
             return item switch
@@ -30,6 +32,7 @@ namespace Snipdeck.App.Views
                 SettingsViewModel => SettingsTemplate,
                 TrashViewModel => TrashTemplate,
                 GlobalParametersViewModel => GlobalParametersTemplate,
+                TagIconsViewModel => TagIconsTemplate,
                 _ => null,
             };
         }

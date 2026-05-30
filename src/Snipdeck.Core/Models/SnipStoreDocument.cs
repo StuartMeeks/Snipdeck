@@ -3,9 +3,10 @@ namespace Snipdeck.Core.Models
     public sealed class SnipStoreDocument
     {
         // v2 adds shared parameter definitions (Cli.Parameters + GlobalParameters).
-        // Additive and forward-incompatible: a v1-only build refuses a v2 store
-        // rather than silently dropping shared parameters.
-        public const int CurrentSchemaVersion = 2;
+        // v3 adds per-tag icon glyphs (Cli.TagIcons).
+        // Additive and forward-incompatible: an older build refuses a newer store
+        // rather than silently dropping the new collections.
+        public const int CurrentSchemaVersion = 3;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
@@ -20,5 +21,12 @@ namespace Snipdeck.Core.Models
         /// precedence). See <c>ParameterResolver</c>.
         /// </summary>
         public List<Parameter> GlobalParameters { get; set; } = [];
+
+        /// <summary>
+        /// Icon glyph per tag name (Segoe Fluent Icons), applied wherever that
+        /// tag appears in the left navigation. Tag names absent from the map use
+        /// the default "#" glyph. Tags are matched by name across all CLIs.
+        /// </summary>
+        public Dictionary<string, string> TagIcons { get; set; } = [];
     }
 }

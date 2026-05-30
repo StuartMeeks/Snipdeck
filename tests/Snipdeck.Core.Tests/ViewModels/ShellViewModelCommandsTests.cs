@@ -335,6 +335,33 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task SaveTagIcons_persists_glyphs_and_refreshes_the_nav()
+        {
+            Cli cli = null!;
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "x", Tags = ["deploy"] });
+            });
+
+            // Select the CLI so its tags populate the nav (default glyph "#").
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            Assert.Equal("#", vm.Tags.Single(t => t.Name == "deploy").Glyph);
+
+            vm.OpenTagIcons();
+            var tagsVm = Assert.IsType<TagIconsViewModel>(vm.CurrentContent);
+            tagsVm.Rows.Single(r => r.TagName == "deploy").Glyph = "X";
+
+            await vm.SaveTagIconsCommand.ExecuteAsync(null);
+
+            Assert.Equal("X", store.Document.TagIcons["deploy"]);
+            // Nav glyph refreshed in place; the view stays on the Tags editor.
+            Assert.Equal("X", vm.Tags.Single(t => t.Name == "deploy").Glyph);
+            Assert.IsType<TagIconsViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
         public async Task SaveGlobalParameters_persists_edited_rows_to_the_document()
         {
             var (vm, store, _, _, _) = await BuildAsync();
@@ -416,7 +443,7 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             // Select the CLI: its pane tags should not yet include the trashed snip's tag.
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
-            Assert.DoesNotContain("incident", vm.Tags);
+            Assert.DoesNotContain("incident", vm.Tags.Select(t => t.Name));
 
             // Restore from Trash while that CLI is still the selected one.
             vm.OpenTrash();
@@ -424,7 +451,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.RestoreSnipCommand.ExecuteAsync(card);
 
             // The pane tag list must now reflect the restored snip, and we stay on Trash.
-            Assert.Contains("incident", vm.Tags);
+            Assert.Contains("incident", vm.Tags.Select(t => t.Name));
             Assert.IsType<TrashViewModel>(vm.CurrentContent);
         }
 

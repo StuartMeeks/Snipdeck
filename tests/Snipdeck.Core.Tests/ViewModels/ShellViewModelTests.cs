@@ -114,10 +114,11 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             var cliVm = Assert.IsType<CliViewModel>(vm.CurrentContent);
             Assert.Equal("pl-app", cliVm.Name);
-            Assert.Contains(ShellViewModel.AllTagsSentinel, vm.Tags);
-            Assert.Contains("read", vm.Tags);
-            Assert.Contains("deploy", vm.Tags);
-            Assert.Contains("orgs", vm.Tags);
+            var tagNames = vm.Tags.Select(t => t.Name).ToList();
+            Assert.Contains(ShellViewModel.AllTagsSentinel, tagNames);
+            Assert.Contains("read", tagNames);
+            Assert.Contains("deploy", tagNames);
+            Assert.Contains("orgs", tagNames);
             Assert.Equal(ShellViewModel.AllTagsSentinel, vm.SelectedTag);
         }
 

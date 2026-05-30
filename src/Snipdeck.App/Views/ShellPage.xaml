@@ -402,12 +402,83 @@
             </ScrollViewer>
         </DataTemplate>
 
+        <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="640" HorizontalAlignment="Stretch">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Tags"
+                                       Style="{ThemeResource TitleTextBlockStyle}" />
+                            <TextBlock Text="Give a tag an icon (a Segoe Fluent Icons glyph, e.g. paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default #."
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="Save"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveTagIconsCommand}" />
+                    </Grid>
+
+                    <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind StatusMessage, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
+
+                    <TextBlock Text="No tags yet. Add tags to your snips, then give them icons here."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+                    <ItemsControl ItemsSource="{x:Bind Rows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TagIconRowViewModel">
+                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="160" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon Grid.Column="0"
+                                                  FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                  Glyph="{x:Bind PreviewGlyph, Mode=OneWay}"
+                                                  FontSize="18"
+                                                  VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{x:Bind TagName}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBox Grid.Column="2"
+                                                 PlaceholderText="Icon (blank = #)"
+                                                 Text="{x:Bind Glyph, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+
         <local:ShellContentTemplateSelector x:Key="ShellContentSelector"
                                              HomeTemplate="{StaticResource HomeContentTemplate}"
                                              CliTemplate="{StaticResource CliContentTemplate}"
                                              SettingsTemplate="{StaticResource SettingsContentTemplate}"
                                              TrashTemplate="{StaticResource TrashContentTemplate}"
-                                             GlobalParametersTemplate="{StaticResource GlobalParametersContentTemplate}" />
+                                             GlobalParametersTemplate="{StaticResource GlobalParametersContentTemplate}"
+                                             TagIconsTemplate="{StaticResource TagIconsContentTemplate}" />
     </UserControl.Resources>
 
     <NavigationView x:Name="ShellNavigation"
@@ -416,8 +487,18 @@
                     PaneDisplayMode="Left"
                     OpenPaneLength="280"
                     MenuItemsSource="{x:Bind ViewModel.Tags, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedTag, Mode=TwoWay}"
-                    SelectionChanged="OnNavigationSelectionChanged">
+                    SelectedItem="{x:Bind ViewModel.SelectedTagItem, Mode=TwoWay}">
+
+        <NavigationView.MenuItemTemplate>
+            <DataTemplate x:DataType="vm:TagItemViewModel">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="{x:Bind Glyph}"
+                              FontSize="16" />
+                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                </StackPanel>
+            </DataTemplate>
+        </NavigationView.MenuItemTemplate>
 
         <NavigationView.PaneHeader>
             <StackPanel Padding="12,8" Spacing="8">
@@ -441,8 +522,19 @@
                         Background="Transparent"
                         BorderThickness="0">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE8EC;" FontSize="16" />
+                        <FontIcon Glyph="&#xE943;" FontSize="16" />
                         <TextBlock Text="Shared parameters" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="TagsButton"
+                        Click="OnTagsClicked"
+                        HorizontalAlignment="Stretch"
+                        Margin="12,8,12,0"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE8EC;" FontSize="16" />
+                        <TextBlock Text="Tags" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button x:Name="TrashButton"
