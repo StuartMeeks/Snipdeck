@@ -322,6 +322,13 @@ re-polishing the same screens after every feature lands. Known items so far:
   the risk of accidental copies / conflicts with the overflow menu and
   favourite star hit-targets. Decide, then either remove the button or keep
   it.
+- **Resizable, size-remembering snip editor.** The New/Edit snip editor was
+  widened to fit its content, but it's still a `ContentDialog` (fixed size).
+  Make it genuinely user-resizable and persist the chosen size (to `AppConfig`)
+  so it reopens at the same dimensions. `ContentDialog` can't do this natively —
+  the likely route is to host the editor in a resizable secondary `Window`
+  (native drag-resize) rather than a dialog overlay, which means rethinking how
+  the editor is shown and how its result returns through `IShellInteractions`.
 
 Add to this list as other cosmetic / interaction snags turn up during
 feature work, then knock them out in one pass before a stable cut.
