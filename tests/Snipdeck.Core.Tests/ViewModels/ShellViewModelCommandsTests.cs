@@ -66,6 +66,35 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task CopySnip_opens_the_flyout_for_a_described_snip_even_without_parameters()
+        {
+            Cli cli = null!;
+            var (vm, _, clip, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // No parameters, but a description worth reading before copy.
+                d.Snips.Add(new Snip
+                {
+                    CliId = cli.Id,
+                    Title = "Status",
+                    CommandTemplate = "pl-app status",
+                    Description = "Shows **cluster** status.",
+                });
+            });
+
+            ix.NextParameterFillResult = new ParameterFillResult("pl-app status");
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            var card = ((CliViewModel)vm.CurrentContent!).Snips[0];
+
+            await vm.CopySnipCommand.ExecuteAsync(card);
+
+            // The flyout was shown (so the description renders) rather than copying directly.
+            Assert.NotNull(ix.LastFilledSnip);
+            Assert.Equal("pl-app status", clip.LastText);
+        }
+
+        [Fact]
         public async Task CopySnip_with_parameters_uses_resolved_command_from_interactions()
         {
             Cli cli = null!;

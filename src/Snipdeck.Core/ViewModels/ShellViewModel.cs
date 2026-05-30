@@ -100,7 +100,11 @@ namespace Snipdeck.Core.ViewModels
             var snip = cardVm.Snip;
 
             string commandToCopy;
-            if (snip.Parameters.Count == 0)
+            // Skip the flyout only when there's nothing to show: no parameters to
+            // fill and no description to read. A described-but-parameterless snip
+            // still opens the flyout so its (rendered) description is visible
+            // before the copy.
+            if (snip.Parameters.Count == 0 && string.IsNullOrWhiteSpace(snip.Description))
             {
                 commandToCopy = snip.CommandTemplate;
             }

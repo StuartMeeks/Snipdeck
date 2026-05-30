@@ -18,6 +18,22 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public void Parameterless_snip_with_token_like_template_text_stays_copy_enabled()
+        {
+            // No declared parameters, but the template contains a bare {token} that
+            // the engine treats as an unresolved placeholder. There's nothing to
+            // fill, so it must copy verbatim (as the direct copy path does) rather
+            // than being gated off as "unresolved".
+            var snip = new Snip { CommandTemplate = "git commit -m {message}" };
+
+            var vm = new ParameterFillViewModel(snip);
+
+            Assert.Empty(vm.Inputs);
+            Assert.True(vm.IsCopyEnabled);
+            Assert.Equal("git commit -m {message}", vm.Preview);
+        }
+
+        [Fact]
         public void Defaults_pre_fill_inputs_and_drive_copy_enabled_state()
         {
             var snip = new Snip
