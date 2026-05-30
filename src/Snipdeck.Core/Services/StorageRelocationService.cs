@@ -51,23 +51,6 @@ namespace Snipdeck.Core.Services
             }
         }
 
-        public void RemoveStore(string directory)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(directory);
-
-            var store = StorePath(directory);
-            if (File.Exists(store))
-            {
-                File.Delete(store);
-            }
-
-            var icons = Path.Combine(directory, _iconsSubdirectory);
-            if (Directory.Exists(icons))
-            {
-                Directory.Delete(icons, recursive: true);
-            }
-        }
-
         private string StorePath(string directory) => Path.Combine(directory, StoreFileName);
 
         private static bool PathsEqual(string a, string b) =>

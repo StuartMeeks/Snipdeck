@@ -40,13 +40,12 @@ namespace Snipdeck.Core.Abstractions
 
         /// <summary>
         /// Copies the store file and the icons subdirectory from the current
-        /// directory to the target. Non-destructive — the originals are left in
-        /// place so the new config can be persisted durably before
-        /// <see cref="RemoveStore"/> removes them.
+        /// directory to the target. Non-destructive: the originals are left in
+        /// place as a safety copy. We never delete the old store from the
+        /// running process — the storage path is only re-read after the restart,
+        /// and a failed restart would otherwise leave the app writing to a
+        /// directory we'd already emptied.
         /// </summary>
         void CopyStore(string currentDirectory, string targetDirectory);
-
-        /// <summary>Removes the store file and icons subdirectory from a directory.</summary>
-        void RemoveStore(string directory);
     }
 }

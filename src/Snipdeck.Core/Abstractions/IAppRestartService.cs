@@ -7,6 +7,12 @@ namespace Snipdeck.Core.Abstractions
     /// </summary>
     public interface IAppRestartService
     {
-        void Restart();
+        /// <summary>
+        /// Requests an application restart. On success the process is terminated
+        /// and this does not return; it returns <c>false</c> if the restart
+        /// could not be initiated, so the caller can fall back (e.g. ask the
+        /// user to restart manually).
+        /// </summary>
+        bool Restart();
     }
 }

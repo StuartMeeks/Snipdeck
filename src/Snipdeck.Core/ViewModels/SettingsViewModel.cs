@@ -230,7 +230,6 @@ namespace Snipdeck.Core.ViewModels
             // The storage path is only read at startup, so apply-then-restart keeps
             // the immutable startup state consistent and avoids the running app
             // writing snips to the old location after the switch.
-            var isMove = false;
             switch (outcome)
             {
                 case StorageChangeOutcome.NoChange:
@@ -262,11 +261,10 @@ namespace Snipdeck.Core.ViewModels
                     {
                         return;
                     }
-                    // Copy now; the originals are removed only after the new path
-                    // is durably persisted, so a failed save can't leave the
-                    // config pointing at an emptied old location.
+                    // Copy the snips to the target; the originals are left as a
+                    // safety copy and never deleted from the running process (a
+                    // failed restart must not leave us writing to a removed dir).
                     _relocation.CopyStore(current, target);
-                    isMove = true;
                     break;
 
                 case StorageChangeOutcome.SetEmptyTarget:
@@ -286,12 +284,17 @@ namespace Snipdeck.Core.ViewModels
 
             _config.StoragePath = target;
             await PersistAsync().ConfigureAwait(true);
-            if (isMove)
-            {
-                _relocation.RemoveStore(current);
-            }
             StorageDirectory = target;
-            _restart.Restart();
+
+            // On success the process terminates here; if it returns, the restart
+            // failed, so ask the user to restart manually. The old store is still
+            // intact, so the app stays consistent until they do.
+            if (!_restart.Restart())
+            {
+                await _interactions.NotifyAsync(
+                    "Restart needed",
+                    "Snipdeck couldn't restart automatically. Please restart it to start using the new storage location.").ConfigureAwait(true);
+            }
         }
 
         private async Task PersistAsync()

@@ -138,7 +138,8 @@ namespace Snipdeck.Core.Tests.ViewModels
 
                 Assert.True(File.Exists(Path.Combine(target, "store.json")));
                 Assert.True(File.Exists(Path.Combine(target, "icons", "a.png")));
-                Assert.False(File.Exists(Path.Combine(current, "store.json")));
+                // The original is left as a safety copy (never deleted from the running process).
+                Assert.True(File.Exists(Path.Combine(current, "store.json")));
                 Assert.Equal(target, store.Current.StoragePath);
                 Assert.Equal(target, vm.StorageDirectory);
                 Assert.Equal(1, restart.RestartCount);
@@ -196,6 +197,34 @@ namespace Snipdeck.Core.Tests.ViewModels
                 Assert.Null(store.Current.StoragePath);
                 Assert.Equal(0, restart.RestartCount);
                 Assert.True(File.Exists(Path.Combine(current, "store.json")));
+            }
+            finally
+            {
+                Directory.Delete(current, recursive: true);
+                Directory.Delete(target, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task ChangeStoragePath_notifies_when_the_restart_cannot_be_initiated()
+        {
+            var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
+            var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
+            try
+            {
+                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}"); // adopt path, no file ops
+
+                var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
+                picker.NextFolder = target;
+                ix.NextConfirmResult = true;
+                restart.NextRestartResult = false; // restart denied
+
+                await vm.ChangeStoragePathCommand.ExecuteAsync(null);
+
+                // Path still persisted, but the user is told to restart manually.
+                Assert.Equal(target, store.Current.StoragePath);
+                Assert.Equal(1, restart.RestartCount);
+                Assert.Equal(1, ix.NotifyCount);
             }
             finally
             {

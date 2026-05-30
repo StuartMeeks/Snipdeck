@@ -116,25 +116,5 @@ namespace Snipdeck.Core.Tests.Services
             }
         }
 
-        [Fact]
-        public void RemoveStore_deletes_the_store_and_icons()
-        {
-            var dir = NewTempDir();
-            try
-            {
-                File.WriteAllText(Path.Combine(dir, "store.json"), "{}");
-                _ = Directory.CreateDirectory(Path.Combine(dir, "icons"));
-                File.WriteAllText(Path.Combine(dir, "icons", "abc.png"), "x");
-
-                new StorageRelocationService().RemoveStore(dir);
-
-                Assert.False(File.Exists(Path.Combine(dir, "store.json")));
-                Assert.False(Directory.Exists(Path.Combine(dir, "icons")));
-            }
-            finally
-            {
-                Directory.Delete(dir, recursive: true);
-            }
-        }
     }
 }
