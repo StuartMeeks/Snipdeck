@@ -96,6 +96,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{x:Bind Name}"
@@ -106,6 +107,10 @@
                                 Content="Edit CLI"
                                 Click="OnEditCliClicked" />
                         <Button Grid.Column="2"
+                                Margin="0,0,8,0"
+                                Content="Delete CLI"
+                                Click="OnDeleteCliClicked" />
+                        <Button Grid.Column="3"
                                 Content="New snip"
                                 Click="OnNewSnipClicked"
                                 Style="{ThemeResource AccentButtonStyle}" />
@@ -175,6 +180,16 @@
                                    MaxWidth="320" />
                     </tk:SettingsCard>
 
+                    <tk:SettingsCard Header="Backups to keep"
+                                     Description="Older backups beyond this count are pruned after each save.">
+                        <NumberBox Value="{x:Bind BackupRetention, Mode=TwoWay}"
+                                   Minimum="1"
+                                   Maximum="200"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   MinWidth="120" />
+                    </tk:SettingsCard>
+
                     <tk:SettingsCard Header="Updates"
                                      Description="Check the GitHub releases feed for a newer build.">
                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -212,10 +227,81 @@
             </ScrollViewer>
         </DataTemplate>
 
+        <DataTemplate x:Key="TrashContentTemplate" x:DataType="vm:TrashViewModel">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="24" Spacing="16">
+                    <TextBlock Text="Trash"
+                               Style="{ThemeResource TitleTextBlockStyle}" />
+                    <TextBlock Text="Deleted snips are kept here. Restore a snip to put it back in its CLI, or delete it permanently."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock Text="Trash is empty."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+                    <ItemsControl ItemsSource="{x:Bind Snips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SnipCardViewModel">
+                                <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Padding="16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0"
+                                               Text="{x:Bind Title}"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                               TextTrimming="CharacterEllipsis" />
+
+                                    <Border Grid.Row="1"
+                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                            CornerRadius="4"
+                                            Padding="8,6"
+                                            Margin="0,8,0,0">
+                                        <TextBlock Text="{x:Bind CommandTemplate}"
+                                                   FontFamily="Cascadia Mono, Consolas, Courier New"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap" />
+                                    </Border>
+
+                                    <StackPanel Grid.Row="2"
+                                                Orientation="Horizontal"
+                                                Spacing="8"
+                                                Margin="0,12,0,0">
+                                        <Button Content="Restore"
+                                                Style="{ThemeResource AccentButtonStyle}"
+                                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.RestoreSnipCommand}"
+                                                CommandParameter="{x:Bind}" />
+                                        <Button Content="Delete permanently"
+                                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteForeverCommand}"
+                                                CommandParameter="{x:Bind}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+
         <local:ShellContentTemplateSelector x:Key="ShellContentSelector"
                                              HomeTemplate="{StaticResource HomeContentTemplate}"
                                              CliTemplate="{StaticResource CliContentTemplate}"
-                                             SettingsTemplate="{StaticResource SettingsContentTemplate}" />
+                                             SettingsTemplate="{StaticResource SettingsContentTemplate}"
+                                             TrashTemplate="{StaticResource TrashContentTemplate}" />
     </UserControl.Resources>
 
     <NavigationView x:Name="ShellNavigation"
@@ -241,17 +327,30 @@
         </NavigationView.PaneHeader>
 
         <NavigationView.PaneFooter>
-            <Button x:Name="SettingsButton"
-                    Click="OnSettingsClicked"
-                    HorizontalAlignment="Stretch"
-                    Margin="12,8"
-                    Background="Transparent"
-                    BorderThickness="0">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <FontIcon Glyph="&#xE713;" FontSize="16" />
-                    <TextBlock Text="Settings" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
+            <StackPanel>
+                <Button x:Name="TrashButton"
+                        Click="OnTrashClicked"
+                        HorizontalAlignment="Stretch"
+                        Margin="12,8,12,0"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE74D;" FontSize="16" />
+                        <TextBlock Text="Trash" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="SettingsButton"
+                        Click="OnSettingsClicked"
+                        HorizontalAlignment="Stretch"
+                        Margin="12,8"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE713;" FontSize="16" />
+                        <TextBlock Text="Settings" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </NavigationView.PaneFooter>
 
         <ContentControl Content="{x:Bind ViewModel.CurrentContent, Mode=OneWay}"

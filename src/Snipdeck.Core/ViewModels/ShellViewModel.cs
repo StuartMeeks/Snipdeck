@@ -80,6 +80,11 @@ namespace Snipdeck.Core.ViewModels
             CurrentContent = settings;
         }
 
+        public void OpenTrash()
+        {
+            CurrentContent = BuildTrashViewModel();
+        }
+
         public void GoHome()
         {
             SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsHome);
@@ -95,7 +100,11 @@ namespace Snipdeck.Core.ViewModels
             var snip = cardVm.Snip;
 
             string commandToCopy;
-            if (snip.Parameters.Count == 0)
+            // Skip the flyout only when there's nothing to show: no parameters to
+            // fill and no description to read. A described-but-parameterless snip
+            // still opens the flyout so its (rendered) description is visible
+            // before the copy.
+            if (snip.Parameters.Count == 0 && string.IsNullOrWhiteSpace(snip.Description))
             {
                 commandToCopy = snip.CommandTemplate;
             }
@@ -157,6 +166,37 @@ namespace Snipdeck.Core.ViewModels
             }
             cardVm.Snip.IsTrash = true;
             await SaveAndRefreshAsync().ConfigureAwait(true);
+        }
+
+        [RelayCommand]
+        private async Task RestoreSnipAsync(SnipCardViewModel? cardVm)
+        {
+            if (cardVm is null)
+            {
+                return;
+            }
+            cardVm.Snip.IsTrash = false;
+            await SaveAndRefreshTrashAsync().ConfigureAwait(true);
+        }
+
+        [RelayCommand]
+        private async Task DeleteForeverAsync(SnipCardViewModel? cardVm)
+        {
+            if (cardVm is null)
+            {
+                return;
+            }
+            var confirmed = await _interactions.ConfirmAsync(
+                "Delete permanently",
+                $"Permanently delete “{cardVm.Snip.Title}”? This can't be undone.",
+                "Delete",
+                "Cancel").ConfigureAwait(true);
+            if (!confirmed)
+            {
+                return;
+            }
+            _ = _document.Snips.RemoveAll(s => s.Id == cardVm.Snip.Id);
+            await SaveAndRefreshTrashAsync().ConfigureAwait(true);
         }
 
         [RelayCommand]
@@ -264,6 +304,55 @@ namespace Snipdeck.Core.ViewModels
             await SaveAndRefreshAsync().ConfigureAwait(true);
         }
 
+        [RelayCommand]
+        private async Task DeleteCurrentCliAsync()
+        {
+            if (SelectedCliChoice?.Cli is not { } cli)
+            {
+                return;
+            }
+
+            // Must-be-empty semantics: a CLI can only be deleted once its visible
+            // (non-trashed) snips are gone. Trashed snips don't block — they're
+            // already soft-deleted and the user can't see them.
+            var activeSnipCount = _document.Snips.Count(s => s.CliId == cli.Id && !s.IsTrash);
+            if (activeSnipCount > 0)
+            {
+                await _interactions.NotifyAsync(
+                    "Can't delete CLI",
+                    $"“{cli.Name}” still has {activeSnipCount} snip{(activeSnipCount == 1 ? "" : "s")}. " +
+                    "Delete those snips first, then delete the CLI.").ConfigureAwait(true);
+                return;
+            }
+
+            var confirmed = await _interactions.ConfirmAsync(
+                "Delete CLI",
+                $"Delete “{cli.Name}”? This can't be undone.",
+                "Delete",
+                "Cancel").ConfigureAwait(true);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            // Remove the CLI and any trashed snips that belonged to it — otherwise
+            // those snips would be orphaned, pointing at a CLI that no longer exists.
+            _ = _document.Snips.RemoveAll(s => s.CliId == cli.Id);
+            _ = _document.Clis.RemoveAll(c => c.Id == cli.Id);
+
+            // Persist the removal first; the deleted CLI is no longer in CliChoices
+            // so SaveAndRefreshAsync falls back to the first choice (Home).
+            await SaveAndRefreshAsync().ConfigureAwait(true);
+
+            // Only after the store is safely persisted do we clean up the icon —
+            // a best-effort side effect. Doing it earlier would risk deleting the
+            // asset while a failed save left the store still referencing it.
+            if (!string.IsNullOrEmpty(cli.IconRef))
+            {
+                await _iconStorage.DeleteIconAsync(cli.IconRef).ConfigureAwait(true);
+            }
+        }
+
         partial void OnSelectedCliChoiceChanged(CliChoice? value)
         {
             _suppressShellRefresh = true;
@@ -337,6 +426,38 @@ namespace Snipdeck.Core.ViewModels
             {
                 CurrentContent = new HomeViewModel(_document, SearchText);
             }
+        }
+
+        private TrashViewModel BuildTrashViewModel()
+        {
+            var trashed = _document.Snips.Where(s => s.IsTrash);
+            return new TrashViewModel(trashed);
+        }
+
+        // Trash actions (restore / delete-forever) never add or remove a CLI, so
+        // the CLI switcher doesn't need rebuilding. But the pane tag list for the
+        // currently-selected CLI can go stale — a restore can surface a tag no
+        // visible snip had, and a purge can orphan one — and that list stays on
+        // screen while the user is on the Trash view. So rebuild the tags in
+        // place, then refresh the Trash list, all while keeping the user on the
+        // Trash view (suppressing the shell-content swap that a tag change would
+        // otherwise trigger).
+        private async Task SaveAndRefreshTrashAsync()
+        {
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+
+            _suppressShellRefresh = true;
+            try
+            {
+                RebuildTags();
+                SelectedTag = Tags.Count > 0 ? AllTagsSentinel : null;
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
+
+            CurrentContent = BuildTrashViewModel();
         }
 
         private async Task SaveAndRefreshAsync()

@@ -31,7 +31,7 @@ namespace Snipdeck.App
             var snipStoreFilePath = Path.Combine(storageDirectory, _snipStoreFileName);
 
             var snipStore = new JsonSnipStore(snipStoreFilePath);
-            var backupService = new BackupService(snipStoreFilePath, backupDirectory, clock);
+            var backupService = new BackupService(snipStoreFilePath, backupDirectory, clock, () => config.BackupRetention);
             var iconStorage = new IconAssetStorage(storageDirectory);
 
             var services = new ServiceCollection();

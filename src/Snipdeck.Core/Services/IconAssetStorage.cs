@@ -47,9 +47,21 @@ namespace Snipdeck.Core.Services
 
         public string? ResolveAbsolutePath(string? relativePath)
         {
-            return string.IsNullOrWhiteSpace(relativePath)
-                ? null
-                : Path.Combine(_baseDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return null;
+            }
+
+            var combined = Path.Combine(_baseDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var full = Path.GetFullPath(combined);
+
+            // The store is untrusted input and this path feeds File.Delete. Reject
+            // anything that escapes the managed icons directory — an absolute path
+            // (Path.Combine silently discards the base for one) or `..` traversal —
+            // so a malformed IconRef can never touch files outside icon storage.
+            var iconsRoot = Path.GetFullPath(Path.Combine(_baseDirectory, _iconsSubdirectory));
+            var prefix = iconsRoot + Path.DirectorySeparatorChar;
+            return full.StartsWith(prefix, StringComparison.Ordinal) ? full : null;
         }
     }
 }

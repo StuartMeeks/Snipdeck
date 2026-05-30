@@ -66,6 +66,35 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task CopySnip_opens_the_flyout_for_a_described_snip_even_without_parameters()
+        {
+            Cli cli = null!;
+            var (vm, _, clip, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // No parameters, but a description worth reading before copy.
+                d.Snips.Add(new Snip
+                {
+                    CliId = cli.Id,
+                    Title = "Status",
+                    CommandTemplate = "pl-app status",
+                    Description = "Shows **cluster** status.",
+                });
+            });
+
+            ix.NextParameterFillResult = new ParameterFillResult("pl-app status");
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            var card = ((CliViewModel)vm.CurrentContent!).Snips[0];
+
+            await vm.CopySnipCommand.ExecuteAsync(card);
+
+            // The flyout was shown (so the description renders) rather than copying directly.
+            Assert.NotNull(ix.LastFilledSnip);
+            Assert.Equal("pl-app status", clip.LastText);
+        }
+
+        [Fact]
         public async Task CopySnip_with_parameters_uses_resolved_command_from_interactions()
         {
             Cli cli = null!;
@@ -210,6 +239,201 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             Assert.Single(store.Document.Snips);
             Assert.Equal("New", store.Document.Snips[0].Title);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_is_blocked_when_the_cli_has_active_snips()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d => (cli, _) = SeedOneCliOneSnip(d));
+
+            // Even with confirmation primed, the must-be-empty guard fires first.
+            ix.NextConfirmResult = true;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(1, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_does_nothing_when_not_confirmed()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "empty-app" };
+                d.Clis.Add(cli);
+            });
+
+            ix.NextConfirmResult = false;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(0, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_removes_cli_and_its_trashed_snips_then_falls_back_to_home()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // A trashed snip must not block deletion, and must be removed with the CLI.
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "old", CommandTemplate = "x", IsTrash = true });
+            });
+
+            ix.NextConfirmResult = true;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Empty(store.Document.Clis);
+            Assert.Empty(store.Document.Snips);
+            Assert.Equal(1, store.SaveCount);
+            Assert.True(vm.SelectedCliChoice?.IsHome);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_deletes_the_icon_asset()
+        {
+            var icons = new FakeIconAssetStorage();
+            var cli = new Cli { Name = "pl-app", IconRef = "icons/abc.png" };
+            var doc = new SnipStoreDocument();
+            doc.Clis.Add(cli);
+            var store = new InMemorySnipStore(doc);
+            var ix = new FakeShellInteractions { NextConfirmResult = true };
+            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons);
+            await vm.LoadAsync();
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Contains("icons/abc.png", icons.Deleted);
+            Assert.Empty(store.Document.Clis);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_no_ops_on_home()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync(d => d.Clis.Add(new Cli { Name = "pl-app" }));
+
+            // Selection defaults to the Home entry after load.
+            ix.NextConfirmResult = true;
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(0, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task OpenTrash_shows_only_trashed_snips()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Active", CommandTemplate = "a" });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Single(trash.Snips);
+            Assert.Equal("Binned", trash.Snips[0].Title);
+        }
+
+        [Fact]
+        public async Task RestoreSnip_clears_trash_flag_saves_and_drops_it_from_the_trash_view()
+        {
+            Cli cli = null!;
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+
+            await vm.RestoreSnipCommand.ExecuteAsync(card);
+
+            Assert.False(store.Document.Snips[0].IsTrash);
+            Assert.Equal(1, store.SaveCount);
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Empty(trash.Snips);
+        }
+
+        [Fact]
+        public async Task RestoreSnip_refreshes_the_pane_tags_for_the_selected_cli()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Active", CommandTemplate = "a" });
+                // Trashed, and carrying a tag no visible snip has.
+                d.Snips.Add(new Snip
+                {
+                    CliId = cli.Id,
+                    Title = "Binned",
+                    CommandTemplate = "b",
+                    Tags = ["incident"],
+                    IsTrash = true,
+                });
+            });
+
+            // Select the CLI: its pane tags should not yet include the trashed snip's tag.
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            Assert.DoesNotContain("incident", vm.Tags);
+
+            // Restore from Trash while that CLI is still the selected one.
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+            await vm.RestoreSnipCommand.ExecuteAsync(card);
+
+            // The pane tag list must now reflect the restored snip, and we stay on Trash.
+            Assert.Contains("incident", vm.Tags);
+            Assert.IsType<TrashViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
+        public async Task DeleteForever_only_removes_the_snip_when_confirmed()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Binned", CommandTemplate = "b", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+
+            ix.NextConfirmResult = false;
+            await vm.DeleteForeverCommand.ExecuteAsync(card);
+            Assert.Single(store.Document.Snips);
+            Assert.Equal(0, store.SaveCount);
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteForeverCommand.ExecuteAsync(card);
+            Assert.Empty(store.Document.Snips);
+            Assert.Equal(1, store.SaveCount);
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.Empty(trash.Snips);
         }
 
         [Fact]

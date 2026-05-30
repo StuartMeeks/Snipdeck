@@ -29,6 +29,11 @@ namespace Snipdeck.App.Views
             ViewModel.OpenSettings(settings);
         }
 
+        private void OnTrashClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.OpenTrash();
+        }
+
         private void OnNavigationSelectionChanged(
             NavigationView sender,
             NavigationViewSelectionChangedEventArgs args)
@@ -60,6 +65,14 @@ namespace Snipdeck.App.Views
             if (ViewModel.EditCurrentCliCommand.CanExecute(null))
             {
                 ViewModel.EditCurrentCliCommand.Execute(null);
+            }
+        }
+
+        private void OnDeleteCliClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.DeleteCurrentCliCommand.CanExecute(null))
+            {
+                ViewModel.DeleteCurrentCliCommand.Execute(null);
             }
         }
     }

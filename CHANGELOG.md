@@ -8,6 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Markdown rendering for snip descriptions.** A snip's description is now
+  rendered as Markdown (headings, bold/italic, inline and block code, links,
+  ordered/unordered lists) in the copy flyout, instead of being hidden. The
+  Markdown is parsed in Core (`MarkdownParser`, backed by Markdig) into a
+  UI-free model that the WinUI head maps onto native text; the editor labels
+  the field as Markdown. A snip with a description but no parameters now opens
+  the flyout too, so its description is always visible before copying.
+- **Git-derived version numbers (Nerdbank.GitVersioning).** Every build now
+  stamps a real version (`0.1.0-alpha.<git-height>+<commit>`) into all
+  assemblies from a single `version.json`, so the About page shows a meaningful
+  version for dev and CI builds instead of the `1.0.0` compile-time fallback.
+  Releases derive their version from NBGV rather than the tag string — see
+  CONTRIBUTING.md for the `nbgv tag` release flow.
+- **Trash.** A "Trash" entry in the pane footer lists soft-deleted snips from
+  across every CLI. Each can be **Restored** (returned to its CLI) or **Deleted
+  permanently** (after confirmation). Previously, deleting a snip moved it to
+  trash but it then vanished with no way to recover or purge it.
+- **Configurable backup retention.** Choose how many timestamped store backups
+  to keep (default 20) from Settings → "Backups to keep". The count is honoured
+  on the next write-triggered backup, with no restart required.
+- **Delete a CLI.** A "Delete CLI" action on the CLI view removes an empty CLI
+  after confirmation. Deletion uses must-be-empty semantics: a CLI with visible
+  (non-trashed) snips can't be deleted until those snips are removed. The CLI's
+  icon asset and any leftover trashed snips are cleaned up with it.
+
+## [0.1.0-alpha.1] - 2026-05-30
+
+First packaged release. Cuts an alpha to exercise the release pipeline
+end-to-end and put the v1 feature set in front of real users.
+
+### Added
 - **Unhandled-exception logging.** Exceptions that previously vanished into
   WinUI's "Continue?" debugger dialog (and would have crashed the process
   outside the debugger) are now captured to

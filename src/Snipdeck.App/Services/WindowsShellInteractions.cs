@@ -47,6 +47,19 @@ namespace Snipdeck.App.Services
             return result == ContentDialogResult.Primary;
         }
 
+        public async Task NotifyAsync(string title, string message, string buttonText = "OK")
+        {
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = buttonText,
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = GetXamlRoot(),
+            };
+            _ = await dialog.ShowAsync();
+        }
+
         public async Task<SnipEditResult?> EditSnipAsync(Snip snip, IReadOnlyList<Cli> availableClis)
         {
             ArgumentNullException.ThrowIfNull(snip);

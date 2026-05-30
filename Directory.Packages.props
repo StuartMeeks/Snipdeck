@@ -5,10 +5,16 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
+  <!-- Build-time, all projects -->
+  <ItemGroup>
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
+  </ItemGroup>
+
   <!-- Core -->
   <ItemGroup>
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Jdenticon-net" Version="3.1.2" />
+    <PackageVersion Include="Markdig" Version="1.2.0" />
   </ItemGroup>
 
   <!-- App (WinUI 3 head) -->
