@@ -412,6 +412,17 @@ re-polishing the same screens after every feature lands. Known items so far:
   (e.g. a danger `Button` style / `Foreground` from the theme palette)
   rather than the neutral default, so it visually distinguishes itself from
   benign actions.
+- **Inconsistent button corner radii.** Cancel buttons render with square
+  corners while Save / Copy buttons are rounded. Standardise on rounded
+  corners for *all* buttons (the dialog `CloseButton` is the likely culprit —
+  align it with the themed `CornerRadius` the primary buttons pick up).
+- **Consider making the whole Snip card the Copy target.** Rather than a
+  dedicated Copy button on the card, let a click anywhere on the card trigger
+  the copy / parameter-fill flow. Weigh the trade-offs before committing:
+  discoverability and a cleaner card vs. losing an explicit affordance and
+  the risk of accidental copies / conflicts with the overflow menu and
+  favourite star hit-targets. Decide, then either remove the button or keep
+  it.
 
 Add to this list as other cosmetic / interaction snags turn up during
 feature work, then knock them out in one pass before a stable cut.
