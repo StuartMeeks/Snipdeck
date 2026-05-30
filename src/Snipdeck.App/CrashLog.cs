@@ -17,7 +17,7 @@ namespace Snipdeck.App
     {
         private const string _logFileName = "unhandled.log";
         private const int _maxLogBytes = 5 * 1024 * 1024;
-        private static readonly object _writeLock = new();
+        private static readonly Lock _writeLock = new();
 
         public static void Write(string source, Exception exception)
         {
@@ -31,7 +31,7 @@ namespace Snipdeck.App
                     return;
                 }
 
-                Directory.CreateDirectory(paths.LogsDirectory);
+                _ = Directory.CreateDirectory(paths.LogsDirectory);
                 var logPath = Path.Combine(paths.LogsDirectory, _logFileName);
                 var text = Format(source, exception);
 
@@ -74,12 +74,12 @@ namespace Snipdeck.App
         private static string Format(string source, Exception exception)
         {
             var sb = new StringBuilder();
-            sb.AppendLine(new string('=', 72));
-            sb.Append(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture))
-              .Append("  ")
-              .AppendLine(source);
+            _ = sb.AppendLine(new string('=', 72));
+            _ = sb.Append(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture))
+                  .Append("  ")
+                  .AppendLine(source);
             AppendException(sb, exception, depth: 0);
-            sb.AppendLine();
+            _ = sb.AppendLine();
             return sb.ToString();
         }
 
@@ -87,28 +87,28 @@ namespace Snipdeck.App
         {
             var indent = new string(' ', depth * 2);
 
-            sb.Append(indent).Append("Type: ").AppendLine(ex.GetType().FullName ?? ex.GetType().Name);
+            _ = sb.Append(indent).Append("Type: ").AppendLine(ex.GetType().FullName ?? ex.GetType().Name);
             if (ex is COMException)
             {
-                sb.Append(indent).Append("HRESULT: 0x")
-                  .AppendLine(ex.HResult.ToString("X8", CultureInfo.InvariantCulture));
+                _ = sb.Append(indent).Append("HRESULT: 0x")
+                      .AppendLine(ex.HResult.ToString("X8", CultureInfo.InvariantCulture));
             }
-            sb.Append(indent).Append("Message: ").AppendLine(ex.Message);
+            _ = sb.Append(indent).Append("Message: ").AppendLine(ex.Message);
             if (!string.IsNullOrEmpty(ex.Source))
             {
-                sb.Append(indent).Append("Source: ").AppendLine(ex.Source);
+                _ = sb.Append(indent).Append("Source: ").AppendLine(ex.Source);
             }
             if (!string.IsNullOrWhiteSpace(ex.StackTrace))
             {
-                sb.Append(indent).AppendLine("Stack:");
-                foreach (var line in ex.StackTrace!.Split('\n'))
+                _ = sb.Append(indent).AppendLine("Stack:");
+                foreach (var line in ex.StackTrace.Split('\n'))
                 {
-                    sb.Append(indent).Append("  ").AppendLine(line.TrimEnd('\r'));
+                    _ = sb.Append(indent).Append("  ").AppendLine(line.TrimEnd('\r'));
                 }
             }
             if (ex.InnerException is not null)
             {
-                sb.Append(indent).AppendLine("Inner:");
+                _ = sb.Append(indent).AppendLine("Inner:");
                 AppendException(sb, ex.InnerException, depth + 1);
             }
         }
