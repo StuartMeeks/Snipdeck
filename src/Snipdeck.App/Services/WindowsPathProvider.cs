@@ -11,6 +11,7 @@ namespace Snipdeck.App.Services
         private const string _settingsFileName = "settings.json";
         private const string _storeDirectoryName = "store";
         private const string _backupsDirectoryName = "backups";
+        private const string _logsDirectoryName = "logs";
 
         public WindowsPathProvider()
         {
@@ -20,6 +21,7 @@ namespace Snipdeck.App.Services
             SettingsFilePath = Path.Combine(AppDataDirectory, _settingsFileName);
             DefaultStorageDirectory = Path.Combine(AppDataDirectory, _storeDirectoryName);
             DefaultBackupDirectory = Path.Combine(AppDataDirectory, _backupsDirectoryName);
+            LogsDirectory = Path.Combine(AppDataDirectory, _logsDirectoryName);
         }
 
         public string AppDataDirectory { get; }
@@ -29,5 +31,7 @@ namespace Snipdeck.App.Services
         public string DefaultStorageDirectory { get; }
 
         public string DefaultBackupDirectory { get; }
+
+        public string LogsDirectory { get; }
     }
 }

@@ -9,5 +9,7 @@ namespace Snipdeck.Core.Abstractions
         string DefaultStorageDirectory { get; }
 
         string DefaultBackupDirectory { get; }
+
+        string LogsDirectory { get; }
     }
 }

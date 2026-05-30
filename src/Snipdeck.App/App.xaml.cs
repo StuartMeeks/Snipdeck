@@ -26,6 +26,13 @@ namespace Snipdeck.App
             var dispatcher = Services.GetRequiredService<IDispatcher>();
             _ = dispatcher.HasUiThreadAccess;
 
+            // Catch everything we can. Without these handlers an exception
+            // raised in XAML or in an unobserved Task is invisible — the
+            // debugger pops a "Continue?" dialog and the detail is lost.
+            UnhandledException += OnXamlUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+
             AppInstance.GetCurrent().Activated += OnInstanceActivated;
         }
 
@@ -108,6 +115,31 @@ namespace Snipdeck.App
             }
             _mainWindow.AppWindow.Show();
             _mainWindow.Activate();
+        }
+
+        private static void OnXamlUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            CrashLog.Write("XAML.UnhandledException", e.Exception);
+            // Keep the app alive. Without this the process dies; with it
+            // we get the same "click Continue and carry on" behaviour the
+            // debugger gave us, minus the lost diagnostic.
+            e.Handled = true;
+        }
+
+        private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            CrashLog.Write("TaskScheduler.UnobservedTaskException", e.Exception);
+            e.SetObserved();
+        }
+
+        private static void OnAppDomainUnhandledException(object? sender, System.UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception ex)
+            {
+                CrashLog.Write(
+                    e.IsTerminating ? "AppDomain.UnhandledException (terminating)" : "AppDomain.UnhandledException",
+                    ex);
+            }
         }
     }
 }
