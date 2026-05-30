@@ -187,11 +187,16 @@
                     </tk:SettingsCard>
 
                     <tk:SettingsCard Header="Storage location"
-                                     Description="Where snips and backups live. Move support lands in a future phase.">
-                        <TextBlock Text="{x:Bind StorageDirectory}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxWidth="320" />
+                                     Description="Where your snips live. Changing it restarts Snipdeck to load the new location.">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind StorageDirectory, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxWidth="260" />
+                            <Button Content="Change…"
+                                    Command="{x:Bind ChangeStoragePathCommand}" />
+                        </StackPanel>
                     </tk:SettingsCard>
 
                     <tk:SettingsCard Header="Backups to keep"
