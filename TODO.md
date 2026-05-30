@@ -364,7 +364,7 @@ build-and-debug cycle relied heavily on PRs as the feedback loop:
 local Linux can't build the `Snipdeck.App` project (the WinUI XAML
 compiler is Windows-only), so analyser errors / build breaks only
 surface in CI. Each round-trip is a PR, which generates churn and
-sometimes ends with master broken (PR #13 was merged with red CI).
+sometimes ends with main broken (PR #13 was merged with red CI).
 
 **Idea.** Three independent improvements; each is small, all three
 together would make the iteration loop tight.
@@ -379,7 +379,7 @@ together would make the iteration loop tight.
   editorconfig violations (IDE0058, IDE0330, IDE0370, IDE0005 — all
   hit in this session) before the push.
 - **Branch protection: require status checks to pass.** Add a rule to
-  the existing branch ruleset on `master` that requires the
+  the existing branch ruleset on `main` that requires the
   `App build (windows)` and `Core build + tests (ubuntu)` checks to be
   green before the Merge button activates. Mechanical guardrail
   against the merged-red scenario.
@@ -390,7 +390,7 @@ together would make the iteration loop tight.
   commit per change, which is what the project's commit log wants.
   Auto-mode currently blocks `git push --force-with-lease` — would
   need an explicit settings.json permission or a one-off approval
-  to enable. Force-push to `master` itself stays blocked.
+  to enable. Force-push to `main` itself stays blocked.
 
 **Sequencing.** Do `EnableWindowsTargeting` first (cheapest, biggest
 quality-of-life win for me); then branch protection (one-off setup,

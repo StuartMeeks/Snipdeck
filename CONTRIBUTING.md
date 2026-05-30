@@ -118,7 +118,7 @@ name matches the computed version** (install once with
 `dotnet tool install --global nbgv`):
 
 ```
-git checkout master && git pull
+git checkout main && git pull
 nbgv tag            # mints e.g. v0.1.0-alpha.7 for the current commit
 git push origin v0.1.0-alpha.7
 ```
@@ -129,11 +129,11 @@ the version from `nbgv get-version` (asserting it's a public release per
 attaches the artefacts to a new GitHub Release. The hyphen in the version
 (`-alpha`, `-beta`, …) marks the GitHub release as a pre-release and feeds
 Velopack's channel name. Don't tag from feature branches — release from
-`master`.
+`main`.
 
 To cut a **stable** release (or move to a new line), edit `version.json` first
 — e.g. `0.1.0-alpha.{height}` → `0.1.0` for the first stable, or bump to
-`0.2.0-alpha.{height}` — commit that on `master`, then `nbgv tag` and push.
+`0.2.0-alpha.{height}` — commit that on `main`, then `nbgv tag` and push.
 
 ## Asking for direction
 
