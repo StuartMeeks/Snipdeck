@@ -347,6 +347,40 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task RestoreSnip_refreshes_the_pane_tags_for_the_selected_cli()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Active", CommandTemplate = "a" });
+                // Trashed, and carrying a tag no visible snip has.
+                d.Snips.Add(new Snip
+                {
+                    CliId = cli.Id,
+                    Title = "Binned",
+                    CommandTemplate = "b",
+                    Tags = ["incident"],
+                    IsTrash = true,
+                });
+            });
+
+            // Select the CLI: its pane tags should not yet include the trashed snip's tag.
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            Assert.DoesNotContain("incident", vm.Tags);
+
+            // Restore from Trash while that CLI is still the selected one.
+            vm.OpenTrash();
+            var card = ((TrashViewModel)vm.CurrentContent!).Snips[0];
+            await vm.RestoreSnipCommand.ExecuteAsync(card);
+
+            // The pane tag list must now reflect the restored snip, and we stay on Trash.
+            Assert.Contains("incident", vm.Tags);
+            Assert.IsType<TrashViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
         public async Task DeleteForever_only_removes_the_snip_when_confirmed()
         {
             Cli cli = null!;

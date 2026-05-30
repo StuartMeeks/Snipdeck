@@ -430,13 +430,29 @@ namespace Snipdeck.Core.ViewModels
             return new TrashViewModel(trashed);
         }
 
-        // Trash actions (restore / delete-forever) don't add or remove a CLI, so
-        // the CLI switcher and tag list don't need rebuilding here — those are
-        // refreshed lazily the next time a CLI is selected. We just persist and
-        // rebuild the Trash list in place so the user stays on the Trash view.
+        // Trash actions (restore / delete-forever) never add or remove a CLI, so
+        // the CLI switcher doesn't need rebuilding. But the pane tag list for the
+        // currently-selected CLI can go stale — a restore can surface a tag no
+        // visible snip had, and a purge can orphan one — and that list stays on
+        // screen while the user is on the Trash view. So rebuild the tags in
+        // place, then refresh the Trash list, all while keeping the user on the
+        // Trash view (suppressing the shell-content swap that a tag change would
+        // otherwise trigger).
         private async Task SaveAndRefreshTrashAsync()
         {
             await _store.SaveAsync(_document).ConfigureAwait(true);
+
+            _suppressShellRefresh = true;
+            try
+            {
+                RebuildTags();
+                SelectedTag = Tags.Count > 0 ? AllTagsSentinel : null;
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
+
             CurrentContent = BuildTrashViewModel();
         }
 
