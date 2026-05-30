@@ -213,6 +213,99 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task DeleteCurrentCli_is_blocked_when_the_cli_has_active_snips()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d => (cli, _) = SeedOneCliOneSnip(d));
+
+            // Even with confirmation primed, the must-be-empty guard fires first.
+            ix.NextConfirmResult = true;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(1, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_does_nothing_when_not_confirmed()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "empty-app" };
+                d.Clis.Add(cli);
+            });
+
+            ix.NextConfirmResult = false;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(0, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_removes_cli_and_its_trashed_snips_then_falls_back_to_home()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // A trashed snip must not block deletion, and must be removed with the CLI.
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "old", CommandTemplate = "x", IsTrash = true });
+            });
+
+            ix.NextConfirmResult = true;
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Empty(store.Document.Clis);
+            Assert.Empty(store.Document.Snips);
+            Assert.Equal(1, store.SaveCount);
+            Assert.True(vm.SelectedCliChoice?.IsHome);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_deletes_the_icon_asset()
+        {
+            var icons = new FakeIconAssetStorage();
+            var cli = new Cli { Name = "pl-app", IconRef = "icons/abc.png" };
+            var doc = new SnipStoreDocument();
+            doc.Clis.Add(cli);
+            var store = new InMemorySnipStore(doc);
+            var ix = new FakeShellInteractions { NextConfirmResult = true };
+            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons);
+            await vm.LoadAsync();
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Contains("icons/abc.png", icons.Deleted);
+            Assert.Empty(store.Document.Clis);
+        }
+
+        [Fact]
+        public async Task DeleteCurrentCli_no_ops_on_home()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync(d => d.Clis.Add(new Cli { Name = "pl-app" }));
+
+            // Selection defaults to the Home entry after load.
+            ix.NextConfirmResult = true;
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            Assert.Single(store.Document.Clis);
+            Assert.Equal(0, ix.NotifyCount);
+            Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
         public async Task NewCli_adds_the_cli_and_writes_icon_bytes_when_provided()
         {
             var (vm, store, _, ix, _) = await BuildAsync();

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable backup retention.** Choose how many timestamped store backups
   to keep (default 20) from Settings → "Backups to keep". The count is honoured
   on the next write-triggered backup, with no restart required.
+- **Delete a CLI.** A "Delete CLI" action on the CLI view removes an empty CLI
+  after confirmation. Deletion uses must-be-empty semantics: a CLI with visible
+  (non-trashed) snips can't be deleted until those snips are removed. The CLI's
+  icon asset and any leftover trashed snips are cleaned up with it.
 
 ## [0.1.0-alpha.1] - 2026-05-30
 

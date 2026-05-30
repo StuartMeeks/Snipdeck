@@ -62,5 +62,13 @@ namespace Snipdeck.App.Views
                 ViewModel.EditCurrentCliCommand.Execute(null);
             }
         }
+
+        private void OnDeleteCliClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.DeleteCurrentCliCommand.CanExecute(null))
+            {
+                ViewModel.DeleteCurrentCliCommand.Execute(null);
+            }
+        }
     }
 }

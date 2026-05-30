@@ -20,6 +20,12 @@ namespace Snipdeck.Core.Tests.Support
 
         public string? LastConfirmTitle { get; private set; }
 
+        public string? LastNotifyTitle { get; private set; }
+
+        public string? LastNotifyMessage { get; private set; }
+
+        public int NotifyCount { get; private set; }
+
         public Snip? LastEditedSnip { get; private set; }
 
         public Cli? LastEditedCli { get; private set; }
@@ -30,6 +36,14 @@ namespace Snipdeck.Core.Tests.Support
         {
             LastConfirmTitle = title;
             return Task.FromResult(NextConfirmResult);
+        }
+
+        public Task NotifyAsync(string title, string message, string buttonText = "OK")
+        {
+            LastNotifyTitle = title;
+            LastNotifyMessage = message;
+            NotifyCount++;
+            return Task.CompletedTask;
         }
 
         public Task<SnipEditResult?> EditSnipAsync(Snip snip, IReadOnlyList<Cli> availableClis)
