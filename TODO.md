@@ -53,6 +53,108 @@ This is the single biggest content-quality-of-life feature after v1 ships.
 
 ---
 
+## Execute Snips, not just construct them (with per-CLI shell + execution history)
+
+**Problem.** Today Snipdeck is a sophisticated clipboard — it builds the command
+and you paste it into your own terminal. That round-trip discards the most
+valuable artefact of running a CLI: the *output*. There's no way to ask "what
+did this Snip return last time I ran it against staging?", to diff two runs,
+or to even tell whether the previous invocation succeeded.
+
+**Idea.** Let Snipdeck *execute* a Snip in its configured shell, stream the
+output into a Snipdeck panel as it runs, and persist each execution against
+the Snip so the user accumulates a searchable run history.
+
+**Sketch.**
+
+- **Per-CLI shell declaration.** `Cli` gains a `Shell` field (enum:
+  `Cmd` / `PowerShell` / `PwshCore` / `Bash` / `Custom`) and an optional
+  `CustomShellPath` + `CustomShellArgsTemplate` for the escape hatch.
+  Default for new CLIs is whatever the platform considers canonical
+  (`PowerShell` on Windows). A Snip can override its CLI's shell when needed.
+- **A Run action alongside Copy.** Card overflow gains **Run**. Clicking it
+  walks the same parameter-fill flow as Copy, but on submit we spawn the
+  configured shell with the resolved command instead of copying to the
+  clipboard. The parameter-fill dialog is replaced or extended with a
+  **dry-run preview** of the exact command line plus a final "Run" button —
+  arbitrary execution is a footgun and the user must see the resolved
+  string once before it runs.
+- **Live output panel.** Output streams into a dedicated content pane —
+  probably a new content state alongside `HomeViewModel` / `CliViewModel` —
+  with stdout and stderr distinguished (colour, or two lanes), an exit-code
+  badge once the process completes, an elapsed timer, and a **Cancel** button
+  that kills the process group. Lines arrive via `IDispatcher` so we don't
+  mutate UI state off-thread (this fix's lesson, applied early).
+- **Execution history per Snip.** Each run captures: `SnipId`,
+  `ResolvedCommand`, `StartedAt`, `FinishedAt`, `ExitCode`,
+  `Cancelled`, `Stdout`, `Stderr` (or an interleaved stream with timestamps),
+  and the parameter values that were used. New entries append to a per-Snip
+  history log.
+- **Searchable history.** A new "History" view (probably a pane footer entry,
+  next to Settings) lists executions across all Snips, newest-first, with
+  full-text search over the captured output and command line. Clicking an
+  entry opens the run in the same output panel as a live run — just with the
+  Cancel button disabled and a "Run again" button enabled.
+
+**Storage — the awkward bit.**
+
+The current JSON-store rule (`CLAUDE.md`: "not SQLite, not LiteDB — the data
+is small") was made on the assumption of snippet definitions. **Execution
+output is not small.** A single `kubectl describe pod` can be tens of KB, and
+a power user might rack up thousands of runs.
+
+Options to weigh when this is scheduled:
+
+- **Per-Snip history file** (e.g. `<data>/history/<snip-id>.jsonl`,
+  append-only JSONL, one line per run). Keeps the main snip store small and
+  fast to load. Pruning is per-file. Cross-Snip search needs to walk all
+  files — feasible up to maybe ~10k files; degrades after.
+- **Per-CLI history file**. Compromise; smaller fan-out, still naturally
+  partitioned, but a single hot CLI's history can grow unbounded.
+- **Bring in SQLite specifically for executions** (NOT for the snip store).
+  Best query/search story, opens the door to `LIKE` / `MATCH` over output.
+  Departs from the "one JSON document" principle — but the principle was
+  scoped to *definitions*, not arbitrary observation data. Worth a real
+  conversation when this gets picked up; I (Claude) lean toward this option
+  for any non-trivial history feature.
+
+Retention defaults probably want to be "last N runs per Snip" (configurable),
+matching the existing backup-retention shape.
+
+**Open questions** to settle when scheduled:
+
+- **Working directory.** Per-CLI? Per-Snip override? Inherit from Snipdeck's
+  cwd? Likely per-CLI with per-Snip override, defaulting to the user's home.
+- **Environment variables.** Some CLIs need env (auth tokens, region pins).
+  Probably a per-CLI key/value list, masked in the UI (touches the parked
+  "secret parameters" decision).
+- **Safety / confirmation.** First-run confirmation per Snip? An allow-list?
+  A "this Snip has been edited since you last ran it" warning? Worth getting
+  right — Snipdeck running an unreviewed `rm -rf` is a category of incident
+  we don't want to ship.
+- **Cancellation semantics.** `Process.Kill(entireProcessTree: true)` covers
+  most shells. PowerShell can be sticky; document and test.
+- **Cross-platform shells.** `cmd` and `PowerShell` are Windows-only;
+  `pwsh` is cross-platform; `bash` on Windows means WSL. The enum needs to
+  encode both the shell *and* its launcher.
+- **Large outputs.** Cap captured-per-run size (configurable; default ~5 MB?)
+  and truncate with a marker. The UI panel can spool to disk for the live
+  view if needed.
+- **ANSI / colour.** `IShell` should pass output through verbatim; the panel
+  needs an ANSI escape parser to render colours and clear-line sequences.
+  Avalonia / WinUI both lack a built-in terminal control — either pull a
+  community one or render to a `RichTextBlock` with the ANSI stripped /
+  interpreted.
+- **Streaming-to-history vs. capture-then-write.** Stream-to-history (write
+  each chunk as it arrives) means a crashed Snipdeck still leaves a useful
+  partial log. Capture-then-write is simpler. Probably stream.
+
+This is a *significant* expansion of Snipdeck's surface area — it crosses
+from "snippet manager" into "lightweight runbook executor". Worth doing,
+worth doing carefully, and worth a design conversation before the first PR.
+
+---
+
 ## Carried over from the phase stack
 
 These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
