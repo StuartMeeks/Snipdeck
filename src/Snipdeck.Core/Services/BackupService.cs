@@ -7,30 +7,49 @@ namespace Snipdeck.Core.Services
 {
     public sealed class BackupService : IBackupService, IDisposable
     {
-        public const int DefaultRetention = 20;
+        public const int DefaultRetention = AppConfig.DefaultBackupRetention;
         private const string _filenamePrefix = "snipstore_";
         private const string _filenameSuffix = ".json";
         private const string _timestampFormat = "yyyyMMdd_HHmmssfff";
 
         private readonly string _sourceFilePath;
         private readonly IClock _clock;
-        private readonly int _retention;
+        private readonly Func<int> _retentionProvider;
         private readonly SemaphoreSlim _gate = new(1, 1);
 
+        /// <summary>
+        /// Constructs the service with a fixed retention count. Validated eagerly.
+        /// </summary>
         public BackupService(string sourceFilePath, string backupDirectory, IClock clock, int retention = DefaultRetention)
+            : this(sourceFilePath, backupDirectory, clock, ValidateFixedRetention(retention))
+        {
+        }
+
+        /// <summary>
+        /// Constructs the service with a retention <paramref name="retentionProvider"/>
+        /// read lazily on each prune, so a change to the backing configuration takes
+        /// effect on the next backup without re-creating the service. Provided values
+        /// are clamped to at least 1 at use time — a bad configuration value must never
+        /// crash a backup.
+        /// </summary>
+        public BackupService(string sourceFilePath, string backupDirectory, IClock clock, Func<int> retentionProvider)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(sourceFilePath);
             ArgumentException.ThrowIfNullOrWhiteSpace(backupDirectory);
             ArgumentNullException.ThrowIfNull(clock);
-            if (retention < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(retention), retention, "Retention must be at least 1.");
-            }
+            ArgumentNullException.ThrowIfNull(retentionProvider);
 
             _sourceFilePath = sourceFilePath;
             BackupDirectory = backupDirectory;
             _clock = clock;
-            _retention = retention;
+            _retentionProvider = retentionProvider;
+        }
+
+        private static Func<int> ValidateFixedRetention(int retention)
+        {
+            return retention < 1
+                ? throw new ArgumentOutOfRangeException(nameof(retention), retention, "Retention must be at least 1.")
+                : () => retention;
         }
 
         public string BackupDirectory { get; }
@@ -107,11 +126,13 @@ namespace Snipdeck.Core.Services
 
         private void PruneStaleBackups()
         {
+            var retention = Math.Max(1, _retentionProvider());
+
             var ordered = EnumerateBackupFiles()
                 .OrderByDescending(name => name, StringComparer.Ordinal)
                 .ToList();
 
-            for (var i = _retention; i < ordered.Count; i++)
+            for (var i = retention; i < ordered.Count; i++)
             {
                 try
                 {

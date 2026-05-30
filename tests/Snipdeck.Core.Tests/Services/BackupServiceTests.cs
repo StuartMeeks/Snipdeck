@@ -133,6 +133,54 @@ namespace Snipdeck.Core.Tests.Services
         }
 
         [Fact]
+        public async Task CreateBackupAsync_reads_retention_lazily_from_provider()
+        {
+            WriteSource();
+            var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+            var retention = 5;
+            var service = new BackupService(_sourcePath, _backupDirectory, clock, () => retention);
+
+            // Fill up under the initial retention of 5.
+            for (var i = 0; i < 5; i++)
+            {
+                await service.CreateBackupAsync();
+                clock.Advance(TimeSpan.FromSeconds(1));
+            }
+            Assert.Equal(5, Directory.GetFiles(_backupDirectory, "snipstore_*.json").Length);
+
+            // Tighten retention and back up again: the next prune honours the new value.
+            retention = 2;
+            await service.CreateBackupAsync();
+
+            Assert.Equal(2, Directory.GetFiles(_backupDirectory, "snipstore_*.json").Length);
+        }
+
+        [Fact]
+        public async Task CreateBackupAsync_clamps_non_positive_provider_value_to_one()
+        {
+            WriteSource();
+            var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+            var service = new BackupService(_sourcePath, _backupDirectory, clock, () => 0);
+
+            for (var i = 0; i < 4; i++)
+            {
+                await service.CreateBackupAsync();
+                clock.Advance(TimeSpan.FromSeconds(1));
+            }
+
+            // A zero/negative provider value never wipes everything: at least one is kept.
+            Assert.Single(Directory.GetFiles(_backupDirectory, "snipstore_*.json"));
+        }
+
+        [Fact]
+        public void Provider_constructor_rejects_null_provider()
+        {
+            var clock = new FakeClock(DateTimeOffset.UtcNow);
+            Assert.Throws<ArgumentNullException>(
+                () => new BackupService(_sourcePath, _backupDirectory, clock, retentionProvider: null!));
+        }
+
+        [Fact]
         public async Task PruneStep_does_not_touch_unrelated_files_in_backup_directory()
         {
             WriteSource();

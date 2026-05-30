@@ -4,11 +4,15 @@ namespace Snipdeck.Core.Models
     {
         public const int CurrentSchemaVersion = 1;
 
+        public const int DefaultBackupRetention = 20;
+
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
         public string? StoragePath { get; set; }
 
         public string? BackupDirectory { get; set; }
+
+        public int BackupRetention { get; set; } = DefaultBackupRetention;
 
         public ThemePreference Theme { get; set; } = ThemePreference.System;
 
