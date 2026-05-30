@@ -31,7 +31,7 @@ namespace Snipdeck.Core.Services
                 : StorageChangeOutcome.SetEmptyTarget;
         }
 
-        public void MoveStore(string currentDirectory, string targetDirectory)
+        public void CopyStore(string currentDirectory, string targetDirectory)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
             ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
@@ -45,20 +45,26 @@ namespace Snipdeck.Core.Services
             }
 
             var sourceIcons = Path.Combine(currentDirectory, _iconsSubdirectory);
-            var targetIcons = Path.Combine(targetDirectory, _iconsSubdirectory);
             if (Directory.Exists(sourceIcons))
             {
-                CopyDirectory(sourceIcons, targetIcons);
+                CopyDirectory(sourceIcons, Path.Combine(targetDirectory, _iconsSubdirectory));
+            }
+        }
+
+        public void RemoveStore(string directory)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+
+            var store = StorePath(directory);
+            if (File.Exists(store))
+            {
+                File.Delete(store);
             }
 
-            // Only remove the originals once everything is safely copied across.
-            if (File.Exists(sourceStore))
+            var icons = Path.Combine(directory, _iconsSubdirectory);
+            if (Directory.Exists(icons))
             {
-                File.Delete(sourceStore);
-            }
-            if (Directory.Exists(sourceIcons))
-            {
-                Directory.Delete(sourceIcons, recursive: true);
+                Directory.Delete(icons, recursive: true);
             }
         }
 

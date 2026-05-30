@@ -230,6 +230,7 @@ namespace Snipdeck.Core.ViewModels
             // The storage path is only read at startup, so apply-then-restart keeps
             // the immutable startup state consistent and avoids the running app
             // writing snips to the old location after the switch.
+            var isMove = false;
             switch (outcome)
             {
                 case StorageChangeOutcome.NoChange:
@@ -261,7 +262,11 @@ namespace Snipdeck.Core.ViewModels
                     {
                         return;
                     }
-                    _relocation.MoveStore(current, target);
+                    // Copy now; the originals are removed only after the new path
+                    // is durably persisted, so a failed save can't leave the
+                    // config pointing at an emptied old location.
+                    _relocation.CopyStore(current, target);
+                    isMove = true;
                     break;
 
                 case StorageChangeOutcome.SetEmptyTarget:
@@ -281,6 +286,10 @@ namespace Snipdeck.Core.ViewModels
 
             _config.StoragePath = target;
             await PersistAsync().ConfigureAwait(true);
+            if (isMove)
+            {
+                _relocation.RemoveStore(current);
+            }
             StorageDirectory = target;
             _restart.Restart();
         }

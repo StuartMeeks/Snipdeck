@@ -90,7 +90,7 @@ namespace Snipdeck.Core.Tests.Services
         }
 
         [Fact]
-        public void MoveStore_copies_store_and_icons_then_removes_the_originals()
+        public void CopyStore_copies_store_and_icons_and_leaves_the_originals()
         {
             var current = NewTempDir();
             var target = NewTempDir();
@@ -101,17 +101,39 @@ namespace Snipdeck.Core.Tests.Services
                 File.WriteAllText(Path.Combine(current, "icons", "abc.png"), "icon-bytes");
                 Directory.Delete(target);
 
-                new StorageRelocationService().MoveStore(current, target);
+                new StorageRelocationService().CopyStore(current, target);
 
                 Assert.Equal("{\"snips\":[]}", File.ReadAllText(Path.Combine(target, "store.json")));
                 Assert.Equal("icon-bytes", File.ReadAllText(Path.Combine(target, "icons", "abc.png")));
-                Assert.False(File.Exists(Path.Combine(current, "store.json")));
-                Assert.False(Directory.Exists(Path.Combine(current, "icons")));
+                // Non-destructive: originals remain until RemoveStore runs.
+                Assert.True(File.Exists(Path.Combine(current, "store.json")));
+                Assert.True(Directory.Exists(Path.Combine(current, "icons")));
             }
             finally
             {
                 if (Directory.Exists(current)) { Directory.Delete(current, recursive: true); }
                 if (Directory.Exists(target)) { Directory.Delete(target, recursive: true); }
+            }
+        }
+
+        [Fact]
+        public void RemoveStore_deletes_the_store_and_icons()
+        {
+            var dir = NewTempDir();
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "store.json"), "{}");
+                _ = Directory.CreateDirectory(Path.Combine(dir, "icons"));
+                File.WriteAllText(Path.Combine(dir, "icons", "abc.png"), "x");
+
+                new StorageRelocationService().RemoveStore(dir);
+
+                Assert.False(File.Exists(Path.Combine(dir, "store.json")));
+                Assert.False(Directory.Exists(Path.Combine(dir, "icons")));
+            }
+            finally
+            {
+                Directory.Delete(dir, recursive: true);
             }
         }
     }

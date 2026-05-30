@@ -39,10 +39,14 @@ namespace Snipdeck.Core.Abstractions
         StorageChangeOutcome Inspect(string currentDirectory, string targetDirectory);
 
         /// <summary>
-        /// Moves the store file and the icons subdirectory from the current
-        /// directory to the target (copy-then-remove). Only valid for
-        /// <see cref="StorageChangeOutcome.MoveToTarget"/>.
+        /// Copies the store file and the icons subdirectory from the current
+        /// directory to the target. Non-destructive — the originals are left in
+        /// place so the new config can be persisted durably before
+        /// <see cref="RemoveStore"/> removes them.
         /// </summary>
-        void MoveStore(string currentDirectory, string targetDirectory);
+        void CopyStore(string currentDirectory, string targetDirectory);
+
+        /// <summary>Removes the store file and icons subdirectory from a directory.</summary>
+        void RemoveStore(string directory);
     }
 }
