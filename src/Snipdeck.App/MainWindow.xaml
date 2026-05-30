@@ -22,69 +22,60 @@
 
         <Grid x:Name="AppTitleBar"
               Grid.Row="0"
-              Height="48"
-              Padding="12,0,0,0"
-              ColumnSpacing="12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+              Height="48">
 
             <TextBlock x:Name="AppTitleTextBlock"
-                       Grid.Column="0"
                        Text="Snipdeck"
                        Style="{StaticResource CaptionTextBlockStyle}"
-                       VerticalAlignment="Center" />
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0" />
 
-            <ComboBox Grid.Column="1"
-                      VerticalAlignment="Center"
-                      MinWidth="160"
-                      ToolTipService.ToolTip="Switch CLI"
-                      ItemsSource="{x:Bind Shell.CliChoices, Mode=OneWay}"
-                      SelectedItem="{x:Bind Shell.SelectedCliChoice, Mode=TwoWay}"
-                      DisplayMemberPath="Display" />
+            <!-- Search and switcher, centred as a group in the bar. -->
+            <StackPanel Orientation="Horizontal"
+                        Spacing="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <AutoSuggestBox x:Name="SearchBox"
+                                VerticalAlignment="Center"
+                                Width="280"
+                                PlaceholderText="Search snips"
+                                QueryIcon="Find"
+                                TextMemberPath="Title"
+                                TextChanged="OnSearchTextChanged"
+                                SuggestionChosen="OnSearchSuggestionChosen"
+                                QuerySubmitted="OnSearchQuerySubmitted">
+                    <AutoSuggestBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SnipSearchResult">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        CornerRadius="4"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind CliName}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="{x:Bind Title}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </DataTemplate>
+                    </AutoSuggestBox.ItemTemplate>
+                </AutoSuggestBox>
 
-            <AutoSuggestBox x:Name="SearchBox"
-                            Grid.Column="2"
-                            VerticalAlignment="Center"
-                            Width="280"
-                            PlaceholderText="Search snips"
-                            QueryIcon="Find"
-                            TextMemberPath="Title"
-                            TextChanged="OnSearchTextChanged"
-                            SuggestionChosen="OnSearchSuggestionChosen"
-                            QuerySubmitted="OnSearchQuerySubmitted">
-                <AutoSuggestBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SnipSearchResult">
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0"
-                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                    CornerRadius="4"
-                                    Padding="6,2"
-                                    VerticalAlignment="Center">
-                                <TextBlock Text="{x:Bind CliName}"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </Border>
-                            <TextBlock Grid.Column="1"
-                                       Text="{x:Bind Title}"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis" />
-                        </Grid>
-                    </DataTemplate>
-                </AutoSuggestBox.ItemTemplate>
-            </AutoSuggestBox>
-
-            <Border x:Name="TitleBarDragRegion"
-                    Grid.Column="3"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Background="Transparent" />
+                <ComboBox VerticalAlignment="Center"
+                          MinWidth="160"
+                          ToolTipService.ToolTip="Switch CLI"
+                          ItemsSource="{x:Bind Shell.CliChoices, Mode=OneWay}"
+                          SelectedItem="{x:Bind Shell.SelectedCliChoice, Mode=TwoWay}"
+                          DisplayMemberPath="Display" />
+            </StackPanel>
         </Grid>
 
         <ContentControl x:Name="ShellHost"

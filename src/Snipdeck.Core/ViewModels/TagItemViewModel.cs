@@ -7,8 +7,12 @@ namespace Snipdeck.Core.ViewModels
     /// </summary>
     public sealed class TagItemViewModel(string name, string glyph, bool isAll = false)
     {
-        /// <summary>Fallback glyph for a tag with no assigned icon.</summary>
-        public const string DefaultGlyph = "#";
+        /// <summary>
+        /// Fallback glyph for a tag with no assigned icon: the Segoe Fluent Icons
+        /// "Tag" glyph (same as the Tags feature icon). A literal "#" renders as
+        /// tofu in that icon font, so we use a real glyph.
+        /// </summary>
+        public const string DefaultGlyph = "\uE8EC";
 
         public string Name { get; } = name;
 

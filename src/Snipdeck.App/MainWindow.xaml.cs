@@ -19,9 +19,9 @@ namespace Snipdeck.App
             InitializeComponent();
 
             ExtendsContentIntoTitleBar = true;
-            // Only the spacer is draggable; the switcher and search box in the
-            // title bar stay interactive.
-            SetTitleBar(TitleBarDragRegion);
+            // The whole bar is the drag region; WinUI auto-excludes the interactive
+            // controls (search box, switcher) so they stay clickable.
+            SetTitleBar(AppTitleBar);
 
             ShellHost.Content = shellPage;
 

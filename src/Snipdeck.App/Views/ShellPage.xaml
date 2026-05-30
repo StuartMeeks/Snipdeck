@@ -413,7 +413,7 @@
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Tags"
                                        Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Give a tag an icon (a Segoe Fluent Icons glyph, e.g. paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default #."
+                            <TextBlock Text="Give a tag an icon (a Segoe Fluent Icons glyph, e.g. paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default tag icon."
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        TextWrapping="Wrap" />
@@ -461,7 +461,7 @@
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBox Grid.Column="2"
-                                                 PlaceholderText="Icon (blank = #)"
+                                                 PlaceholderText="Icon (blank = default)"
                                                  Text="{x:Bind Glyph, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     </Grid>
                                 </Border>

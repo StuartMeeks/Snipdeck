@@ -345,9 +345,9 @@ namespace Snipdeck.Core.Tests.ViewModels
                 d.Snips.Add(new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "x", Tags = ["deploy"] });
             });
 
-            // Select the CLI so its tags populate the nav (default glyph "#").
+            // Select the CLI so its tags populate the nav (default tag glyph).
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
-            Assert.Equal("#", vm.Tags.Single(t => t.Name == "deploy").Glyph);
+            Assert.Equal(TagItemViewModel.DefaultGlyph, vm.Tags.Single(t => t.Name == "deploy").Glyph);
 
             vm.OpenTagIcons();
             var tagsVm = Assert.IsType<TagIconsViewModel>(vm.CurrentContent);
