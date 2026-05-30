@@ -323,3 +323,20 @@ load-bearing for the v1 demo, but they're the obvious next-pulls.
 - **Trash UI.** Soft-deleted Snips currently just vanish from the views.
   Need a "Trash" entry in the pane footer that lists trashed Snips with a
   restore action and a hard-delete option.
+- **Re-enable `PublishTrimmed` once JSON serialisation is trim-safe.**
+  Disabled in `Snipdeck.App.csproj` to unblock the first release. To
+  turn it back on:
+  1. Move `JsonSnipStore` / `JsonSettingsStore` onto
+     `JsonSerializerContext` source generation
+     (`[JsonSerializable(typeof(SnipStoreDocument))]` etc.) so the
+     untyped `Serialize/Deserialize` calls disappear. Removes IL2026.
+  2. Audit Jdenticon-net, Microsoft.Windows.SDK.NET and WinRT.Runtime
+     trim warnings (IL2104); either suppress per-assembly with
+     `<TrimmerRootAssembly>` entries / `[DynamicallyAccessedMembers]`
+     attributes, or accept them via targeted
+     `<TrimmerSingleWarn>false</TrimmerSingleWarn>` carve-outs.
+  3. Flip `PublishTrimmed` back to `True` for Release.
+
+  Payoff is a meaningfully smaller self-contained Velopack package
+  (probably ~80 MB instead of ~150–200 MB). Not urgent for alpha but
+  worth doing before a stable cut.
