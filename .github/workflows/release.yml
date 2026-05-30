@@ -44,11 +44,15 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $version = $tag.TrimStart('v')
-          $isPrerelease = $version.Contains('-')
-          if ($isPrerelease) {
+          # Emit lowercase 'true'/'false' explicitly — PowerShell's boolean
+          # string-interpolation produces 'True'/'False' (capitalised), which
+          # softprops/action-gh-release@v2 silently treats as falsy.
+          if ($version.Contains('-')) {
+            $isPrerelease = 'true'
             $channel = ($version -split '-', 2)[1] -replace '\..*$', ''
             if ([string]::IsNullOrWhiteSpace($channel)) { $channel = 'beta' }
           } else {
+            $isPrerelease = 'false'
             $channel = 'stable'
           }
           "version=$version"           >> $env:GITHUB_OUTPUT
