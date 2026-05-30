@@ -300,14 +300,17 @@ namespace Snipdeck.Core.ViewModels
             _ = _document.Snips.RemoveAll(s => s.CliId == cli.Id);
             _ = _document.Clis.RemoveAll(c => c.Id == cli.Id);
 
+            // Persist the removal first; the deleted CLI is no longer in CliChoices
+            // so SaveAndRefreshAsync falls back to the first choice (Home).
+            await SaveAndRefreshAsync().ConfigureAwait(true);
+
+            // Only after the store is safely persisted do we clean up the icon —
+            // a best-effort side effect. Doing it earlier would risk deleting the
+            // asset while a failed save left the store still referencing it.
             if (!string.IsNullOrEmpty(cli.IconRef))
             {
                 await _iconStorage.DeleteIconAsync(cli.IconRef).ConfigureAwait(true);
             }
-
-            // The deleted CLI is no longer in CliChoices, so SaveAndRefreshAsync
-            // falls back to the first choice (Home).
-            await SaveAndRefreshAsync().ConfigureAwait(true);
         }
 
         partial void OnSelectedCliChoiceChanged(CliChoice? value)
