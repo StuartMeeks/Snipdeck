@@ -96,6 +96,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{x:Bind Name}"
@@ -106,6 +107,10 @@
                                 Content="Edit CLI"
                                 Click="OnEditCliClicked" />
                         <Button Grid.Column="2"
+                                Margin="0,0,8,0"
+                                Content="Delete CLI"
+                                Click="OnDeleteCliClicked" />
+                        <Button Grid.Column="3"
                                 Content="New snip"
                                 Click="OnNewSnipClicked"
                                 Style="{ThemeResource AccentButtonStyle}" />

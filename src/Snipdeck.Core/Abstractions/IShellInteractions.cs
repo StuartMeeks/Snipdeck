@@ -15,6 +15,11 @@ namespace Snipdeck.Core.Abstractions
             string confirmButtonText = "Yes",
             string cancelButtonText = "Cancel");
 
+        Task NotifyAsync(
+            string title,
+            string message,
+            string buttonText = "OK");
+
         Task<SnipEditResult?> EditSnipAsync(Snip snip, IReadOnlyList<Cli> availableClis);
 
         Task<CliEditResult?> EditCliAsync(Cli cli);

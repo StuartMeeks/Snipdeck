@@ -6,6 +6,8 @@ namespace Snipdeck.Core.Tests.Support
     {
         public Dictionary<Guid, byte[]> Saved { get; } = [];
 
+        public List<string> Deleted { get; } = [];
+
         public Task<string> SaveIconAsync(Guid cliId, byte[] bytes)
         {
             Saved[cliId] = bytes;
@@ -14,6 +16,7 @@ namespace Snipdeck.Core.Tests.Support
 
         public Task DeleteIconAsync(string relativePath)
         {
+            Deleted.Add(relativePath);
             return Task.CompletedTask;
         }
 

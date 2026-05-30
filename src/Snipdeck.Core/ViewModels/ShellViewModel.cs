@@ -264,6 +264,55 @@ namespace Snipdeck.Core.ViewModels
             await SaveAndRefreshAsync().ConfigureAwait(true);
         }
 
+        [RelayCommand]
+        private async Task DeleteCurrentCliAsync()
+        {
+            if (SelectedCliChoice?.Cli is not { } cli)
+            {
+                return;
+            }
+
+            // Must-be-empty semantics: a CLI can only be deleted once its visible
+            // (non-trashed) snips are gone. Trashed snips don't block — they're
+            // already soft-deleted and the user can't see them.
+            var activeSnipCount = _document.Snips.Count(s => s.CliId == cli.Id && !s.IsTrash);
+            if (activeSnipCount > 0)
+            {
+                await _interactions.NotifyAsync(
+                    "Can't delete CLI",
+                    $"“{cli.Name}” still has {activeSnipCount} snip{(activeSnipCount == 1 ? "" : "s")}. " +
+                    "Delete those snips first, then delete the CLI.").ConfigureAwait(true);
+                return;
+            }
+
+            var confirmed = await _interactions.ConfirmAsync(
+                "Delete CLI",
+                $"Delete “{cli.Name}”? This can't be undone.",
+                "Delete",
+                "Cancel").ConfigureAwait(true);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            // Remove the CLI and any trashed snips that belonged to it — otherwise
+            // those snips would be orphaned, pointing at a CLI that no longer exists.
+            _ = _document.Snips.RemoveAll(s => s.CliId == cli.Id);
+            _ = _document.Clis.RemoveAll(c => c.Id == cli.Id);
+
+            // Persist the removal first; the deleted CLI is no longer in CliChoices
+            // so SaveAndRefreshAsync falls back to the first choice (Home).
+            await SaveAndRefreshAsync().ConfigureAwait(true);
+
+            // Only after the store is safely persisted do we clean up the icon —
+            // a best-effort side effect. Doing it earlier would risk deleting the
+            // asset while a failed save left the store still referencing it.
+            if (!string.IsNullOrEmpty(cli.IconRef))
+            {
+                await _iconStorage.DeleteIconAsync(cli.IconRef).ConfigureAwait(true);
+            }
+        }
+
         partial void OnSelectedCliChoiceChanged(CliChoice? value)
         {
             _suppressShellRefresh = true;
