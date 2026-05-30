@@ -297,107 +297,6 @@ Reasons:
 
 ---
 
-## Code-sign the installer (SmartScreen / Authenticode)
-
-**Problem.** The v0.1.0-alpha.1 installer is unsigned. Downloading it in
-Edge / Chrome trips SmartScreen's "this file isn't commonly downloaded —
-make sure you trust it" warning, and running it shows the blue "Windows
-protected your PC" dialog. Every user has to click through "More info →
-Run anyway", which is a terrible first impression and a real deterrent.
-
-**Cause.** SmartScreen reputation is built from a combination of valid
-Authenticode signatures plus aggregate download counts. An unsigned
-binary with zero downloads is automatic prompt-territory. Signing solves
-the warning immediately for EV certs and over time (as downloads
-accumulate) for OV certs.
-
-**Options.**
-
-- **Azure Trusted Signing** (recommended). Microsoft's new managed
-  signing service, ~$10/month, gives you a cloud-hosted signing identity
-  with no HSM to manage. Velopack supports it natively via
-  `--azureTrustedSigningAccount` / `--azureTrustedSigningCertProfile`
-  flags on `vpk pack`. Wants an Azure subscription and an OIDC trust
-  relationship from the GitHub Actions runner — five-step setup, no
-  long-lived secrets in the repo.
-- **Standard OV code-signing certificate.** From DigiCert / Sectigo /
-  GlobalSign, ~$200–400/year. Comes as a cert + key the runner imports.
-  SmartScreen reputation builds gradually rather than instantly. Easier
-  if you already have an account with a CA.
-- **EV code-signing certificate.** ~$400–600/year, requires an HSM /
-  USB token (hard to use from CI without a paid signing service in front
-  of it) but gets immediate SmartScreen reputation. Probably overkill
-  for an alpha; revisit pre-1.0 stable.
-
-**Sketch — Azure Trusted Signing path.**
-
-1. Create the Azure resources (Trusted Signing account, certificate
-   profile, OIDC trust to the GitHub repo) per
-   <https://learn.microsoft.com/azure/trusted-signing/>.
-2. Add the federated-identity secrets / variables to the repo: tenant
-   id, client id, account / profile names.
-3. In `release.yml`, extend the `vpk pack` step with
-   `--azureTrustedSigningAccount`, `--azureTrustedSigningCertProfile`,
-   `--azureTrustedSigningEndpoint` (region URL) and an `azure/login@v2`
-   step ahead of it for federated auth.
-4. Verify with `signtool verify /pa /v Snipdeck-*-Setup.exe` locally
-   after a download, and re-do the manual install smoke test.
-
-**Open questions.**
-
-- Whether the cost ($10/month indefinitely) is acceptable for a hobby /
-  side project. If not, the OV cert path is a single annual payment.
-- Whether the Velopack-generated update packages (the `.nupkg` deltas
-  used by self-update) also need signing for self-update to keep working
-  smoothly under SmartScreen. Worth reading the Velopack signing docs
-  carefully before flipping the switch.
-
-Not urgent — alpha users can click through the prompt — but blocking
-for any kind of broader distribution.
-
----
-
-## Tighten the iteration loop (build/CI feedback)
-
-**Problem.** During the phase build-out and post-release fixes, the
-build-and-debug cycle relied heavily on PRs as the feedback loop:
-local Linux can't build the `Snipdeck.App` project (the WinUI XAML
-compiler is Windows-only), so analyser errors / build breaks only
-surface in CI. Each round-trip is a PR, which generates churn and
-sometimes ends with main broken (PR #13 was merged with red CI).
-
-**Idea.** Three independent improvements; each is small, all three
-together would make the iteration loop tight.
-
-**Sketch.**
-
-- **`EnableWindowsTargeting=true` for local builds.** Adding this to
-  `Snipdeck.App.csproj` (or passing as `-p:EnableWindowsTargeting=true`
-  on Linux) lets the restore + compile step run on non-Windows hosts.
-  The WinUI XAML pass still requires Windows, but most analyser /
-  C# compiler rules fire under plain `dotnet build` and would catch
-  editorconfig violations (IDE0058, IDE0330, IDE0370, IDE0005 — all
-  hit in this session) before the push.
-- **Branch protection: require status checks to pass.** Add a rule to
-  the existing branch ruleset on `main` that requires the
-  `App build (windows)` and `Core build + tests (ubuntu)` checks to be
-  green before the Merge button activates. Mechanical guardrail
-  against the merged-red scenario.
-- **Draft PRs with force-push fixups during iteration.** Convention,
-  not config: open PRs as **Draft** while iterating, and amend +
-  force-push fixup commits into the original commit instead of stacking
-  "fix lint" follow-ups. The final merged history shows one clean
-  commit per change, which is what the project's commit log wants.
-  Auto-mode currently blocks `git push --force-with-lease` — would
-  need an explicit settings.json permission or a one-off approval
-  to enable. Force-push to `main` itself stays blocked.
-
-**Sequencing.** Do `EnableWindowsTargeting` first (cheapest, biggest
-quality-of-life win for me); then branch protection (one-off setup,
-done forever); then adopt the draft-PR convention.
-
----
-
 ## Final UI polish pass
 
 A deliberate sweep of visual / interaction rough edges, done **at the end**
@@ -423,9 +322,50 @@ re-polishing the same screens after every feature lands. Known items so far:
   the risk of accidental copies / conflicts with the overflow menu and
   favourite star hit-targets. Decide, then either remove the button or keep
   it.
+- **Resizable, size-remembering snip editor.** The New/Edit snip editor was
+  widened to fit its content, but it's still a `ContentDialog` (fixed size).
+  Make it genuinely user-resizable and persist the chosen size (to `AppConfig`)
+  so it reopens at the same dimensions. `ContentDialog` can't do this natively —
+  the likely route is to host the editor in a resizable secondary `Window`
+  (native drag-resize) rather than a dialog overlay, which means rethinking how
+  the editor is shown and how its result returns through `IShellInteractions`.
 
 Add to this list as other cosmetic / interaction snags turn up during
 feature work, then knock them out in one pass before a stable cut.
+
+---
+
+## Icon picker (glyph browser) for tag icons
+
+**Problem.** Tag icons are set by typing a raw glyph — either pasting a Segoe
+Fluent Icons character or entering its hex code point (`GlyphInput.Resolve`
+already accepts `E8EC`, `U+E8EC`, `0xE8EC`, `&#xE8EC;`). That works, but it's
+unfriendly: the user has to know or look up a code point and can't see what's
+available. There's no way to browse the icon set.
+
+**Idea.** A visual icon picker — a searchable grid of glyphs the user clicks to
+choose — instead of (or alongside) typing a code. Driven from the Tags
+management view, and a reusable fit for any future "choose a glyph" need.
+
+**Sketch.**
+- A reusable `IconPicker` control / flyout: a virtualised `GridView` of
+  `FontIcon`s over a list of Segoe Fluent Icons glyphs, with a search box that
+  filters by name and/or code point.
+- Needs a glyph **catalogue** — code point + friendly name — for the grid and
+  search. Either hand-curate a useful subset or embed the published Segoe Fluent
+  Icons mapping; the names are what make search worthwhile.
+- Wire into the Tags view: add a "Choose…" button next to each row that opens
+  the picker, while keeping the free-text field as an escape hatch for pasting /
+  power users.
+- Selection still flows through `GlyphInput.Resolve` and the stored-character
+  model, so persistence is unchanged.
+
+**Open questions** to settle when scheduled:
+- Curated subset vs. full catalogue (the full set is ~1.5k glyphs — needs
+  virtualisation and good search to stay usable).
+- Where do the glyph **names** come from, and is fuzzy search worth it?
+- Do CLI icons (today: uploaded image, identicon fallback) also gain a
+  "pick a glyph instead" option, or stay image-only? Keep the first cut to tags.
 
 ---
 
