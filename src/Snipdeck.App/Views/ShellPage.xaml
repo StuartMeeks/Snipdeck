@@ -486,38 +486,30 @@
                     IsSettingsVisible="False"
                     PaneDisplayMode="Left"
                     OpenPaneLength="280"
-                    MenuItemsSource="{x:Bind ViewModel.Tags, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedTagItem, Mode=TwoWay}">
+                    ItemInvoked="OnNavigationItemInvoked">
 
-        <NavigationView.MenuItemTemplate>
-            <DataTemplate x:DataType="vm:TagItemViewModel">
-                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                              Glyph="{x:Bind Glyph}"
-                              FontSize="16" />
-                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
-            </DataTemplate>
-        </NavigationView.MenuItemTemplate>
-
-        <NavigationView.PaneHeader>
-            <StackPanel Padding="12,8" Spacing="8">
-                <AutoSuggestBox PlaceholderText="Search"
-                                QueryIcon="Find"
-                                Text="{x:Bind ViewModel.SearchText, Mode=TwoWay}" />
-
-                <ComboBox ItemsSource="{x:Bind ViewModel.CliChoices, Mode=OneWay}"
-                          SelectedItem="{x:Bind ViewModel.SelectedCliChoice, Mode=TwoWay}"
-                          DisplayMemberPath="Display"
-                          HorizontalAlignment="Stretch" />
-            </StackPanel>
-        </NavigationView.PaneHeader>
+        <NavigationView.MenuItems>
+            <NavigationViewItem x:Name="HomeNavItem" Content="Home">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="DocumentationNavItem"
+                                Content="Documentation"
+                                SelectsOnInvoked="False">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItemHeader Content="Tags" />
+        </NavigationView.MenuItems>
 
         <NavigationView.PaneFooter>
             <StackPanel>
                 <Button x:Name="SharedParametersButton"
                         Click="OnSharedParametersClicked"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Margin="12,8,12,0"
                         Background="Transparent"
                         BorderThickness="0">
@@ -529,6 +521,7 @@
                 <Button x:Name="TagsButton"
                         Click="OnTagsClicked"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Margin="12,8,12,0"
                         Background="Transparent"
                         BorderThickness="0">
@@ -540,6 +533,7 @@
                 <Button x:Name="TrashButton"
                         Click="OnTrashClicked"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Margin="12,8,12,0"
                         Background="Transparent"
                         BorderThickness="0">
@@ -551,6 +545,7 @@
                 <Button x:Name="SettingsButton"
                         Click="OnSettingsClicked"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Margin="12,8"
                         Background="Transparent"
                         BorderThickness="0">

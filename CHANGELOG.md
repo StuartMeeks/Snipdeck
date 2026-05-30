@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Shell layout: CLI switcher and search moved to the title bar.** The CLI
+  switcher and a snip search box now live in the custom title bar. Search is
+  snip-only with name autocomplete, scoped to the selected CLI; each suggestion
+  shows its CLI in a badge so identically-named snips are distinguishable, and
+  choosing one filters the list to it. The left navigation now leads with
+  **Home** and **Documentation** entries, followed by a **Tags** heading with an
+  **All** entry and the scoped tags; the footer actions (Shared parameters,
+  Tags, Trash, Settings) are left-aligned.
 - **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
   and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
   instead of the reflection-based serializer, removing the IL2026 trim warnings.
@@ -17,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
 
 ### Added
+- **Tag icons in the navigation.** Tags can carry a Segoe Fluent Icons glyph,
+  shown beside the tag in the left navigation (tags default to `#`). A new
+  "Tags" entry in the left-pane footer lets you set each tag's icon. Icons are
+  nav-only — snip tag chips are unchanged. (Store schema is now v3; an older
+  build refuses a v3 store rather than dropping tag icons.)
 - **Shared parameter definitions.** Define a parameter once and reuse it
   across snips, at two scopes: **CLI-scoped** (in the CLI editor — inherited by
   every snip under that CLI) and **global** (a new "Shared parameters" entry in

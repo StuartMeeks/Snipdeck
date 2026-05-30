@@ -8,9 +8,8 @@ namespace Snipdeck.Core.ViewModels
 {
     public sealed partial class CliViewModel : ObservableObject
     {
-        public CliViewModel(Cli cli, IEnumerable<Snip> filteredSnips)
+        public CliViewModel(Cli? cli, IEnumerable<Snip> filteredSnips)
         {
-            ArgumentNullException.ThrowIfNull(cli);
             ArgumentNullException.ThrowIfNull(filteredSnips);
 
             Cli = cli;
@@ -21,9 +20,13 @@ namespace Snipdeck.Core.ViewModels
                     .Select(s => new SnipCardViewModel(s)));
         }
 
-        public Cli Cli { get; }
+        /// <summary>The CLI in scope, or null for the unscoped "All" view across every CLI.</summary>
+        public Cli? Cli { get; }
 
-        public string Name => Cli.Name;
+        /// <summary>True for a single CLI — gates the CLI-specific header actions (edit/delete/new).</summary>
+        public bool HasCli => Cli is not null;
+
+        public string Name => Cli?.Name ?? "All snips";
 
         public ObservableCollection<SnipCardViewModel> Snips { get; }
 

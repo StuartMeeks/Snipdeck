@@ -19,6 +19,9 @@ namespace Snipdeck.Core.ViewModels
     {
         public const string AllTagsSentinel = "All";
 
+        /// <summary>The project documentation opened by the "Documentation" nav item.</summary>
+        public const string DocumentationUrl = "https://github.com/StuartMeeks/Snipdeck#readme";
+
         // Glyph for the "All" tag entry (Segoe Fluent Icons "Filter").
         private const string _allTagsGlyph = "\uE71C";
 
@@ -27,6 +30,7 @@ namespace Snipdeck.Core.ViewModels
         private readonly IClock _clock;
         private readonly IShellInteractions _interactions;
         private readonly IIconAssetStorage _iconStorage;
+        private readonly IExternalLinkService _externalLinks;
         private SnipStoreDocument _document = new();
         private bool _suppressShellRefresh;
 
@@ -50,19 +54,22 @@ namespace Snipdeck.Core.ViewModels
             IClipboardService clipboard,
             IClock clock,
             IShellInteractions interactions,
-            IIconAssetStorage iconStorage)
+            IIconAssetStorage iconStorage,
+            IExternalLinkService externalLinks)
         {
             ArgumentNullException.ThrowIfNull(store);
             ArgumentNullException.ThrowIfNull(clipboard);
             ArgumentNullException.ThrowIfNull(clock);
             ArgumentNullException.ThrowIfNull(interactions);
             ArgumentNullException.ThrowIfNull(iconStorage);
+            ArgumentNullException.ThrowIfNull(externalLinks);
 
             _store = store;
             _clipboard = clipboard;
             _clock = clock;
             _interactions = interactions;
             _iconStorage = iconStorage;
+            _externalLinks = externalLinks;
         }
 
         public ObservableCollection<CliChoice> CliChoices { get; } = [];
@@ -78,7 +85,21 @@ namespace Snipdeck.Core.ViewModels
             // collection-change marshalling requires the original thread.
             _document = await _store.LoadAsync(cancellationToken).ConfigureAwait(true);
             RebuildCliChoices();
-            SelectedCliChoice = CliChoices.FirstOrDefault();
+            // Start on Home (no tag selected), scope = "All". Suppress so setting
+            // the choice doesn't auto-switch to the snip list (that's the
+            // user-driven behaviour); build the All-scope tag list explicitly.
+            _suppressShellRefresh = true;
+            try
+            {
+                SelectedCliChoice = CliChoices.FirstOrDefault();
+                RebuildTags();
+                SelectedTagItem = null;
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
+            ApplyShellContent();
         }
 
         public void OpenSettings(SettingsViewModel settings)
@@ -128,11 +149,13 @@ namespace Snipdeck.Core.ViewModels
 
             // Refresh the left-nav glyphs in place, keeping the user on this view
             // (suppress the content swap a selection change would otherwise cause).
+            var wasHome = SelectedTagItem is null;
+            var previousTagName = SelectedTagItem?.Name;
             _suppressShellRefresh = true;
             try
             {
                 RebuildTags();
-                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
+                RestoreTagSelection(wasHome, previousTagName);
             }
             finally
             {
@@ -141,10 +164,63 @@ namespace Snipdeck.Core.ViewModels
             tags.StatusMessage = "Saved.";
         }
 
-        public void GoHome()
+        /// <summary>Show the Home launcher (no tag selected). Scope is unchanged.</summary>
+        public void ShowHome()
         {
-            SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsHome);
+            SelectedTagItem = null;
+            ApplyShellContent();
         }
+
+        /// <summary>Open the project documentation (GitHub readme) in the browser.</summary>
+        public Task OpenDocumentationAsync() => _externalLinks.OpenAsync(DocumentationUrl);
+
+        /// <summary>
+        /// Snip-name autocomplete for the title-bar search, scoped to the current
+        /// CLI switcher value. Each result carries its CLI name for the badge.
+        /// </summary>
+        public IReadOnlyList<SnipSearchResult> GetSearchSuggestions(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return [];
+            }
+            var trimmed = query.Trim();
+            return [.. ScopedSnips()
+                .Where(s => !s.IsTrash && s.Title.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(s => s.Title, StringComparer.OrdinalIgnoreCase)
+                .Select(s => new SnipSearchResult(s.Title, CliNameFor(s.CliId), s.CliId, s.Id))];
+        }
+
+        /// <summary>Filter the snip list down to a chosen search result, switching CLI scope if needed.</summary>
+        public void SelectSearchResult(SnipSearchResult result)
+        {
+            ArgumentNullException.ThrowIfNull(result);
+
+            var choice = CliChoices.FirstOrDefault(c => c.Cli?.Id == result.CliId);
+            if (choice is not null && !ReferenceEquals(choice, SelectedCliChoice))
+            {
+                // Switching the CLI shows that scope's snips (selects the "All" tag).
+                SelectedCliChoice = choice;
+            }
+            else
+            {
+                // Same scope but possibly on Home — move to the snip list.
+                SelectedTagItem ??= Tags.FirstOrDefault(t => t.IsAll);
+            }
+
+            SearchText = result.Title;
+        }
+
+        /// <summary>Filter the snip list by free-text search, moving off Home if needed.</summary>
+        public void ApplySearch(string query)
+        {
+            // Search is snips-only: ensure the snip list is showing.
+            SelectedTagItem ??= Tags.FirstOrDefault(t => t.IsAll);
+            SearchText = query ?? string.Empty;
+        }
+
+        private string CliNameFor(Guid cliId) =>
+            _document.Clis.FirstOrDefault(c => c.Id == cliId)?.Name ?? string.Empty;
 
         [RelayCommand]
         private async Task CopySnipAsync(SnipCardViewModel? cardVm)
@@ -417,10 +493,17 @@ namespace Snipdeck.Core.ViewModels
 
         partial void OnSelectedCliChoiceChanged(CliChoice? value)
         {
+            // The initial/programmatic set is orchestrated by the caller (LoadAsync /
+            // SaveAndRefresh) under suppression; only react to user switcher changes.
+            if (_suppressShellRefresh)
+            {
+                return;
+            }
             _suppressShellRefresh = true;
             try
             {
                 RebuildTags();
+                // Changing the CLI shows that scope's snips (the "All" tag).
                 SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
             }
             finally
@@ -459,23 +542,24 @@ namespace Snipdeck.Core.ViewModels
         private void RebuildCliChoices()
         {
             CliChoices.Clear();
-            CliChoices.Add(new CliChoice { Display = "All / Home" });
+            CliChoices.Add(new CliChoice { Display = "All" });
             foreach (var cli in _document.Clis.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase))
             {
                 CliChoices.Add(new CliChoice { Cli = cli, Display = cli.Name });
             }
         }
 
+        // Snips in the current switcher scope: a single CLI, or all CLIs when "All".
+        private IEnumerable<Snip> ScopedSnips() =>
+            SelectedCliChoice?.Cli is { } cli
+                ? _document.Snips.Where(s => s.CliId == cli.Id)
+                : _document.Snips;
+
         private void RebuildTags()
         {
             Tags.Clear();
-            if (SelectedCliChoice?.Cli is not { } cli)
-            {
-                return;
-            }
-            var snipsForCli = _document.Snips.Where(s => s.CliId == cli.Id);
             Tags.Add(new TagItemViewModel(AllTagsSentinel, _allTagsGlyph, isAll: true));
-            foreach (var tag in SnipFilter.DistinctTagsFor(snipsForCli)
+            foreach (var tag in SnipFilter.DistinctTagsFor(ScopedSnips())
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase))
             {
                 var glyph = _document.TagIcons.TryGetValue(tag, out var g) && !string.IsNullOrWhiteSpace(g)
@@ -487,17 +571,17 @@ namespace Snipdeck.Core.ViewModels
 
         private void ApplyShellContent()
         {
-            if (SelectedCliChoice?.Cli is { } cli)
-            {
-                var cliSnips = _document.Snips.Where(s => s.CliId == cli.Id);
-                var effectiveTag = SelectedTag == AllTagsSentinel ? null : SelectedTag;
-                var filtered = SnipFilter.Apply(cliSnips, SearchText, effectiveTag).ToList();
-                CurrentContent = new CliViewModel(cli, filtered);
-            }
-            else
+            // No tag selected => the Home launcher. A tag (or "All") => the snip
+            // list for the current scope, filtered by that tag and the search text.
+            if (SelectedTagItem is null)
             {
                 CurrentContent = new HomeViewModel(_document, SearchText);
+                return;
             }
+
+            var effectiveTag = SelectedTagItem.IsAll ? null : SelectedTagItem.Name;
+            var filtered = SnipFilter.Apply(ScopedSnips(), SearchText, effectiveTag).ToList();
+            CurrentContent = new CliViewModel(SelectedCliChoice?.Cli, filtered);
         }
 
         private TrashViewModel BuildTrashViewModel()
@@ -518,11 +602,13 @@ namespace Snipdeck.Core.ViewModels
         {
             await _store.SaveAsync(_document).ConfigureAwait(true);
 
+            var wasHome = SelectedTagItem is null;
+            var previousTagName = SelectedTagItem?.Name;
             _suppressShellRefresh = true;
             try
             {
                 RebuildTags();
-                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
+                RestoreTagSelection(wasHome, previousTagName);
             }
             finally
             {
@@ -536,6 +622,8 @@ namespace Snipdeck.Core.ViewModels
         {
             await _store.SaveAsync(_document).ConfigureAwait(true);
             var previousCliId = SelectedCliChoice?.Cli?.Id;
+            var wasHome = SelectedTagItem is null;
+            var previousTagName = SelectedTagItem?.Name;
 
             _suppressShellRefresh = true;
             try
@@ -544,13 +632,24 @@ namespace Snipdeck.Core.ViewModels
                 SelectedCliChoice = CliChoices.FirstOrDefault(c => c.Cli?.Id == previousCliId)
                     ?? CliChoices.FirstOrDefault();
                 RebuildTags();
-                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
+                RestoreTagSelection(wasHome, previousTagName);
             }
             finally
             {
                 _suppressShellRefresh = false;
             }
             ApplyShellContent();
+        }
+
+        // Re-apply the prior nav selection after a tag rebuild: stay on Home when
+        // the user was on Home, otherwise reselect the same tag (falling back to
+        // "All" if that tag no longer exists in scope).
+        private void RestoreTagSelection(bool wasHome, string? previousTagName)
+        {
+            SelectedTagItem = wasHome
+                ? null
+                : Tags.FirstOrDefault(t => string.Equals(t.Name, previousTagName, StringComparison.Ordinal))
+                  ?? Tags.FirstOrDefault(t => t.IsAll);
         }
     }
 }

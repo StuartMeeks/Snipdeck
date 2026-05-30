@@ -34,7 +34,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var clip = new FakeClipboardService();
             var ix = new FakeShellInteractions();
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
-            var vm = new ShellViewModel(store, clip, clock, ix, new FakeIconAssetStorage());
+            var vm = new ShellViewModel(store, clip, clock, ix, new FakeIconAssetStorage(), new FakeExternalLinkService());
             await vm.LoadAsync();
             return (vm, store, clip, ix, clock);
         }
@@ -298,7 +298,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.Empty(store.Document.Clis);
             Assert.Empty(store.Document.Snips);
             Assert.Equal(1, store.SaveCount);
-            Assert.True(vm.SelectedCliChoice?.IsHome);
+            Assert.True(vm.SelectedCliChoice?.IsAll);
         }
 
         [Fact]
@@ -310,7 +310,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             doc.Clis.Add(cli);
             var store = new InMemorySnipStore(doc);
             var ix = new FakeShellInteractions { NextConfirmResult = true };
-            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons);
+            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons, new FakeExternalLinkService());
             await vm.LoadAsync();
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
 
@@ -493,7 +493,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             // Replace the icon storage so we can inspect — rebuild the VM
             var clip = new FakeClipboardService();
             var clock = new FakeClock(DateTimeOffset.UtcNow);
-            var vmWithIcons = new ShellViewModel(store, clip, clock, ix, icons);
+            var vmWithIcons = new ShellViewModel(store, clip, clock, ix, icons, new FakeExternalLinkService());
             await vmWithIcons.LoadAsync();
 
             await vmWithIcons.NewCliCommand.ExecuteAsync(null);
