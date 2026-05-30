@@ -297,6 +297,107 @@ Reasons:
 
 ---
 
+## Code-sign the installer (SmartScreen / Authenticode)
+
+**Problem.** The v0.1.0-alpha.1 installer is unsigned. Downloading it in
+Edge / Chrome trips SmartScreen's "this file isn't commonly downloaded —
+make sure you trust it" warning, and running it shows the blue "Windows
+protected your PC" dialog. Every user has to click through "More info →
+Run anyway", which is a terrible first impression and a real deterrent.
+
+**Cause.** SmartScreen reputation is built from a combination of valid
+Authenticode signatures plus aggregate download counts. An unsigned
+binary with zero downloads is automatic prompt-territory. Signing solves
+the warning immediately for EV certs and over time (as downloads
+accumulate) for OV certs.
+
+**Options.**
+
+- **Azure Trusted Signing** (recommended). Microsoft's new managed
+  signing service, ~$10/month, gives you a cloud-hosted signing identity
+  with no HSM to manage. Velopack supports it natively via
+  `--azureTrustedSigningAccount` / `--azureTrustedSigningCertProfile`
+  flags on `vpk pack`. Wants an Azure subscription and an OIDC trust
+  relationship from the GitHub Actions runner — five-step setup, no
+  long-lived secrets in the repo.
+- **Standard OV code-signing certificate.** From DigiCert / Sectigo /
+  GlobalSign, ~$200–400/year. Comes as a cert + key the runner imports.
+  SmartScreen reputation builds gradually rather than instantly. Easier
+  if you already have an account with a CA.
+- **EV code-signing certificate.** ~$400–600/year, requires an HSM /
+  USB token (hard to use from CI without a paid signing service in front
+  of it) but gets immediate SmartScreen reputation. Probably overkill
+  for an alpha; revisit pre-1.0 stable.
+
+**Sketch — Azure Trusted Signing path.**
+
+1. Create the Azure resources (Trusted Signing account, certificate
+   profile, OIDC trust to the GitHub repo) per
+   <https://learn.microsoft.com/azure/trusted-signing/>.
+2. Add the federated-identity secrets / variables to the repo: tenant
+   id, client id, account / profile names.
+3. In `release.yml`, extend the `vpk pack` step with
+   `--azureTrustedSigningAccount`, `--azureTrustedSigningCertProfile`,
+   `--azureTrustedSigningEndpoint` (region URL) and an `azure/login@v2`
+   step ahead of it for federated auth.
+4. Verify with `signtool verify /pa /v Snipdeck-*-Setup.exe` locally
+   after a download, and re-do the manual install smoke test.
+
+**Open questions.**
+
+- Whether the cost ($10/month indefinitely) is acceptable for a hobby /
+  side project. If not, the OV cert path is a single annual payment.
+- Whether the Velopack-generated update packages (the `.nupkg` deltas
+  used by self-update) also need signing for self-update to keep working
+  smoothly under SmartScreen. Worth reading the Velopack signing docs
+  carefully before flipping the switch.
+
+Not urgent — alpha users can click through the prompt — but blocking
+for any kind of broader distribution.
+
+---
+
+## Tighten the iteration loop (build/CI feedback)
+
+**Problem.** During the phase build-out and post-release fixes, the
+build-and-debug cycle relied heavily on PRs as the feedback loop:
+local Linux can't build the `Snipdeck.App` project (the WinUI XAML
+compiler is Windows-only), so analyser errors / build breaks only
+surface in CI. Each round-trip is a PR, which generates churn and
+sometimes ends with master broken (PR #13 was merged with red CI).
+
+**Idea.** Three independent improvements; each is small, all three
+together would make the iteration loop tight.
+
+**Sketch.**
+
+- **`EnableWindowsTargeting=true` for local builds.** Adding this to
+  `Snipdeck.App.csproj` (or passing as `-p:EnableWindowsTargeting=true`
+  on Linux) lets the restore + compile step run on non-Windows hosts.
+  The WinUI XAML pass still requires Windows, but most analyser /
+  C# compiler rules fire under plain `dotnet build` and would catch
+  editorconfig violations (IDE0058, IDE0330, IDE0370, IDE0005 — all
+  hit in this session) before the push.
+- **Branch protection: require status checks to pass.** Add a rule to
+  the existing branch ruleset on `master` that requires the
+  `App build (windows)` and `Core build + tests (ubuntu)` checks to be
+  green before the Merge button activates. Mechanical guardrail
+  against the merged-red scenario.
+- **Draft PRs with force-push fixups during iteration.** Convention,
+  not config: open PRs as **Draft** while iterating, and amend +
+  force-push fixup commits into the original commit instead of stacking
+  "fix lint" follow-ups. The final merged history shows one clean
+  commit per change, which is what the project's commit log wants.
+  Auto-mode currently blocks `git push --force-with-lease` — would
+  need an explicit settings.json permission or a one-off approval
+  to enable. Force-push to `master` itself stays blocked.
+
+**Sequencing.** Do `EnableWindowsTargeting` first (cheapest, biggest
+quality-of-life win for me); then branch protection (one-off setup,
+done forever); then adopt the draft-PR convention.
+
+---
+
 ## Carried over from the phase stack
 
 These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
