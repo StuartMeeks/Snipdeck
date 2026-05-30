@@ -13,8 +13,18 @@ namespace Snipdeck.Core.ViewModels
         [ObservableProperty]
         public partial string Glyph { get; set; } = glyph;
 
-        /// <summary>What to show in the preview — the entered glyph, or the default when blank.</summary>
-        public string PreviewGlyph => string.IsNullOrWhiteSpace(Glyph) ? TagItemViewModel.DefaultGlyph : Glyph.Trim();
+        /// <summary>
+        /// What to show in the preview — the resolved glyph (a typed code point like
+        /// "E8EC" becomes its character), or the default when blank.
+        /// </summary>
+        public string PreviewGlyph
+        {
+            get
+            {
+                var resolved = GlyphInput.Resolve(Glyph);
+                return resolved.Length == 0 ? TagItemViewModel.DefaultGlyph : resolved;
+            }
+        }
 
         partial void OnGlyphChanged(string value) => OnPropertyChanged(nameof(PreviewGlyph));
     }
@@ -54,8 +64,10 @@ namespace Snipdeck.Core.ViewModels
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var row in Rows)
             {
-                var glyph = row.Glyph?.Trim();
-                if (!string.IsNullOrEmpty(glyph) && glyph != TagItemViewModel.DefaultGlyph)
+                // Store the resolved character, so a typed code point ("E8EC") is
+                // persisted (and later rendered) as its glyph.
+                var glyph = GlyphInput.Resolve(row.Glyph);
+                if (glyph.Length != 0 && glyph != TagItemViewModel.DefaultGlyph)
                 {
                     map[row.TagName] = glyph;
                 }
