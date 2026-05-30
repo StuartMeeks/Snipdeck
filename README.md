@@ -8,15 +8,27 @@ Conceptually inspired by SnipCommand, with one defining difference: **the CLI is
 the top-level organising axis** — every Snip belongs to exactly one CLI (e.g.
 `pl-app`, `mpt-app`, `inv-app`).
 
-> Snipdeck is in early development. The list below describes what's actually
-> implemented today, not what's planned.
+> Snipdeck is alpha software. The list below describes what's actually
+> implemented today, not what's planned. See [`TODO.md`](TODO.md) for the
+> backlog and [`CHANGELOG.md`](CHANGELOG.md) for what's shipped.
 
 ## Status
 
-In active development. The data model, JSON store, substitution engine, settings,
-backup service, and first-run seed live in `Snipdeck.Core` and are covered by
-unit tests. The WinUI 3 UI shell, platform services, and Velopack updater are
-being layered on next.
+Alpha. **v0.1.0-alpha.1** is the first packaged release — see
+[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains
+the full v1 feature set: browse CLIs and Snips, author Snips with structured
+parameters, fill and copy resolved commands, global hotkey, system tray with
+close-to-tray, theme switching, and Velopack-backed self-update.
+
+## Install
+
+Download `Snipdeck-alpha-Setup.exe` from the latest
+[release](https://github.com/StuartMeeks/Snipdeck/releases) and run it.
+The installer is unpackaged (no Microsoft Store, no MSIX) and Velopack
+handles self-update from then on.
+
+Windows 11 is the supported target — Mica backdrop only renders there;
+on Windows 10 it falls back to a solid colour.
 
 ## Stack
 

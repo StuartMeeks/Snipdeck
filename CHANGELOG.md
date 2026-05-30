@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha.1] - 2026-05-30
+
+First packaged release. Cuts an alpha to exercise the release pipeline
+end-to-end and put the v1 feature set in front of real users.
+
 ### Added
 - **Unhandled-exception logging.** Exceptions that previously vanished into
   WinUI's "Continue?" debugger dialog (and would have crashed the process
