@@ -328,6 +328,40 @@ feature work, then knock them out in one pass before a stable cut.
 
 ---
 
+## Icon picker (glyph browser) for tag icons
+
+**Problem.** Tag icons are set by typing a raw glyph — either pasting a Segoe
+Fluent Icons character or entering its hex code point (`GlyphInput.Resolve`
+already accepts `E8EC`, `U+E8EC`, `0xE8EC`, `&#xE8EC;`). That works, but it's
+unfriendly: the user has to know or look up a code point and can't see what's
+available. There's no way to browse the icon set.
+
+**Idea.** A visual icon picker — a searchable grid of glyphs the user clicks to
+choose — instead of (or alongside) typing a code. Driven from the Tags
+management view, and a reusable fit for any future "choose a glyph" need.
+
+**Sketch.**
+- A reusable `IconPicker` control / flyout: a virtualised `GridView` of
+  `FontIcon`s over a list of Segoe Fluent Icons glyphs, with a search box that
+  filters by name and/or code point.
+- Needs a glyph **catalogue** — code point + friendly name — for the grid and
+  search. Either hand-curate a useful subset or embed the published Segoe Fluent
+  Icons mapping; the names are what make search worthwhile.
+- Wire into the Tags view: add a "Choose…" button next to each row that opens
+  the picker, while keeping the free-text field as an escape hatch for pasting /
+  power users.
+- Selection still flows through `GlyphInput.Resolve` and the stored-character
+  model, so persistence is unchanged.
+
+**Open questions** to settle when scheduled:
+- Curated subset vs. full catalogue (the full set is ~1.5k glyphs — needs
+  virtualisation and good search to stay usable).
+- Where do the glyph **names** come from, and is fuzzy search worth it?
+- Do CLI icons (today: uploaded image, identicon fallback) also gain a
+  "pick a glyph instead" option, or stay image-only? Keep the first cut to tags.
+
+---
+
 ## Carried over from the phase stack
 
 These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
