@@ -34,6 +34,19 @@ namespace Snipdeck.App.Views
             IsPrimaryButtonEnabled = ViewModel.CanSave;
         }
 
+        private void OnAddParameterClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.AddParameter();
+        }
+
+        private void OnRemoveParameterClicked(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.Tag is ParameterEditorRowViewModel row)
+            {
+                ViewModel.RemoveParameter(row);
+            }
+        }
+
         private async void OnPickIconClicked(object sender, RoutedEventArgs e)
         {
             var picked = await _filePicker.PickImageAsync();

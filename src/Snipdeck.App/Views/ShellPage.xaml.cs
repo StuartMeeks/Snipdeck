@@ -34,6 +34,11 @@ namespace Snipdeck.App.Views
             ViewModel.OpenTrash();
         }
 
+        private void OnSharedParametersClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.OpenGlobalParameters();
+        }
+
         private void OnNavigationSelectionChanged(
             NavigationView sender,
             NavigationViewSelectionChangedEventArgs args)
