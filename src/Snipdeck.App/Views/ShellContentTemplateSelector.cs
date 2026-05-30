@@ -17,6 +17,8 @@ namespace Snipdeck.App.Views
 
         public DataTemplate? SettingsTemplate { get; set; }
 
+        public DataTemplate? TrashTemplate { get; set; }
+
         protected override DataTemplate? SelectTemplateCore(object item)
         {
             return item switch
@@ -24,6 +26,7 @@ namespace Snipdeck.App.Views
                 HomeViewModel => HomeTemplate,
                 CliViewModel => CliTemplate,
                 SettingsViewModel => SettingsTemplate,
+                TrashViewModel => TrashTemplate,
                 _ => null,
             };
         }

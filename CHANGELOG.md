@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Trash.** A "Trash" entry in the pane footer lists soft-deleted snips from
+  across every CLI. Each can be **Restored** (returned to its CLI) or **Deleted
+  permanently** (after confirmation). Previously, deleting a snip moved it to
+  trash but it then vanished with no way to recover or purge it.
 - **Configurable backup retention.** Choose how many timestamped store backups
   to keep (default 20) from Settings → "Backups to keep". The count is honoured
   on the next write-triggered backup, with no restart required.
