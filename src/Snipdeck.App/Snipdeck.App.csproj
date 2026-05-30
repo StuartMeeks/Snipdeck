@@ -45,12 +45,15 @@
 	<PropertyGroup>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-		<!-- Trimming is disabled until we move JSON serialisation onto
-		     System.Text.Json source-gen (JsonSerializerContext). The
-		     untyped Serialize/DeserializeAsync overloads are IL2026'd
-		     and Jdenticon / Microsoft.Windows.SDK.NET / WinRT.Runtime
-		     also produce trim warnings, which TreatWarningsAsErrors
-		     promotes into a failed publish. -->
+		<!-- PublishTrimmed stays off. The JSON stores now serialise via source-gen
+		     (StoreJsonContext), which removed the IL2026 reflection warnings — but a
+		     trimmed Release publish still fails on IL2104 from Microsoft.Windows.SDK.NET,
+		     WinRT.Runtime and Jdenticon, which aren't annotated trim-safe. Silencing
+		     those wouldn't make trimming safe: the WinRT interop layer uses reflection,
+		     so full trimming risks runtime breakage that can't be caught by a build.
+		     A WinUI head can't be fully trimmed without partial-trim (which only trims
+		     our own tiny assemblies, so negligible savings). Revisit only if the
+		     WinAppSDK/WinRT assemblies ship trim annotations. -->
 		<PublishTrimmed>False</PublishTrimmed>
 	</PropertyGroup>
 </Project>

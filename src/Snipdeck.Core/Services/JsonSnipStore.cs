@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
@@ -8,13 +7,6 @@ namespace Snipdeck.Core.Services
 {
     public sealed class JsonSnipStore : ISnipStore, IDisposable
     {
-        private static readonly JsonSerializerOptions _serializerOptions = new()
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-        };
-
         private readonly SemaphoreSlim _gate = new(1, 1);
 
         public JsonSnipStore(string filePath)
@@ -42,7 +34,7 @@ namespace Snipdeck.Core.Services
                     FileShare.Read);
 
                 var document = await JsonSerializer
-                    .DeserializeAsync<SnipStoreDocument>(stream, _serializerOptions, cancellationToken)
+                    .DeserializeAsync(stream, StoreJsonContext.Default.SnipStoreDocument, cancellationToken)
                     .ConfigureAwait(false)
                     ?? new SnipStoreDocument();
 
@@ -80,7 +72,7 @@ namespace Snipdeck.Core.Services
                     FileShare.None))
                 {
                     await JsonSerializer
-                        .SerializeAsync(stream, document, _serializerOptions, cancellationToken)
+                        .SerializeAsync(stream, document, StoreJsonContext.Default.SnipStoreDocument, cancellationToken)
                         .ConfigureAwait(false);
                     await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 }

@@ -1,12 +1,23 @@
+using System.Text.Json.Serialization;
+
 namespace Snipdeck.Core.Models
 {
     [Flags]
     public enum HotkeyModifiers
     {
+        [JsonStringEnumMemberName("none")]
         None = 0,
+
+        [JsonStringEnumMemberName("alt")]
         Alt = 1,
+
+        [JsonStringEnumMemberName("control")]
         Control = 2,
+
+        [JsonStringEnumMemberName("shift")]
         Shift = 4,
+
+        [JsonStringEnumMemberName("windows")]
         Windows = 8,
     }
 
