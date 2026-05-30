@@ -24,7 +24,7 @@ namespace Snipdeck.Core.Abstractions
 
         Task<CliEditResult?> EditCliAsync(Cli cli);
 
-        Task<ParameterFillResult?> FillParametersAsync(Snip snip);
+        Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters);
     }
 
     public sealed record SnipEditResult(Snip Snip);

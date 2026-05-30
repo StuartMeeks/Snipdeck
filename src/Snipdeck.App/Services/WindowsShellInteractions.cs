@@ -88,10 +88,11 @@ namespace Snipdeck.App.Services
                 : null;
         }
 
-        public async Task<ParameterFillResult?> FillParametersAsync(Snip snip)
+        public async Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             ArgumentNullException.ThrowIfNull(snip);
-            var fill = new ParameterFillViewModel(snip);
+            ArgumentNullException.ThrowIfNull(parameters);
+            var fill = new ParameterFillViewModel(snip, parameters);
             var dialog = new ParameterFillDialog(fill)
             {
                 XamlRoot = GetXamlRoot(),

@@ -32,6 +32,8 @@ namespace Snipdeck.Core.Tests.Support
 
         public Snip? LastFilledSnip { get; private set; }
 
+        public IReadOnlyList<Parameter>? LastFilledParameters { get; private set; }
+
         public Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel")
         {
             LastConfirmTitle = title;
@@ -58,9 +60,10 @@ namespace Snipdeck.Core.Tests.Support
             return Task.FromResult(NextCliEditResult);
         }
 
-        public Task<ParameterFillResult?> FillParametersAsync(Snip snip)
+        public Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             LastFilledSnip = snip;
+            LastFilledParameters = parameters;
             return Task.FromResult(NextParameterFillResult);
         }
     }

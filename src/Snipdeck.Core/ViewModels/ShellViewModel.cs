@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using Snipdeck.Core.Abstractions;
+using Snipdeck.Core.Engine;
 using Snipdeck.Core.Models;
 using Snipdeck.Core.Services;
 
@@ -98,19 +99,23 @@ namespace Snipdeck.Core.ViewModels
                 return;
             }
             var snip = cardVm.Snip;
+            // Effective parameters: local overrides plus any shared (CLI/global)
+            // definitions the template's tokens inherit by name.
+            var cli = _document.Clis.FirstOrDefault(c => c.Id == snip.CliId);
+            var parameters = ParameterResolver.Resolve(snip, cli, _document.GlobalParameters);
 
             string commandToCopy;
             // Skip the flyout only when there's nothing to show: no parameters to
             // fill and no description to read. A described-but-parameterless snip
             // still opens the flyout so its (rendered) description is visible
             // before the copy.
-            if (snip.Parameters.Count == 0 && string.IsNullOrWhiteSpace(snip.Description))
+            if (parameters.Count == 0 && string.IsNullOrWhiteSpace(snip.Description))
             {
                 commandToCopy = snip.CommandTemplate;
             }
             else
             {
-                var result = await _interactions.FillParametersAsync(snip).ConfigureAwait(true);
+                var result = await _interactions.FillParametersAsync(snip, parameters).ConfigureAwait(true);
                 if (result is null)
                 {
                     return;

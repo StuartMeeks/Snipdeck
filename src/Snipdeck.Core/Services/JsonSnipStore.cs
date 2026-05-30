@@ -54,6 +54,11 @@ namespace Snipdeck.Core.Services
         {
             ArgumentNullException.ThrowIfNull(document);
 
+            // Stamp the current schema version on every write so a store touched
+            // by this build is marked v2 — an older (v1-only) build then refuses
+            // it rather than silently dropping the shared-parameter collections.
+            document.SchemaVersion = SnipStoreDocument.CurrentSchemaVersion;
+
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {

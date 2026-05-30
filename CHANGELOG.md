@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Shared parameter definitions — resolution groundwork.** A Snip's
+  `{token}` now resolves its parameter definition by name with precedence:
+  the Snip's own parameter overrides a CLI-scoped one, which overrides a
+  global one. A Snip can omit a parameter to inherit the shared definition
+  (e.g. an `env` Choice defined once on a CLI). Store schema is now v2
+  (additive: `Cli.Parameters` + `SnipStoreDocument.GlobalParameters`); an
+  older build refuses a v2 store rather than dropping shared definitions.
+  The UI to manage shared parameters lands next; existing snips are
+  unaffected.
 - **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
   and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
   instead of the reflection-based serializer, removing the IL2026 trim warnings.
