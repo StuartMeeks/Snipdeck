@@ -45,7 +45,12 @@
 	<PropertyGroup>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-		<PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-		<PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+		<!-- Trimming is disabled until we move JSON serialisation onto
+		     System.Text.Json source-gen (JsonSerializerContext). The
+		     untyped Serialize/DeserializeAsync overloads are IL2026'd
+		     and Jdenticon / Microsoft.Windows.SDK.NET / WinRT.Runtime
+		     also produce trim warnings, which TreatWarningsAsErrors
+		     promotes into a failed publish. -->
+		<PublishTrimmed>False</PublishTrimmed>
 	</PropertyGroup>
 </Project>
