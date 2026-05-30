@@ -199,6 +199,104 @@ worth doing carefully, and worth a design conversation before the first PR.
 
 ---
 
+## Importer: bring snips in from SnipCommand and friends
+
+**Problem.** `CLAUDE.md` already parks SnipCommand import as a "future nicety":
+read a SnipCommand JSON, auto-suggest the CLI from the first token of each
+command. Worth doing — SnipCommand is the obvious migration path. And there
+are other shapes worth ingesting later (VS Code snippets, espanso, Alfred,
+TextExpander, ad-hoc shell-history dumps).
+
+**Decision: this is a separate CLI tool, not a feature inside the WinUI app.**
+
+Reasons:
+
+- Import is a rare / one-off operation. It doesn't deserve UI surface area
+  in the main app, where it'd compete for visual real estate with everyday
+  workflows.
+- A CLI tool is cross-platform — useful for users who want to bulk-prep an
+  import on a Linux box or in CI before bringing the JSON over to a Windows
+  Snipdeck install.
+- Adding a new source format (espanso, TextExpander, …) is then a new
+  subcommand in the importer, not a new dialog in the main app.
+- Distribution is independent: shipped as a `dotnet tool` for trivial
+  install (`dotnet tool install -g snipdeck-importer`) and versioned
+  separately from the desktop app.
+- Spectre.Console.Cli is the established pattern in the wider
+  StuartMeeks toolbox — fits naturally.
+
+**Sketch.**
+
+- New project at `tools/Snipdeck.Importer/` in this solution, targeting
+  `net10.0` (NOT `-windows`), depending on `Snipdeck.Core`. Re-uses
+  `SnipStoreDocument`, `Cli`, `Snip`, `Parameter`, `JsonSnipStore`,
+  `BackupService` — exactly the surface Core was carved off for.
+- Packaged as a .NET tool (`<PackAsTool>true</PackAsTool>`,
+  `ToolCommandName=snipdeck-importer`).
+- Subcommand per source: `snipdeck-importer snipcommand <path>`,
+  later `snipdeck-importer vscode <path>`, etc. Each source adapter
+  implements an `ISnippetSource` that yields `Snip` candidates plus
+  a suggested `Cli` name.
+- Defaults to **dry-run**: parses the source, prints the planned
+  additions (Snips grouped by suggested CLI, parameter summary), exits
+  without touching the store. `--write` actually merges into the store.
+- `--store <path>` lets the user point at an arbitrary store file;
+  defaults to the same path the desktop app uses
+  (`IPathProvider`'s default, factored down into Core).
+- `--cli <name>` forces every imported Snip into a named CLI, overriding
+  the per-command auto-suggestion.
+- `--into <cli-name>` is the per-command equivalent — apply only to
+  Snips that didn't get a confident auto-suggestion.
+
+**SnipCommand specifics.**
+
+- SnipCommand stores a flat list — Snipdeck groups by CLI. Auto-suggest
+  the CLI from the first whitespace-separated token of each command
+  (`pl-app orgs list` → `pl-app`). When the leading token is `sudo`,
+  `npx`, or similar, peel it off and use the next token.
+- SnipCommand uses inline markup: `[sc_choice ...]`, `[sc_variable ...]`.
+  Snipdeck uses `{token}` placeholders plus a structured `Parameter[]`
+  list. The importer:
+  1. Parses the markup, mints a placeholder name (the variable / choice
+     name, with collisions disambiguated).
+  2. Replaces the inline markup with `{name}` in the command template.
+  3. Emits a `Parameter` entry of the right `Type` (Choice with options,
+     or Text) into the Snip.
+- Description / tags carry across one-for-one where present.
+
+**Merge semantics.**
+
+- Always write a backup of the existing store before modifying it
+  (call `BackupService` so the desktop app's retention policy stays in
+  charge).
+- New Snips always mint fresh GUIDs — SnipCommand IDs aren't reused.
+- De-duplication: if a Snip with the same `(Title, CommandTemplate)`
+  already exists, skip by default. `--allow-duplicates` opts in to
+  importing them anyway.
+- New CLIs are created on demand when an imported Snip's suggested CLI
+  doesn't already exist in the target store.
+
+**Open questions** to settle when scheduled:
+
+- **Where the docs live.** The importer's README probably belongs in
+  the tool's project folder, with a pointer from the desktop app's
+  README so users discover it.
+- **Velopack interaction.** The desktop app should never be running
+  against a store the importer is concurrently rewriting. The atomic
+  temp-file-then-rename write the JsonSnipStore already does avoids
+  corruption, but a running desktop instance won't *see* the changes
+  until it next reloads. Worth surfacing in `--write` output:
+  "Snipdeck is running — restart it to see the imported Snips."
+- **Adversarial sources.** A SnipCommand JSON crafted to overflow a
+  parameter name, embed escape sequences in the command preview, or
+  similar — be defensive when parsing. Treat the input as untrusted.
+- **Future sources.** VS Code snippets (`*.code-snippets`) and espanso
+  (`*.yml`) are the obvious next two. Each has its own placeholder
+  syntax to translate. Add them when there's actual demand, not
+  speculatively.
+
+---
+
 ## Carried over from the phase stack
 
 These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
