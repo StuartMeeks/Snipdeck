@@ -73,6 +73,14 @@ namespace Snipdeck.App.Controls
         {
             if (!_recording)
             {
+                // Keyboard activation: Enter or Space begins recording (pointer
+                // users start it by tapping). Every other key passes through so
+                // Tab navigation through Settings still works.
+                if (e.Key is VirtualKey.Enter or VirtualKey.Space)
+                {
+                    StartRecording();
+                    e.Handled = true;
+                }
                 return;
             }
 
@@ -91,11 +99,18 @@ namespace Snipdeck.App.Controls
             }
 
             var modifiers = ReadModifiers();
-            var key = MapKey(e.Key);
-
-            // Require a modifier and a supported key; otherwise swallow and wait.
-            if (modifiers == HotkeyModifiers.None || key is null)
+            if (modifiers == HotkeyModifiers.None)
             {
+                // A bare key while recording (e.g. Tab to move on) — cancel and
+                // let it act normally so keyboard focus isn't trapped in the box.
+                StopRecording();
+                return;
+            }
+
+            var key = MapKey(e.Key);
+            if (key is null)
+            {
+                // Modifiers held but an unsupported key — swallow and keep waiting.
                 e.Handled = true;
                 return;
             }
