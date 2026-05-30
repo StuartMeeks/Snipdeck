@@ -29,6 +29,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 new FakeSettingsStore(),
                 new FakeThemeApplier(),
                 new FakeUpdateService(),
+                new FakeHotkeyService(),
                 new FakePathProvider(),
                 new AppConfig());
         }

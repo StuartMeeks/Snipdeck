@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Rebindable global hotkey.** The global hotkey is now editable from
+  Settings: click the capture box and press a shortcut (at least one of
+  Ctrl/Alt/Shift plus a key). The new binding registers and persists
+  immediately; if the chord is already taken by another app, the previous
+  binding is restored and a brief notice is shown. A "Reset" button restores
+  the default (Ctrl+Alt+S). Previously the hotkey was display-only.
 - **Markdown rendering for snip descriptions.** A snip's description is now
   rendered as Markdown (headings, bold/italic, inline and block code, links,
   ordered/unordered lists) in the copy flyout, instead of being hidden. The
