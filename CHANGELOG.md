@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `LogsDirectory`. The log rotates at 5 MB.
 
 ### Fixed
+- Tray icon initialisation crash (`NullReferenceException` inside
+  `H.NotifyIcon.ImageExtensions.ToStream(Uri)`): H.NotifyIcon resolves
+  `TaskbarIcon.IconSource` by reading `BitmapImage.UriSource`, but the
+  tray service was loading the identicon via `BitmapImage.SetSourceAsync`
+  from an in-memory stream — pixels populated, URI null. The service now
+  persists the identicon to `%LOCALAPPDATA%\Snipdeck\tray-icon.png` and
+  loads the `BitmapImage` from that URI, which is the shape H.NotifyIcon
+  expects.
 - First-run crash on startup (`RPC_E_WRONG_THREAD` / `0x8001010E`):
   `ShellViewModel.LoadAsync` resumed on a thread-pool thread after loading
   the store and then mutated `CliChoices`, an `ObservableCollection` already

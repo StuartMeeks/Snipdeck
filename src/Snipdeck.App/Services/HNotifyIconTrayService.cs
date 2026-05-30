@@ -6,17 +6,23 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Services;
 
-using Windows.Storage.Streams;
-
 namespace Snipdeck.App.Services
 {
     internal sealed partial class HNotifyIconTrayService : ITrayService
     {
         // Stable seed so the tray icon never changes between runs of Snipdeck.
         private static readonly Guid _iconSeed = Guid.Parse("5147DEC0-0000-0000-0000-000000000001");
+        private const string _trayIconFileName = "tray-icon.png";
 
+        private readonly IPathProvider _paths;
         private TaskbarIcon? _icon;
         private bool _disposed;
+
+        public HNotifyIconTrayService(IPathProvider paths)
+        {
+            ArgumentNullException.ThrowIfNull(paths);
+            _paths = paths;
+        }
 
         public event EventHandler? ShowRequested;
 
@@ -31,7 +37,12 @@ namespace Snipdeck.App.Services
                 return;
             }
 
-            var image = await BuildTrayBitmapAsync();
+            // H.NotifyIcon resolves IconSource by reading BitmapImage.UriSource,
+            // not the pixel data — a stream-loaded BitmapImage NREs deep inside
+            // the library. Persist the identicon to a stable file path and load
+            // the BitmapImage from that URI instead.
+            var iconPath = await WriteTrayIconFileAsync();
+            var image = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
             _icon = new TaskbarIcon
             {
@@ -89,18 +100,13 @@ namespace Snipdeck.App.Services
             ShowRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        private static async Task<BitmapImage> BuildTrayBitmapAsync()
+        private async Task<string> WriteTrayIconFileAsync()
         {
             var bytes = IdenticonService.GeneratePng(_iconSeed, size: 32);
-            var image = new BitmapImage();
-            using var stream = new InMemoryRandomAccessStream();
-            var writer = new DataWriter(stream);
-            writer.WriteBytes(bytes);
-            _ = await writer.StoreAsync();
-            _ = writer.DetachStream();
-            stream.Seek(0);
-            await image.SetSourceAsync(stream);
-            return image;
+            _ = Directory.CreateDirectory(_paths.AppDataDirectory);
+            var path = Path.Combine(_paths.AppDataDirectory, _trayIconFileName);
+            await File.WriteAllBytesAsync(path, bytes);
+            return path;
         }
 
         private sealed partial class RelayCommand(Action execute) : System.Windows.Input.ICommand
