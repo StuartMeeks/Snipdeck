@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Git-derived version numbers (Nerdbank.GitVersioning).** Every build now
+  stamps a real version (`0.1.0-alpha.<git-height>+<commit>`) into all
+  assemblies from a single `version.json`, so the About page shows a meaningful
+  version for dev and CI builds instead of the `1.0.0` compile-time fallback.
+  Releases derive their version from NBGV rather than the tag string — see
+  CONTRIBUTING.md for the `nbgv tag` release flow.
 - **Trash.** A "Trash" entry in the pane footer lists soft-deleted snips from
   across every CLI. Each can be **Restored** (returned to its CLI) or **Deleted
   permanently** (after confirmation). Previously, deleting a snip moved it to

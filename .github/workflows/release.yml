@@ -38,19 +38,29 @@ jobs:
             **/packages.lock.json
             **/*.csproj
 
-      - name: Derive version + channel from tag
+      - name: Install Nerdbank.GitVersioning CLI
+        run: dotnet tool install --global nbgv --version 3.9.50
+
+      - name: Derive version + channel from NBGV
         id: meta
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $version = $tag.TrimStart('v')
+          # NBGV is the single source of truth — version.json + git height.
+          # On a tagged (public-release) build the SemVer2 string is clean
+          # (no commit-id suffix), e.g. 0.1.0-alpha.7 or 0.1.0 for a stable cut.
+          $json = nbgv get-version --format json | ConvertFrom-Json
+          if (-not $json.PublicRelease) {
+            Write-Error "NBGV did not treat ref '$($json.BuildingRef)' as a public release. The release tag must match publicReleaseRefSpec in version.json; create it with 'nbgv tag'."
+            exit 1
+          }
+          $version = $json.SemVer2
+          $prerelease = $json.PrereleaseVersionNoLeadingHyphen   # 'alpha.7' or ''
           # Emit lowercase 'true'/'false' explicitly — PowerShell's boolean
           # string-interpolation produces 'True'/'False' (capitalised), which
           # softprops/action-gh-release@v2 silently treats as falsy.
-          if ($version.Contains('-')) {
+          if ($prerelease) {
             $isPrerelease = 'true'
-            $channel = ($version -split '-', 2)[1] -replace '\..*$', ''
-            if ([string]::IsNullOrWhiteSpace($channel)) { $channel = 'beta' }
+            $channel = ($prerelease -split '\.')[0]   # 'alpha'
           } else {
             $isPrerelease = 'false'
             $channel = 'stable'
@@ -58,7 +68,7 @@ jobs:
           "version=$version"           >> $env:GITHUB_OUTPUT
           "isPrerelease=$isPrerelease" >> $env:GITHUB_OUTPUT
           "channel=$channel"           >> $env:GITHUB_OUTPUT
-          Write-Host "Tag         : $tag"
+          Write-Host "Tag         : ${{ github.ref_name }}"
           Write-Host "Version     : $version"
           Write-Host "Pre-release : $isPrerelease"
           Write-Host "Channel     : $channel"
@@ -70,7 +80,10 @@ jobs:
         run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore
 
       - name: Publish Snipdeck.App (win-x64)
-        run: dotnet publish src/Snipdeck.App/Snipdeck.App.csproj --configuration Release --runtime win-x64 --self-contained true --output publish -p:Version=${{ steps.meta.outputs.version }}
+        # No -p:Version here — Nerdbank.GitVersioning stamps the assemblies at
+        # build time from version.json + git height (the same number the meta
+        # step reads), so an explicit Version would be redundant and ignored.
+        run: dotnet publish src/Snipdeck.App/Snipdeck.App.csproj --configuration Release --runtime win-x64 --self-contained true --output publish
 
       - name: Install Velopack CLI
         run: dotnet tool install -g vpk

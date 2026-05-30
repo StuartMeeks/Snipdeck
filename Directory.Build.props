@@ -15,4 +15,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- Nerdbank.GitVersioning stamps every assembly with a git-derived version
+       (base + height + commit hash) from the repo-root version.json. Build-time
+       only, so PrivateAssets="all" keeps it out of downstream references. -->
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+  </ItemGroup>
+
 </Project>
