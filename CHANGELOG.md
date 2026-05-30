@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
+  and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
+  instead of the reflection-based serializer, removing the IL2026 trim warnings.
+  The on-disk format is unchanged (proven byte-identical by tests, with enum
+  names pinned via `[JsonStringEnumMemberName]`), so existing stores keep
+  loading. `PublishTrimmed` stays off: a trimmed WinUI publish still trips
+  IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
+
 ### Added
 - **Markdown rendering for snip descriptions.** A snip's description is now
   rendered as Markdown (headings, bold/italic, inline and block code, links,
