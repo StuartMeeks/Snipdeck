@@ -10,7 +10,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var snip = new Snip { CommandTemplate = "echo hi" };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
 
             Assert.True(vm.IsCopyEnabled);
             Assert.Equal("echo hi", vm.Preview);
@@ -26,7 +26,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             // than being gated off as "unresolved".
             var snip = new Snip { CommandTemplate = "git commit -m {message}" };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
 
             Assert.Empty(vm.Inputs);
             Assert.True(vm.IsCopyEnabled);
@@ -42,7 +42,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 Parameters = [new Parameter { Name = "name", Default = "world" }],
             };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
 
             Assert.True(vm.IsCopyEnabled);
             Assert.Equal("echo world", vm.Preview);
@@ -57,7 +57,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 Parameters = [new Parameter { Name = "name" }],
             };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
 
             Assert.False(vm.IsCopyEnabled);
             Assert.Equal("echo {name}", vm.Preview);
@@ -72,7 +72,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 Parameters = [new Parameter { Name = "env", Default = "dev" }],
             };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
             Assert.Equal("deploy dev", vm.Preview);
 
             vm.Inputs[0].Value = "prod";
@@ -94,7 +94,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 ],
             };
 
-            var vm = new ParameterFillViewModel(snip);
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
 
             Assert.Equal("git tag -a v1.0.0 -m \"Release\"", vm.Preview);
             Assert.True(vm.IsCopyEnabled);
