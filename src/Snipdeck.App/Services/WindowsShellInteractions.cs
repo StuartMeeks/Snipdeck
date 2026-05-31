@@ -45,6 +45,7 @@ namespace Snipdeck.App.Services
                 // overriding the primary button's subtle-red foreground.
                 DefaultButton = destructive ? ContentDialogButton.Close : ContentDialogButton.Primary,
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             if (destructive && Application.Current.Resources["DangerDialogPrimaryButtonStyle"] is Style dangerStyle)
             {
@@ -63,6 +64,7 @@ namespace Snipdeck.App.Services
                 CloseButtonText = buttonText,
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             _ = await dialog.ShowAsync();
         }
@@ -74,6 +76,7 @@ namespace Snipdeck.App.Services
             var dialog = new SnipEditorDialog(editor)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary
@@ -88,6 +91,7 @@ namespace Snipdeck.App.Services
             var dialog = new CliEditorDialog(editor, _iconNormaliser, _filePicker)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary
@@ -101,6 +105,7 @@ namespace Snipdeck.App.Services
             var dialog = new ParameterEditorDialog(title, row)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary ? row.BuildParameter() : null;
@@ -114,6 +119,7 @@ namespace Snipdeck.App.Services
             var dialog = new ParameterFillDialog(fill)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary && fill.IsCopyEnabled
@@ -129,5 +135,15 @@ namespace Snipdeck.App.Services
             return ((FrameworkElement)content).XamlRoot;
         }
 
+        // Dialogs are separate visual roots, so they don't inherit the in-app theme
+        // (applied via RequestedTheme on the main window content). Mirror it so a
+        // dialog opened after a Light/Dark switch matches, instead of the OS theme.
+        private ElementTheme CurrentTheme()
+        {
+            var mainWindow = (MainWindow)_services.GetService(typeof(MainWindow))!;
+            return mainWindow.Content is FrameworkElement content
+                ? content.RequestedTheme
+                : ElementTheme.Default;
+        }
     }
 }
