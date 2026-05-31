@@ -82,20 +82,26 @@ namespace Snipdeck.App.Views
             SyncSelectionFromViewModel();
         }
 
-        // Reflect the view model's logical selection onto the NavigationView:
-        // a selected tag highlights its item; Home content highlights Home; any
-        // other content (Settings, Trash, etc.) clears the highlight.
+        /// <summary>Toggle the navigation pane (driven by the title-bar hamburger).</summary>
+        public void TogglePane()
+        {
+            ShellNavigation.IsPaneOpen = !ShellNavigation.IsPaneOpen;
+        }
+
+        // Reflect the view model's current content onto the NavigationView selection
+        // so the right item (tag, Home, or a footer destination) shows the selected look.
         private void SyncSelectionFromViewModel()
         {
-            if (ViewModel.SelectedTagItem is { } selected)
+            ShellNavigation.SelectedItem = ViewModel.CurrentContent switch
             {
-                ShellNavigation.SelectedItem =
-                    _tagItems.FirstOrDefault(i => ReferenceEquals(i.Tag, selected));
-                return;
-            }
-
-            ShellNavigation.SelectedItem =
-                ViewModel.CurrentContent is HomeViewModel ? HomeNavItem : null;
+                HomeViewModel => HomeNavItem,
+                SettingsViewModel => SettingsNavItem,
+                TrashViewModel => TrashNavItem,
+                GlobalParametersViewModel => SharedParametersNavItem,
+                TagIconsViewModel => TagsNavItem,
+                CliViewModel => _tagItems.FirstOrDefault(i => ReferenceEquals(i.Tag, ViewModel.SelectedTagItem)),
+                _ => null,
+            };
         }
 
         private async void OnNavigationItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -113,31 +119,26 @@ namespace Snipdeck.App.Views
             {
                 await ViewModel.OpenDocumentationAsync();
             }
+            else if (ReferenceEquals(item, SharedParametersNavItem))
+            {
+                ViewModel.OpenGlobalParameters();
+            }
+            else if (ReferenceEquals(item, TagsNavItem))
+            {
+                ViewModel.OpenTagIcons();
+            }
+            else if (ReferenceEquals(item, TrashNavItem))
+            {
+                ViewModel.OpenTrash();
+            }
+            else if (ReferenceEquals(item, SettingsNavItem))
+            {
+                ViewModel.OpenSettings(App.Services.GetRequiredService<SettingsViewModel>());
+            }
             else if (item.Tag is TagItemViewModel tag)
             {
                 ViewModel.SelectedTagItem = tag;
             }
-        }
-
-        private void OnSettingsClicked(object sender, RoutedEventArgs e)
-        {
-            var settings = App.Services.GetRequiredService<SettingsViewModel>();
-            ViewModel.OpenSettings(settings);
-        }
-
-        private void OnTrashClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel.OpenTrash();
-        }
-
-        private void OnSharedParametersClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel.OpenGlobalParameters();
-        }
-
-        private void OnTagsClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel.OpenTagIcons();
         }
 
         // Keep the active category toggle checked even when it's re-clicked (the

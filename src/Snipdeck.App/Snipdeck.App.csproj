@@ -28,6 +28,11 @@
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
+	<!-- Hero image is optional: packaged only once the user drops it in. -->
+	<ItemGroup Condition="Exists('Assets\HomeHero.png')">
+		<Content Include="Assets\HomeHero.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
 		<PackageReference Include="H.NotifyIcon.WinUI" />

@@ -21,18 +21,27 @@
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
-                <StackPanel Padding="24" Spacing="28">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <!-- No outer padding: the banner is full-bleed (touches the top and
+                     both edges). Inner content below the banner is padded. -->
+                <StackPanel Spacing="0">
 
-                    <!-- Hero banner: accent gradient with the headings overlaid. -->
-                    <Border Height="160" CornerRadius="8" Padding="32">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />
-                                <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel VerticalAlignment="Bottom" Spacing="2">
+                    <!-- Hero banner: accent-gradient placeholder with the supplied
+                         image layered on top, headings overlaid. -->
+                    <Grid Height="200">
+                        <Border>
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />
+                                    <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Image Source="ms-appx:///Assets/HomeHero.png"
+                               Stretch="UniformToFill"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Stretch" />
+                        <StackPanel VerticalAlignment="Bottom" Margin="32,0,32,20" Spacing="2">
                             <TextBlock Text="Next Iteration"
                                        Style="{ThemeResource BodyStrongTextBlockStyle}"
                                        Foreground="{ThemeResource TextOnAccentFillColorSecondaryBrush}" />
@@ -40,59 +49,84 @@
                                        Style="{ThemeResource TitleLargeTextBlockStyle}"
                                        Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
                         </StackPanel>
-                    </Border>
-
-                    <!-- CLIs -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="CLIs"
-                                   Style="{ThemeResource SubtitleTextBlockStyle}"
-                                   VerticalAlignment="Center" />
-                        <Button Grid.Column="1"
-                                Content="New CLI"
-                                Click="OnNewCliClicked"
-                                Style="{ThemeResource AccentButtonStyle}" />
                     </Grid>
 
-                    <GridView ItemsSource="{x:Bind CliCards}"
-                              SelectionMode="None"
-                              IsItemClickEnabled="False"
-                              Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
-                        <GridView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:CliCardViewModel">
-                                <controls:CliCard
-                                    ViewModel="{x:Bind}"
-                                    NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}"
-                                    Margin="0,0,12,12" />
-                            </DataTemplate>
-                        </GridView.ItemTemplate>
-                    </GridView>
+                    <!-- CLI launcher: a horizontal carousel that overlaps the banner. -->
+                    <ScrollViewer Margin="0,-44,0,0"
+                                  Padding="24,0,24,0"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Enabled"
+                                  Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <ItemsControl ItemsSource="{x:Bind CliCards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CliCardViewModel">
+                                        <controls:CliCard
+                                            ViewModel="{x:Bind}"
+                                            NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- New CLI tile at the end of the carousel. -->
+                            <Button Click="OnNewCliClicked"
+                                    Width="232"
+                                    Height="172"
+                                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
+                                    <TextBlock Text="New CLI" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Snip categories: Most used / Recent / Favourites (unscoped). -->
-                    <StackPanel Spacing="12"
+                    <StackPanel Padding="24" Spacing="16" Margin="0,16,0,0"
                                 Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ToggleButton Content="Most used"
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <ToggleButton CornerRadius="16"
                                           IsChecked="{x:Bind IsMostUsedSelected, Mode=OneWay}"
                                           Command="{x:Bind SelectMostUsedCommand}"
-                                          Click="OnHomeCategoryToggled" />
-                            <ToggleButton Content="Recent"
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                    <TextBlock Text="Most used" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton CornerRadius="16"
                                           IsChecked="{x:Bind IsRecentSelected, Mode=OneWay}"
                                           Command="{x:Bind SelectRecentCommand}"
-                                          Click="OnHomeCategoryToggled" />
-                            <ToggleButton Content="Favourites"
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE823;" FontSize="14" />
+                                    <TextBlock Text="Recent" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton CornerRadius="16"
                                           IsChecked="{x:Bind IsFavouritesSelected, Mode=OneWay}"
                                           Command="{x:Bind SelectFavouritesCommand}"
-                                          Click="OnHomeCategoryToggled" />
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE735;" FontSize="14" />
+                                    <TextBlock Text="Favourites" />
+                                </StackPanel>
+                            </ToggleButton>
                         </StackPanel>
 
                         <GridView ItemsSource="{x:Bind ActiveSnips, Mode=OneWay}"
                                   SelectionMode="None"
-                                  IsItemClickEnabled="False">
+                                  IsItemClickEnabled="False"
+                                  HorizontalAlignment="Center">
                             <GridView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SnipCardViewModel">
                                     <controls:SnipCard
@@ -110,11 +144,13 @@
                         <TextBlock Text="Nothing here yet."
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   HorizontalAlignment="Center"
                                    Visibility="{x:Bind HasActiveSnips, Mode=OneWay, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 
-                    <StackPanel Spacing="8"
+                    <StackPanel Padding="24" Spacing="8"
                                 HorizontalAlignment="Center"
+                                Margin="0,24,0,0"
                                 Visibility="{x:Bind HasCliCards, Converter={StaticResource InvertedBoolToVisibility}}">
                         <TextBlock Text="Welcome to Snipdeck"
                                    Style="{ThemeResource TitleTextBlockStyle}"
@@ -527,6 +563,7 @@
 
     <NavigationView x:Name="ShellNavigation"
                     IsBackButtonVisible="Collapsed"
+                    IsPaneToggleButtonVisible="False"
                     IsSettingsVisible="False"
                     PaneDisplayMode="Left"
                     OpenPaneLength="280"
@@ -548,58 +585,30 @@
             <NavigationViewItemHeader Content="Tags" />
         </NavigationView.MenuItems>
 
-        <NavigationView.PaneFooter>
-            <StackPanel>
-                <Button x:Name="SharedParametersButton"
-                        Click="OnSharedParametersClicked"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Left"
-                        Margin="12,8,12,0"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE943;" FontSize="16" />
-                        <TextBlock Text="Shared parameters" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button x:Name="TagsButton"
-                        Click="OnTagsClicked"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Left"
-                        Margin="12,8,12,0"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE8EC;" FontSize="16" />
-                        <TextBlock Text="Tags" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button x:Name="TrashButton"
-                        Click="OnTrashClicked"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Left"
-                        Margin="12,8,12,0"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE74D;" FontSize="16" />
-                        <TextBlock Text="Trash" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button x:Name="SettingsButton"
-                        Click="OnSettingsClicked"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Left"
-                        Margin="12,8"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE713;" FontSize="16" />
-                        <TextBlock Text="Settings" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </NavigationView.PaneFooter>
+        <NavigationView.FooterMenuItems>
+            <!-- Footer destinations as nav items, so they get the selected look
+                 (indicator bar + darker background) like Home and the tags. -->
+            <NavigationViewItem x:Name="SharedParametersNavItem" Content="Shared parameters">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE943;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="TagsNavItem" Content="Tags">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8EC;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="TrashNavItem" Content="Trash">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE74D;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="SettingsNavItem" Content="Settings">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.FooterMenuItems>
 
         <ContentControl Content="{x:Bind ViewModel.CurrentContent, Mode=OneWay}"
                         ContentTemplateSelector="{StaticResource ShellContentSelector}"

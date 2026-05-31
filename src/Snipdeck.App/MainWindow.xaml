@@ -24,12 +24,27 @@
               Grid.Row="0"
               Height="48">
 
-            <TextBlock x:Name="AppTitleTextBlock"
-                       Text="Snipdeck"
-                       Style="{StaticResource CaptionTextBlockStyle}"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Center"
-                       Margin="12,0,0,0" />
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Spacing="4">
+                <!-- Pane toggle (hamburger): owned by the title bar so Home is the
+                     first item in the nav pane. Registered as passthrough in code-behind. -->
+                <Button x:Name="PaneToggleButton"
+                        Click="OnPaneToggleClicked"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Width="40"
+                        Height="40"
+                        ToolTipService.ToolTip="Toggle navigation">
+                    <FontIcon Glyph="&#xE700;" FontSize="16" />
+                </Button>
+                <TextBlock x:Name="AppTitleTextBlock"
+                           Text="Snipdeck"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,0" />
+            </StackPanel>
 
             <!-- Search and switcher, centred as a group in the bar. The bar is the
                  drag region; this group is registered as a passthrough region (in

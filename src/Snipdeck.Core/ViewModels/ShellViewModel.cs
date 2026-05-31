@@ -180,6 +180,8 @@ namespace Snipdeck.Core.ViewModels
                 SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsAll) ?? CliChoices.FirstOrDefault();
                 RebuildTags();
                 SelectedTagItem = null;
+                SearchText = string.Empty;
+                _focusedSnipId = null;
             }
             finally
             {
