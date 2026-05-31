@@ -1,14 +1,20 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Numerics;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.ViewModels;
+
+using Windows.UI;
 
 namespace Snipdeck.App.Views
 {
@@ -149,6 +155,70 @@ namespace Snipdeck.App.Views
         private void OnHomeCategoryToggled(object sender, RoutedEventArgs e)
         {
             ((ToggleButton)sender).IsChecked = true;
+        }
+
+        // The hero image is painted via a Composition mask brush so its lower edge
+        // fades to transparent — revealing the page's Mica — with no solid colour
+        // (which previously created a hard line / shade mismatch).
+        private void OnHeroHostLoaded(object sender, RoutedEventArgs e)
+        {
+            var host = (Border)sender;
+            host.ActualThemeChanged -= OnHeroHostThemeChanged;
+            host.ActualThemeChanged += OnHeroHostThemeChanged;
+            ApplyHeroVisual(host);
+        }
+
+        private void OnHeroHostSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var host = (Border)sender;
+            if (ElementCompositionPreview.GetElementChildVisual(host) is SpriteVisual visual)
+            {
+                visual.Size = new Vector2((float)host.ActualWidth, (float)host.ActualHeight);
+            }
+            else
+            {
+                ApplyHeroVisual(host);
+            }
+        }
+
+        private void OnHeroHostThemeChanged(FrameworkElement sender, object args)
+        {
+            ApplyHeroVisual((Border)sender);
+        }
+
+        private static void ApplyHeroVisual(Border host)
+        {
+            if (host.ActualWidth <= 0 || host.ActualHeight <= 0)
+            {
+                return;
+            }
+
+            var compositor = ElementCompositionPreview.GetElementVisual(host).Compositor;
+
+            var uri = new Uri(host.ActualTheme == ElementTheme.Dark
+                ? "ms-appx:///Assets/HomeHeroDark.png"
+                : "ms-appx:///Assets/HomeHeroLight.png");
+            var surfaceBrush = compositor.CreateSurfaceBrush(LoadedImageSurface.StartLoadFromUri(uri));
+            surfaceBrush.Stretch = CompositionStretch.UniformToFill;
+
+            // Mask alpha: white = visible, transparent = hidden. The image fades out
+            // toward the bottom, revealing the page background behind it.
+            var gradient = compositor.CreateLinearGradientBrush();
+            gradient.StartPoint = new Vector2(0f, 0f);
+            gradient.EndPoint = new Vector2(0f, 1f);
+            gradient.ColorStops.Add(compositor.CreateColorGradientStop(0.0f, Colors.White));
+            gradient.ColorStops.Add(compositor.CreateColorGradientStop(0.6f, Colors.White));
+            gradient.ColorStops.Add(compositor.CreateColorGradientStop(1.0f, Color.FromArgb(0, 255, 255, 255)));
+
+            var mask = compositor.CreateMaskBrush();
+            mask.Source = surfaceBrush;
+            mask.Mask = gradient;
+
+            var visual = compositor.CreateSpriteVisual();
+            visual.Brush = mask;
+            visual.Size = new Vector2((float)host.ActualWidth, (float)host.ActualHeight);
+
+            ElementCompositionPreview.SetElementChildVisual(host, visual);
         }
 
         private async void OnCopyCloneCommandClicked(object sender, RoutedEventArgs e)
