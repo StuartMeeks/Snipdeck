@@ -173,6 +173,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{x:Bind Name}"
@@ -182,16 +183,21 @@
                              where there is no single CLI to edit/delete or add a snip to. -->
                         <Button Grid.Column="1"
                                 Margin="0,0,8,0"
+                                Content="Shared parameters"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.OpenCliParametersCommand}" />
+                        <Button Grid.Column="2"
+                                Margin="0,0,8,0"
                                 Content="Edit CLI"
                                 Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
                                 Click="OnEditCliClicked" />
-                        <Button Grid.Column="2"
+                        <Button Grid.Column="3"
                                 Margin="0,0,8,0"
                                 Content="Delete CLI"
                                 Style="{StaticResource DangerButtonStyle}"
                                 Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
                                 Click="OnDeleteCliClicked" />
-                        <Button Grid.Column="3"
+                        <Button Grid.Column="4"
                                 Content="New snip"
                                 Style="{ThemeResource AccentButtonStyle}"
                                 Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
@@ -230,6 +236,10 @@
                     <TextBlock Text="Settings"
                                Style="{ThemeResource TitleTextBlockStyle}"
                                Margin="0,0,0,8" />
+
+                    <TextBlock Text="Appearance &amp; behaviour"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               Margin="0,4,0,4" />
 
                     <tk:SettingsCard Header="Theme"
                                      Description="Applies immediately. System follows your Windows preference.">
@@ -290,6 +300,10 @@
                                    MinWidth="120" />
                     </tk:SettingsCard>
 
+                    <TextBlock Text="About"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               Margin="0,16,0,4" />
+
                     <tk:SettingsCard Header="Updates"
                                      Description="Check the GitHub releases feed for a newer build.">
                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -305,21 +319,28 @@
                         </StackPanel>
                     </tk:SettingsCard>
 
-                    <tk:SettingsExpander Header="About">
+                    <tk:SettingsExpander Header="Snipdeck"
+                                         Description="{x:Bind CopyrightDisplay}">
+                        <!-- Collapsed: version shows on the right of the header. -->
+                        <TextBlock Text="{x:Bind VersionDisplay}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <tk:SettingsExpander.Items>
-                            <tk:SettingsCard Header="Application">
-                                <StackPanel HorizontalAlignment="Right">
-                                    <TextBlock Text="{x:Bind AppName}" />
-                                    <TextBlock Text="{x:Bind TaglineDisplay}"
-                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <tk:SettingsCard Header="To clone this repository">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Text="git clone https://github.com/StuartMeeks/Snipdeck"
+                                               FontFamily="Cascadia Mono, Consolas, Courier New"
+                                               VerticalAlignment="Center"
+                                               IsTextSelectionEnabled="True" />
+                                    <Button Click="OnCopyCloneCommandClicked"
+                                            ToolTipService.ToolTip="Copy to clipboard">
+                                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                    </Button>
                                 </StackPanel>
                             </tk:SettingsCard>
-                            <tk:SettingsCard Header="Version">
-                                <TextBlock Text="{x:Bind VersionDisplay}" />
-                            </tk:SettingsCard>
-                            <tk:SettingsCard Header="Copyright">
-                                <TextBlock Text="{x:Bind CopyrightDisplay}" />
+                            <tk:SettingsCard Header="File a bug or request a new feature">
+                                <HyperlinkButton Content="Open issues on GitHub"
+                                                 NavigateUri="https://github.com/StuartMeeks/Snipdeck/issues" />
                             </tk:SettingsCard>
                         </tk:SettingsExpander.Items>
                     </tk:SettingsExpander>
@@ -397,42 +418,33 @@
             </ScrollViewer>
         </DataTemplate>
 
-        <DataTemplate x:Key="GlobalParametersContentTemplate" x:DataType="vm:GlobalParametersViewModel">
+        <DataTemplate x:Key="SharedParametersContentTemplate" x:DataType="vm:SharedParametersViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+                <StackPanel Padding="24" Spacing="16">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Shared parameters"
+                            <TextBlock Text="{x:Bind Title}"
                                        Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Definitions available to every snip across all CLIs. A snip inherits one when its {token} matches and neither the snip nor its CLI defines that name."
+                            <TextBlock Text="{x:Bind Description}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        TextWrapping="Wrap" />
                         </StackPanel>
                         <Button Grid.Column="1"
-                                Margin="0,0,8,0"
-                                Content="Add parameter"
-                                Command="{x:Bind AddParameterCommand}" />
-                        <Button Grid.Column="2"
-                                Content="Save"
+                                Content="Edit"
                                 Style="{ThemeResource AccentButtonStyle}"
-                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveGlobalParametersCommand}" />
+                                VerticalAlignment="Top"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.EditSharedParametersCommand}" />
                     </Grid>
 
-                    <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Visibility="{x:Bind StatusMessage, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
-
-                    <TextBlock Text="No global parameters yet. Add one to share it across every CLI."
+                    <TextBlock Text="No shared parameters yet. Click Edit to add one."
                                Style="{ThemeResource BodyTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Visibility="{x:Bind Parameters.Count, Mode=OneWay, Converter={StaticResource InvertedCountToVisibility}}" />
+                               Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
 
                     <ItemsControl ItemsSource="{x:Bind Parameters}">
                         <ItemsControl.ItemsPanel>
@@ -441,38 +453,45 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ParameterEditorRowViewModel">
-                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                        CornerRadius="6"
-                                        Padding="12">
-                                    <StackPanel Spacing="8">
-                                        <Grid>
+                            <DataTemplate x:DataType="vm:ParameterDisplayViewModel">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0"
-                                                     Header="Name"
-                                                     Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                            <Button Grid.Column="1"
-                                                    Margin="8,24,0,0"
-                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.CurrentContent.RemoveParameterCommand}"
-                                                    CommandParameter="{x:Bind}"
-                                                    ToolTipService.ToolTip="Remove parameter">
-                                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
-                                            </Button>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{x:Bind Name}"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Border Grid.Column="1"
+                                                    Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                                    CornerRadius="10"
+                                                    Padding="8,2"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind TypeDisplay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </Border>
                                         </Grid>
-                                        <ComboBox Header="Type"
-                                                  SelectedIndex="{x:Bind TypeIndex, Mode=TwoWay}"
-                                                  HorizontalAlignment="Stretch">
-                                            <x:String>Text</x:String>
-                                            <x:String>Choice</x:String>
-                                        </ComboBox>
-                                        <TextBox Header="Default"
-                                                 Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBox Header="Options (comma-separated, Choice only)"
-                                                 Text="{x:Bind OptionsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsEnabled="{x:Bind IsChoice, Mode=OneWay}" />
+                                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   Visibility="{x:Bind HasDefault, Converter={StaticResource BoolToVisibility}}">
+                                            <Run Text="Default:" />
+                                            <Run Text="{x:Bind Default}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{x:Bind HasOptions, Converter={StaticResource BoolToVisibility}}">
+                                            <Run Text="Options:" />
+                                            <Run Text="{x:Bind OptionsDisplay}" />
+                                        </TextBlock>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -484,7 +503,7 @@
 
         <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="640" HorizontalAlignment="Stretch">
+                <StackPanel Padding="24" Spacing="16">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -557,7 +576,7 @@
                                              CliTemplate="{StaticResource CliContentTemplate}"
                                              SettingsTemplate="{StaticResource SettingsContentTemplate}"
                                              TrashTemplate="{StaticResource TrashContentTemplate}"
-                                             GlobalParametersTemplate="{StaticResource GlobalParametersContentTemplate}"
+                                             SharedParametersTemplate="{StaticResource SharedParametersContentTemplate}"
                                              TagIconsTemplate="{StaticResource TagIconsContentTemplate}" />
     </UserControl.Resources>
 

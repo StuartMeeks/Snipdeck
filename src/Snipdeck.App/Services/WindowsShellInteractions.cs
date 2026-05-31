@@ -95,6 +95,18 @@ namespace Snipdeck.App.Services
                 : null;
         }
 
+        public async Task<IReadOnlyList<Parameter>?> EditParametersAsync(string title, IReadOnlyList<Parameter> current)
+        {
+            ArgumentNullException.ThrowIfNull(current);
+            var editor = new ParametersEditorViewModel(title, current);
+            var dialog = new ParametersEditorDialog(editor)
+            {
+                XamlRoot = GetXamlRoot(),
+            };
+            var result = await dialog.ShowAsync();
+            return result == ContentDialogResult.Primary ? editor.BuildParameters() : null;
+        }
+
         public async Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             ArgumentNullException.ThrowIfNull(snip);

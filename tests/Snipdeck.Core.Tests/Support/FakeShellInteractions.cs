@@ -18,6 +18,10 @@ namespace Snipdeck.Core.Tests.Support
 
         public ParameterFillResult? NextParameterFillResult { get; set; }
 
+        public IReadOnlyList<Parameter>? NextEditParametersResult { get; set; }
+
+        public string? LastEditParametersTitle { get; private set; }
+
         public string? LastConfirmTitle { get; private set; }
 
         public bool LastConfirmDestructive { get; private set; }
@@ -61,6 +65,12 @@ namespace Snipdeck.Core.Tests.Support
         {
             LastEditedCli = cli;
             return Task.FromResult(NextCliEditResult);
+        }
+
+        public Task<IReadOnlyList<Parameter>?> EditParametersAsync(string title, IReadOnlyList<Parameter> current)
+        {
+            LastEditParametersTitle = title;
+            return Task.FromResult(NextEditParametersResult);
         }
 
         public Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)

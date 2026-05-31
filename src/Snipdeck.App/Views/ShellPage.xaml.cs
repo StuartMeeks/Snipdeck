@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 
+using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.ViewModels;
 
 namespace Snipdeck.App.Views
@@ -97,7 +98,9 @@ namespace Snipdeck.App.Views
                 HomeViewModel => HomeNavItem,
                 SettingsViewModel => SettingsNavItem,
                 TrashViewModel => TrashNavItem,
-                GlobalParametersViewModel => SharedParametersNavItem,
+                // Only the global set maps to the footer item; a CLI-scoped set is
+                // reached from the CLI view, so it leaves the footer unselected.
+                SharedParametersViewModel { IsGlobal: true } => SharedParametersNavItem,
                 TagIconsViewModel => TagsNavItem,
                 CliViewModel => _tagItems.FirstOrDefault(i => ReferenceEquals(i.Tag, ViewModel.SelectedTagItem)),
                 _ => null,
@@ -146,6 +149,12 @@ namespace Snipdeck.App.Views
         private void OnHomeCategoryToggled(object sender, RoutedEventArgs e)
         {
             ((ToggleButton)sender).IsChecked = true;
+        }
+
+        private async void OnCopyCloneCommandClicked(object sender, RoutedEventArgs e)
+        {
+            var clipboard = App.Services.GetRequiredService<IClipboardService>();
+            await clipboard.SetTextAsync("git clone https://github.com/StuartMeeks/Snipdeck");
         }
 
         private void OnNewCliClicked(object sender, RoutedEventArgs e)

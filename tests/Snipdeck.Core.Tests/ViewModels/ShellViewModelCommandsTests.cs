@@ -363,22 +363,58 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
-        public async Task SaveGlobalParameters_persists_edited_rows_to_the_document()
+        public async Task OpenGlobalParameters_shows_a_global_read_only_view()
         {
-            var (vm, store, _, _, _) = await BuildAsync();
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+                d.GlobalParameters.Add(new Parameter { Name = "tenant", Default = "acme" }));
 
             vm.OpenGlobalParameters();
-            var globals = Assert.IsType<GlobalParametersViewModel>(vm.CurrentContent);
-            globals.AddParameterCommand.Execute(null);
-            globals.Parameters[0].Name = "tenant";
-            globals.Parameters[0].Default = "acme";
 
-            await vm.SaveGlobalParametersCommand.ExecuteAsync(null);
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+            Assert.True(view.IsGlobal);
+            var p = Assert.Single(view.Parameters);
+            Assert.Equal("tenant", p.Name);
+            Assert.Equal("acme", p.Default);
+        }
+
+        [Fact]
+        public async Task EditSharedParameters_persists_the_modal_result_to_the_global_set()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync();
+            vm.OpenGlobalParameters();
+
+            ix.NextEditParametersResult = [new Parameter { Name = "tenant", Default = "acme" }];
+            await vm.EditSharedParametersCommand.ExecuteAsync(null);
 
             var saved = Assert.Single(store.Document.GlobalParameters);
             Assert.Equal("tenant", saved.Name);
             Assert.Equal("acme", saved.Default);
-            Assert.Equal("Saved.", globals.StatusMessage);
+            // The read-only view refreshes to show the saved definition.
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+            Assert.Equal("tenant", Assert.Single(view.Parameters).Name);
+        }
+
+        [Fact]
+        public async Task EditSharedParameters_persists_to_the_selected_cli_when_cli_scoped()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+            });
+
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            vm.OpenCliParametersCommand.Execute(null);
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+            Assert.False(view.IsGlobal);
+
+            ix.NextEditParametersResult = [new Parameter { Name = "region", Default = "eu" }];
+            await vm.EditSharedParametersCommand.ExecuteAsync(null);
+
+            var savedCli = Assert.Single(store.Document.Clis);
+            Assert.Equal("region", Assert.Single(savedCli.Parameters).Name);
+            Assert.Empty(store.Document.GlobalParameters);
         }
 
         [Fact]

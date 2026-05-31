@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Home, navigation and shared-parameters polish.** The Home page leads with a
+  full-bleed hero banner (drop `Assets/HomeHero.png` to supply the image), the
+  CLI launcher is a horizontal carousel that overlaps the banner, and a centred
+  pill selector switches between Most used / Recent / Favourites. The navigation
+  pane toggle (hamburger) moved to the title bar (Home is the first nav item),
+  and the footer destinations (Shared parameters / Tags / Trash / Settings) now
+  show the selected indicator like the other nav items. Clicking Home also
+  clears the search. Shared parameters — global and per-CLI (reached from the CLI
+  view header) — now have a read-only card view with an edit modal, instead of
+  inline editing; the Tags and Shared-parameters panes are left-aligned. Settings
+  is grouped into "Appearance &amp; behaviour" and "About"; the About expander
+  shows the version and copyright, with links to clone the repo and file issues.
 - **Shell layout: CLI switcher and search moved to the title bar.** The CLI
   switcher and a snip search box now live in the custom title bar. Search is
   snip-only with name autocomplete, scoped to the selected CLI; each suggestion

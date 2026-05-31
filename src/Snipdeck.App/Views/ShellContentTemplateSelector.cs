@@ -19,7 +19,7 @@ namespace Snipdeck.App.Views
 
         public DataTemplate? TrashTemplate { get; set; }
 
-        public DataTemplate? GlobalParametersTemplate { get; set; }
+        public DataTemplate? SharedParametersTemplate { get; set; }
 
         public DataTemplate? TagIconsTemplate { get; set; }
 
@@ -31,7 +31,7 @@ namespace Snipdeck.App.Views
                 CliViewModel => CliTemplate,
                 SettingsViewModel => SettingsTemplate,
                 TrashViewModel => TrashTemplate,
-                GlobalParametersViewModel => GlobalParametersTemplate,
+                SharedParametersViewModel => SharedParametersTemplate,
                 TagIconsViewModel => TagIconsTemplate,
                 _ => null,
             };

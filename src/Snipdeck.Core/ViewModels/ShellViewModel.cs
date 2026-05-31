@@ -116,23 +116,75 @@ namespace Snipdeck.Core.ViewModels
             CurrentContent = BuildTrashViewModel();
         }
 
+        // Scope of the Shared-parameters view currently shown: null = global, else
+        // the CLI whose parameters are being viewed/edited.
+        private Guid? _sharedParametersCliId;
+
         public void OpenGlobalParameters()
         {
-            CurrentContent = new GlobalParametersViewModel(_document.GlobalParameters);
+            _sharedParametersCliId = null;
+            CurrentContent = BuildSharedParametersView();
         }
 
+        /// <summary>Open the read-only shared-parameters screen for the current CLI scope.</summary>
         [RelayCommand]
-        private async Task SaveGlobalParametersAsync()
+        private void OpenCliParameters()
         {
-            if (CurrentContent is not GlobalParametersViewModel globals)
+            if (SelectedCliChoice?.Cli is not { } cli)
             {
                 return;
             }
-            // Global parameters only affect fill-time resolution (read from the
-            // document on copy), so no shell rebuild is needed — just persist.
-            _document.GlobalParameters = globals.BuildParameters();
+            _sharedParametersCliId = cli.Id;
+            CurrentContent = BuildSharedParametersView();
+        }
+
+        private SharedParametersViewModel BuildSharedParametersView()
+        {
+            return _sharedParametersCliId is { } cliId
+                && _document.Clis.FirstOrDefault(c => c.Id == cliId) is { } cli
+                ? new SharedParametersViewModel(
+                    $"{cli.Name} — shared parameters",
+                    "Inherited by every snip under this CLI whose {token} matches, unless the snip defines that parameter locally.",
+                    isGlobal: false,
+                    cli.Parameters)
+                : new SharedParametersViewModel(
+                    "Shared parameters",
+                    "Definitions available to every snip across all CLIs. A snip inherits one when its {token} matches and neither the snip nor its CLI defines that name.",
+                    isGlobal: true,
+                    _document.GlobalParameters);
+        }
+
+        [RelayCommand]
+        private async Task EditSharedParametersAsync()
+        {
+            if (CurrentContent is not SharedParametersViewModel view)
+            {
+                return;
+            }
+
+            var current = view.IsGlobal
+                ? _document.GlobalParameters
+                : _document.Clis.FirstOrDefault(c => c.Id == _sharedParametersCliId)?.Parameters ?? [];
+
+            var edited = await _interactions.EditParametersAsync(view.Title, current).ConfigureAwait(true);
+            if (edited is null)
+            {
+                return;
+            }
+
+            // Shared parameters only affect fill-time resolution, so persist and
+            // rebuild the read-only view — no full shell refresh needed.
+            if (view.IsGlobal)
+            {
+                _document.GlobalParameters = [.. edited];
+            }
+            else if (_document.Clis.FirstOrDefault(c => c.Id == _sharedParametersCliId) is { } cli)
+            {
+                cli.Parameters = [.. edited];
+            }
+
             await _store.SaveAsync(_document).ConfigureAwait(true);
-            globals.StatusMessage = "Saved.";
+            CurrentContent = BuildSharedParametersView();
         }
 
         public void OpenTagIcons()

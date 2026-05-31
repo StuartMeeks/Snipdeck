@@ -8,29 +8,30 @@ using Snipdeck.Core.Models;
 namespace Snipdeck.Core.ViewModels
 {
     /// <summary>
-    /// The "Shared parameters" content view: edits the global (cross-CLI)
-    /// parameter definitions. Add/remove rows here; the shell persists them via
-    /// its SaveGlobalParameters command.
+    /// Editable list of shared parameter definitions, shown in the edit modal for
+    /// both the global set and a CLI's set. Add/remove rows, then BuildParameters.
     /// </summary>
-    public sealed partial class GlobalParametersViewModel : ObservableObject
+    public sealed partial class ParametersEditorViewModel : ObservableObject
     {
-        public GlobalParametersViewModel(IReadOnlyList<Parameter> parameters)
+        public ParametersEditorViewModel(string title, IReadOnlyList<Parameter> parameters)
         {
             ArgumentNullException.ThrowIfNull(parameters);
+            Title = title;
             Parameters = new ObservableCollection<ParameterEditorRowViewModel>(
                 parameters.Select(p => new ParameterEditorRowViewModel(p)));
         }
 
+        public string Title { get; }
+
         public ObservableCollection<ParameterEditorRowViewModel> Parameters { get; }
 
-        [ObservableProperty]
-        public partial string StatusMessage { get; set; } = string.Empty;
+        public bool IsEmpty => Parameters.Count == 0;
 
         [RelayCommand]
         private void AddParameter()
         {
             Parameters.Add(new ParameterEditorRowViewModel(new Parameter { Name = "param" }));
-            StatusMessage = string.Empty;
+            OnPropertyChanged(nameof(IsEmpty));
         }
 
         [RelayCommand]
@@ -39,7 +40,7 @@ namespace Snipdeck.Core.ViewModels
             if (row is not null)
             {
                 _ = Parameters.Remove(row);
-                StatusMessage = string.Empty;
+                OnPropertyChanged(nameof(IsEmpty));
             }
         }
 
