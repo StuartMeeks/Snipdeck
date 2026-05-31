@@ -6,53 +6,6 @@ canonical list of *parked* v1 features is the "Out of scope for v1" section in
 
 ---
 
-## Shared parameter definitions (global and CLI-scoped)
-
-**Problem.** Today every `Snip` carries its own `Parameter` definitions inline.
-If twenty Snips all need an `env` Choice dropdown with options
-`dev` / `staging` / `prod`, that definition is duplicated twenty times and the
-user has to keep them in sync by hand. Same story for any other recurring
-token (`region`, `org_id`, `tenant`, etc.).
-
-**Idea.** Let parameter definitions live above the Snip and be *referenced* by
-name from individual Snips, with the option to still define a parameter
-locally on a Snip when something one-off is needed.
-
-**Sketch.**
-- Add a collection of shared `Parameter` definitions, probably at two scopes:
-  - **CLI-scoped** — most common case, e.g. an `env` defined once on the
-    `pl-app` CLI and used by every `pl-app` Snip.
-  - **Global** — for the rare cross-CLI definition (`yes_no`, common flags).
-  - Both scopes should be supported; CLI-scoped takes precedence over global
-    when names collide.
-- A Snip can either:
-  - **Reference** a shared parameter by name — it picks up the type, options,
-    and default automatically.
-  - **Define** a parameter locally — overrides any shared definition with the
-    same name *for that Snip only*.
-- The substitution engine doesn't change: tokens still resolve from a
-  `name → value` dictionary. Only the *definition* moves; resolution is the
-  same.
-
-**Open questions** to settle when this gets scheduled:
-- Reference by **name** or by **ID**? Names match the `{token}` model and read
-  well; IDs survive renames. Probably name-based with a uniqueness constraint
-  per scope, plus a rename flow that propagates.
-- Where does the UI to manage shared parameters live? A Settings page? A
-  flyout from each CLI in the pane header? Probably the latter for CLI-scoped
-  and a Settings entry for global.
-- Schema migration: additive. New collections on `SnipStoreDocument` (global)
-  and `Cli` (CLI-scoped). Existing Snips with local `Parameter` entries keep
-  working unchanged.
-- Should a Snip's `Parameters` list contain a discriminated union (local
-  definition vs. reference) or two parallel lists? A small object with
-  `Name` + optional inline definition feels cleanest — absent inline ⇒ resolve
-  from shared scope.
-
-This is the single biggest content-quality-of-life feature after v1 ships.
-
----
-
 ## Execute Snips, not just construct them (with per-CLI shell + execution history)
 
 **Problem.** Today Snipdeck is a sophisticated clipboard — it builds the command
@@ -297,44 +250,6 @@ Reasons:
 
 ---
 
-## Final UI polish pass
-
-A deliberate sweep of visual / interaction rough edges, done **at the end**
-once the feature surface has settled — batching the nitpicks avoids
-re-polishing the same screens after every feature lands. Known items so far:
-
-- **Snip card Copy button is too wide.** It currently stretches further than
-  it should; size it to its content (or a sensible fixed width) so the card
-  action row reads cleanly.
-- **"Delete CLI" button should be styled as a danger action.** It's a
-  destructive, hard-to-reverse operation — give it the red/danger accent
-  (e.g. a danger `Button` style / `Foreground` from the theme palette)
-  rather than the neutral default, so it visually distinguishes itself from
-  benign actions.
-- **Inconsistent button corner radii.** Cancel buttons render with square
-  corners while Save / Copy buttons are rounded. Standardise on rounded
-  corners for *all* buttons (the dialog `CloseButton` is the likely culprit —
-  align it with the themed `CornerRadius` the primary buttons pick up).
-- **Consider making the whole Snip card the Copy target.** Rather than a
-  dedicated Copy button on the card, let a click anywhere on the card trigger
-  the copy / parameter-fill flow. Weigh the trade-offs before committing:
-  discoverability and a cleaner card vs. losing an explicit affordance and
-  the risk of accidental copies / conflicts with the overflow menu and
-  favourite star hit-targets. Decide, then either remove the button or keep
-  it.
-- **Resizable, size-remembering snip editor.** The New/Edit snip editor was
-  widened to fit its content, but it's still a `ContentDialog` (fixed size).
-  Make it genuinely user-resizable and persist the chosen size (to `AppConfig`)
-  so it reopens at the same dimensions. `ContentDialog` can't do this natively —
-  the likely route is to host the editor in a resizable secondary `Window`
-  (native drag-resize) rather than a dialog overlay, which means rethinking how
-  the editor is shown and how its result returns through `IShellInteractions`.
-
-Add to this list as other cosmetic / interaction snags turn up during
-feature work, then knock them out in one pass before a stable cut.
-
----
-
 ## Icon picker (glyph browser) for tag icons
 
 **Problem.** Tag icons are set by typing a raw glyph — either pasting a Segoe
@@ -367,35 +282,15 @@ management view, and a reusable fit for any future "choose a glyph" need.
 - Do CLI icons (today: uploaded image, identicon fallback) also gain a
   "pick a glyph instead" option, or stay image-only? Keep the first cut to tags.
 
+
 ---
 
-## Carried over from the phase stack
+## Resizable, size-remembering snip editor
 
-These were trimmed out of Phase 4–6 to keep the PRs reviewable. None are
-load-bearing for the v1 demo, but they're the obvious next-pulls.
-
-- **Hotkey rebinding UI.** The setting is editable in `AppConfig` already;
-  what's missing is a key-capture control on the Settings page and the call
-  to `IHotkeyService.TryRegister` after the change. Tooling: a small custom
-  `Control` that listens for a single key chord then displays it formatted.
-- **Storage path: move / adopt / warn-on-conflict.** Per `CLAUDE.md`, when
-  the user changes the storage path we need three flows: move the existing
-  store to the new path; adopt a store already at the new path; warn when
-  both exist. UI: a "Change…" button next to the read-only path display.
-- **Re-enable `PublishTrimmed` once JSON serialisation is trim-safe.**
-  Disabled in `Snipdeck.App.csproj` to unblock the first release. To
-  turn it back on:
-  1. Move `JsonSnipStore` / `JsonSettingsStore` onto
-     `JsonSerializerContext` source generation
-     (`[JsonSerializable(typeof(SnipStoreDocument))]` etc.) so the
-     untyped `Serialize/Deserialize` calls disappear. Removes IL2026.
-  2. Audit Jdenticon-net, Microsoft.Windows.SDK.NET and WinRT.Runtime
-     trim warnings (IL2104); either suppress per-assembly with
-     `<TrimmerRootAssembly>` entries / `[DynamicallyAccessedMembers]`
-     attributes, or accept them via targeted
-     `<TrimmerSingleWarn>false</TrimmerSingleWarn>` carve-outs.
-  3. Flip `PublishTrimmed` back to `True` for Release.
-
-  Payoff is a meaningfully smaller self-contained Velopack package
-  (probably ~80 MB instead of ~150–200 MB). Not urgent for alpha but
-  worth doing before a stable cut.
+The New/Edit snip editor was widened to fit its content during the UI polish
+pass, but it's still a `ContentDialog` (fixed size). Make it genuinely
+user-resizable and persist the chosen size (to `AppConfig`) so it reopens at
+the same dimensions. `ContentDialog` can't do this natively — the likely route
+is to host the editor in a resizable secondary `Window` (native drag-resize)
+rather than a dialog overlay, which means rethinking how the editor is shown
+and how its result returns through `IShellInteractions`.
