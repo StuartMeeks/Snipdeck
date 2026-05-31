@@ -237,12 +237,25 @@ namespace Snipdeck.Core.ViewModels
             ApplyShellContent();
         }
 
-        /// <summary>Filter the snip list by free-text search, moving off Home if needed.</summary>
+        /// <summary>Filter the snip list by free-text search, moving off Home (or any
+        /// non-snip page like Settings/Trash) to the snip list.</summary>
         public void ApplySearch(string query)
         {
-            // Search is snips-only: ensure the snip list is showing.
-            SelectedTagItem ??= Tags.FirstOrDefault(t => t.IsAll);
-            SearchText = query ?? string.Empty;
+            // Set state under suppression, then apply once — so submitting the same
+            // query again still swaps a non-snip page back to the snip list (the
+            // property assignments alone would be no-ops and skip the refresh).
+            _suppressShellRefresh = true;
+            try
+            {
+                SelectedTagItem ??= Tags.FirstOrDefault(t => t.IsAll);
+                SearchText = query ?? string.Empty;
+                _focusedSnipId = null;
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
+            ApplyShellContent();
         }
 
         private string CliNameFor(Guid cliId) =>

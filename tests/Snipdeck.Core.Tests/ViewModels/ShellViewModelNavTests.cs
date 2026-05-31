@@ -148,6 +148,19 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task ApplySearch_returns_to_the_snip_list_from_a_non_snip_page()
+        {
+            var (vm, _, plId, _) = await BuildAsync();
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plId); // snip list, All tag
+            vm.OpenTrash(); // non-snip page, but SelectedTagItem stays non-null
+            _ = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+
+            vm.ApplySearch(string.Empty); // same (empty) query text as the default
+
+            _ = Assert.IsType<CliViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
         public async Task OpenDocumentation_opens_the_readme_url()
         {
             var (vm, links, _, _) = await BuildAsync();
