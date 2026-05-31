@@ -55,6 +55,7 @@
             <Style TargetType="views:SnipEditorDialog" BasedOn="{StaticResource SnipdeckContentDialogStyle}" />
             <Style TargetType="views:CliEditorDialog" BasedOn="{StaticResource SnipdeckContentDialogStyle}" />
             <Style TargetType="views:ParameterFillDialog" BasedOn="{StaticResource SnipdeckContentDialogStyle}" />
+            <Style TargetType="views:ParametersEditorDialog" BasedOn="{StaticResource SnipdeckContentDialogStyle}" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

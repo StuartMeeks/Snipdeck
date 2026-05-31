@@ -43,7 +43,10 @@ namespace Snipdeck.Core.ViewModels
 
             Rows = new ObservableCollection<TagIconRowViewModel>(
                 tagNames
-                    .Distinct(StringComparer.Ordinal)
+                    // Tags are matched case-insensitively across the shell, so collapse
+                    // casing variants to a single editable row (avoids a saved icon
+                    // appearing not to apply to the nav's collapsed tag entry).
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
                     .Select(t => new TagIconRowViewModel(t, tagIcons.TryGetValue(t, out var g) ? g : string.Empty)));
         }
