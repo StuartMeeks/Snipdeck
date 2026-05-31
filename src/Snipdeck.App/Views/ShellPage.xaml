@@ -110,7 +110,7 @@
                             <Button Click="OnNewCliClicked"
                                     Width="232"
                                     Height="172"
-                                    Background="{ThemeResource CliCardBackgroundBrush}"
+                                    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
                                     CornerRadius="8">

@@ -12,21 +12,6 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- CLI / New CLI tile background: mostly opaque but still slightly
-                 translucent so the hero shows through faintly (more opaque than the
-                 default card brush, which was too see-through over the hero). -->
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="CliCardBackgroundBrush" Color="#F0FBFBFB" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="CliCardBackgroundBrush" Color="#F02C2C2C" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="HighContrast">
-                    <SolidColorBrush x:Key="CliCardBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-
             <!-- Subtle danger: red text/icon on a normal button, for destructive actions. -->
             <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
