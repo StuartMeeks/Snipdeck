@@ -54,7 +54,12 @@
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <!-- The whole pane shares the header's background colour so the hero's
+                 faded lower edge blends seamlessly into the content below it (no
+                 line between the header and the rest of the page). -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
                 <!-- No outer padding: the hero header is full-bleed. -->
                 <StackPanel Spacing="0">
 
