@@ -62,23 +62,17 @@
                     <!-- Hero header (WinUI Gallery layout): a FIXED-height hero whose
                          image is painted by a Composition mask brush so its lower
                          edge fades to transparent, revealing the page's Mica behind
-                         it (no solid colour, so no line / shade mismatch). The title
-                         sits top-left and the CLI tiles at the bottom. -->
-                    <Grid Height="320">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
+                         it. The title sits top-left; the CLI carousel below is pulled
+                         up so the cards straddle the hero's bottom edge. -->
+                    <Grid Height="360">
                         <!-- Composition-masked hero image is set as this Border's
                              child visual in code-behind (theme-aware, size-tracked). -->
                         <Border x:Name="HeroHost"
-                                Grid.Row="0" Grid.RowSpan="2"
                                 IsHitTestVisible="False"
                                 Loaded="OnHeroHostLoaded"
                                 SizeChanged="OnHeroHostSizeChanged" />
 
-                        <StackPanel Grid.Row="0" Margin="36,32,36,0" Spacing="4">
+                        <StackPanel VerticalAlignment="Top" Margin="36,32,36,0" Spacing="4">
                             <TextBlock Text="Next Iteration"
                                        FontSize="18"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -86,47 +80,47 @@
                                        Style="{ThemeResource TitleLargeTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                         </StackPanel>
-
-                        <!-- CLI launcher: horizontal carousel anchored to the header bottom. -->
-                        <ScrollViewer Grid.Row="1"
-                                      VerticalAlignment="Bottom"
-                                      Margin="0,0,0,16"
-                                      Padding="36,0,36,0"
-                                      HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Disabled"
-                                      HorizontalScrollMode="Enabled">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <ItemsControl ItemsSource="{x:Bind CliCards}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="12" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:CliCardViewModel">
-                                            <controls:CliCard
-                                                ViewModel="{x:Bind}"
-                                                NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <!-- New CLI tile at the end of the carousel (always present). -->
-                                <Button Click="OnNewCliClicked"
-                                        Width="232"
-                                        Height="172"
-                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8">
-                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                                        <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
-                                        <TextBlock Text="New CLI" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </ScrollViewer>
                     </Grid>
+
+                    <!-- CLI launcher: pulled up by 75% of a card's height so the cards
+                         straddle the hero's bottom edge — ~75% over the hero, ~25%
+                         spilling onto the page below. (Card height 172 → -129.) -->
+                    <ScrollViewer Margin="0,-129,0,0"
+                                  Padding="36,0,36,0"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Enabled">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <ItemsControl ItemsSource="{x:Bind CliCards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CliCardViewModel">
+                                        <controls:CliCard
+                                            ViewModel="{x:Bind}"
+                                            NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- New CLI tile at the end of the carousel (always present). -->
+                            <Button Click="OnNewCliClicked"
+                                    Width="232"
+                                    Height="172"
+                                    Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
+                                    <TextBlock Text="New CLI" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Snip categories: Most used / Recent / Favourites (unscoped). -->
                     <StackPanel Padding="24" Spacing="16" Margin="0,8,0,0"

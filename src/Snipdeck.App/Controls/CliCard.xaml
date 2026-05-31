@@ -21,7 +21,7 @@
             CornerRadius="8"
             HorizontalContentAlignment="Stretch"
             VerticalContentAlignment="Stretch"
-            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             Command="{x:Bind NavigateCommand, Mode=OneWay}"
