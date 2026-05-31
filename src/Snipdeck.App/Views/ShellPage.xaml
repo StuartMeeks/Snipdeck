@@ -22,76 +22,88 @@
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <!-- No outer padding: the banner is full-bleed (touches the top and
-                     both edges). Inner content below the banner is padded. -->
+                <!-- No outer padding: the hero header is full-bleed. -->
                 <StackPanel Spacing="0">
 
-                    <!-- Hero banner: accent-gradient placeholder with the supplied
-                         image layered on top, headings overlaid. -->
-                    <Grid Height="200">
-                        <Border>
+                    <!-- Hero header (WinUI Gallery layout): the image is the full-width
+                         background spanning the title row and the CLI tiles row; the
+                         title sits top-left and the tiles sit below, over the image's
+                         lower edge which fades out via the opacity mask. -->
+                    <Grid Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Image Grid.Row="0" Grid.RowSpan="2"
+                               Source="ms-appx:///Assets/HomeHero.png"
+                               Stretch="UniformToFill"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Top" />
+
+                        <!-- Fade the image's lower edge into the header background
+                             (WinUI Image has no OpacityMask, so overlay a gradient
+                             that ends at the header's own background colour). -->
+                        <Border Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
                             <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />
-                                    <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="Transparent" Offset="0.55" />
+                                    <GradientStop Color="{ThemeResource SolidBackgroundFillColorBase}" Offset="1" />
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        <Image Source="ms-appx:///Assets/HomeHero.png"
-                               Stretch="UniformToFill"
-                               HorizontalAlignment="Stretch"
-                               VerticalAlignment="Stretch" />
-                        <StackPanel VerticalAlignment="Bottom" Margin="32,0,32,20" Spacing="2">
+
+                        <StackPanel Grid.Row="0" Margin="36,48,36,0" Spacing="4">
                             <TextBlock Text="Next Iteration"
-                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                       Foreground="{ThemeResource TextOnAccentFillColorSecondaryBrush}" />
+                                       FontSize="18"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <TextBlock Text="Snipdeck"
                                        Style="{ThemeResource TitleLargeTextBlockStyle}"
-                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                         </StackPanel>
+
+                        <!-- CLI launcher: horizontal carousel sitting within the header. -->
+                        <ScrollViewer Grid.Row="1"
+                                      Margin="0,56,0,16"
+                                      Padding="36,0,36,0"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      HorizontalScrollMode="Enabled">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ItemsControl ItemsSource="{x:Bind CliCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="12" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CliCardViewModel">
+                                            <controls:CliCard
+                                                ViewModel="{x:Bind}"
+                                                NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- New CLI tile at the end of the carousel (always present). -->
+                                <Button Click="OnNewCliClicked"
+                                        Width="232"
+                                        Height="172"
+                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                        <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
+                                        <TextBlock Text="New CLI" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
-                    <!-- CLI launcher: a horizontal carousel that overlaps the banner. -->
-                    <ScrollViewer Margin="0,-44,0,0"
-                                  Padding="24,0,24,0"
-                                  HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Disabled"
-                                  HorizontalScrollMode="Enabled"
-                                  Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <ItemsControl ItemsSource="{x:Bind CliCards}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:CliCardViewModel">
-                                        <controls:CliCard
-                                            ViewModel="{x:Bind}"
-                                            NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <!-- New CLI tile at the end of the carousel. -->
-                            <Button Click="OnNewCliClicked"
-                                    Width="232"
-                                    Height="172"
-                                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                                    <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
-                                    <TextBlock Text="New CLI" HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </ScrollViewer>
-
                     <!-- Snip categories: Most used / Recent / Favourites (unscoped). -->
-                    <StackPanel Padding="24" Spacing="16" Margin="0,16,0,0"
+                    <StackPanel Padding="24" Spacing="16" Margin="0,8,0,0"
                                 Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                             <ToggleButton CornerRadius="16"
@@ -155,15 +167,10 @@
                         <TextBlock Text="Welcome to Snipdeck"
                                    Style="{ThemeResource TitleTextBlockStyle}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Start by adding a CLI."
+                        <TextBlock Text="Use the New CLI tile above to get started."
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
-                        <Button Content="New CLI"
-                                Click="OnNewCliClicked"
-                                Style="{ThemeResource AccentButtonStyle}"
-                                HorizontalAlignment="Center"
-                                Margin="0,8,0,0" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
