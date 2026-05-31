@@ -40,10 +40,12 @@ namespace Snipdeck.App.Services
                 Content = message,
                 PrimaryButtonText = confirmButtonText,
                 CloseButtonText = cancelButtonText,
-                DefaultButton = ContentDialogButton.Primary,
+                // For destructive confirms, make Cancel the default: it's the safe
+                // choice, and it stops the default-button accent treatment from
+                // overriding the primary button's subtle-red foreground.
+                DefaultButton = destructive ? ContentDialogButton.Close : ContentDialogButton.Primary,
                 XamlRoot = GetXamlRoot(),
             };
-            // Destructive confirmations (delete) get the subtle-red primary button.
             if (destructive && Application.Current.Resources["DangerDialogPrimaryButtonStyle"] is Style dangerStyle)
             {
                 dialog.PrimaryButtonStyle = dangerStyle;

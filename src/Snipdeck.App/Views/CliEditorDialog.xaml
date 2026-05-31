@@ -12,7 +12,8 @@
     CloseButtonText="Cancel"
     DefaultButton="Primary">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
+    <!-- Right padding leaves a gutter for the overlay scrollbar. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560" Padding="0,0,12,0">
         <StackPanel MinWidth="400" Spacing="12">
             <TextBox Header="Name"
                      Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

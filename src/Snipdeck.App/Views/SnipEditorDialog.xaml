@@ -19,7 +19,9 @@
         <x:Double x:Key="ContentDialogMaxWidth">860</x:Double>
     </ContentDialog.Resources>
 
-    <ScrollViewer MinWidth="720" MaxHeight="560" VerticalScrollBarVisibility="Auto">
+    <!-- Right padding leaves a gutter for the overlay scrollbar so it doesn't
+         sit on top of the fields / buttons when content scrolls. -->
+    <ScrollViewer MinWidth="720" MaxHeight="560" Padding="0,0,12,0" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="12">
             <TextBox Header="Title"
                      Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
