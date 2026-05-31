@@ -140,7 +140,7 @@ namespace Snipdeck.App.Views
             }
             else if (item.Tag is TagItemViewModel tag)
             {
-                ViewModel.SelectedTagItem = tag;
+                ViewModel.SelectTag(tag);
             }
         }
 

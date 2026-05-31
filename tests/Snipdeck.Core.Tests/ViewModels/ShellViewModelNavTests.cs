@@ -161,6 +161,20 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task SelectTag_reapplies_the_snip_list_when_the_same_tag_is_re_invoked()
+        {
+            var (vm, _, plId, _) = await BuildAsync();
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plId);
+            var allTag = vm.Tags.First(t => t.IsAll);
+            vm.OpenTrash(); // non-snip page; SelectedTagItem stays = allTag
+            _ = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+
+            vm.SelectTag(allTag); // re-invoking the already-selected tag must still navigate back
+
+            _ = Assert.IsType<CliViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
         public async Task OpenDocumentation_opens_the_readme_url()
         {
             var (vm, links, _, _) = await BuildAsync();

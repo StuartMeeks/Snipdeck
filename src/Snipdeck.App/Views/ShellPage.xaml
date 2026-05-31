@@ -159,6 +159,11 @@
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
+                        <Button Content="New CLI"
+                                Click="OnNewCliClicked"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                HorizontalAlignment="Center"
+                                Margin="0,8,0,0" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

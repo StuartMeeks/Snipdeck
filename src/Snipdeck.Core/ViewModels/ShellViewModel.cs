@@ -243,6 +243,25 @@ namespace Snipdeck.Core.ViewModels
             OnPropertyChanged(nameof(CanCreateNewSnip));
         }
 
+        /// <summary>
+        /// Select a tag from the nav. Re-applies the snip list even when the tag is
+        /// already selected (e.g. re-invoked from Settings/Trash), since the property
+        /// setter alone wouldn't raise a change and refresh the content.
+        /// </summary>
+        public void SelectTag(TagItemViewModel tag)
+        {
+            ArgumentNullException.ThrowIfNull(tag);
+            _focusedSnipId = null;
+            if (ReferenceEquals(SelectedTagItem, tag))
+            {
+                ApplyShellContent();
+            }
+            else
+            {
+                SelectedTagItem = tag;
+            }
+        }
+
         /// <summary>Open the project documentation (GitHub readme) in the browser.</summary>
         public Task OpenDocumentationAsync() => _externalLinks.OpenAsync(DocumentationUrl);
 
