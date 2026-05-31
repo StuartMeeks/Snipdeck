@@ -1,3 +1,4 @@
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -19,9 +20,11 @@ namespace Snipdeck.App
             InitializeComponent();
 
             ExtendsContentIntoTitleBar = true;
-            // The whole bar is the drag region; WinUI auto-excludes the interactive
-            // controls (search box, switcher) so they stay clickable.
+            // The whole bar is the drag region. WinUI does NOT auto-exclude interactive
+            // children, so the centred search/switcher group is registered as a
+            // passthrough region instead (recomputed when the bar or group resizes).
             SetTitleBar(AppTitleBar);
+            AppTitleBar.SizeChanged += (_, _) => UpdateTitleBarPassthrough();
 
             ShellHost.Content = shellPage;
 
@@ -30,6 +33,36 @@ namespace Snipdeck.App
 
         // The title-bar switcher and snip search bind to the shell view model.
         public ShellViewModel Shell { get; }
+
+        private void OnTitleBarControlsChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateTitleBarPassthrough();
+        }
+
+        // Mark the centred search/switcher group as a passthrough region so its
+        // controls receive pointer input instead of the title-bar drag handler.
+        private void UpdateTitleBarPassthrough()
+        {
+            if (TitleBarControls.XamlRoot is null || TitleBarControls.ActualWidth <= 0)
+            {
+                return;
+            }
+
+            var scale = TitleBarControls.XamlRoot.RasterizationScale;
+            var bounds = TitleBarControls
+                .TransformToVisual(Content)
+                .TransformBounds(new Windows.Foundation.Rect(0, 0, TitleBarControls.ActualWidth, TitleBarControls.ActualHeight));
+
+            var rect = new Windows.Graphics.RectInt32(
+                (int)Math.Round(bounds.X * scale),
+                (int)Math.Round(bounds.Y * scale),
+                (int)Math.Round(bounds.Width * scale),
+                (int)Math.Round(bounds.Height * scale));
+
+            InputNonClientPointerSource
+                .GetForWindowId(AppWindow.Id)
+                .SetRegionRects(NonClientRegionKind.Passthrough, [rect]);
+        }
 
         private void OnSearchTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {

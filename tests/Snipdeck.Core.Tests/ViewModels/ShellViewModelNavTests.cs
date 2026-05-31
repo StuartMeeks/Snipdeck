@@ -108,6 +108,31 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task Selecting_a_search_result_shows_only_that_snip_even_when_titles_collide()
+        {
+            // Two snips share a title within the same CLI; choosing one suggestion
+            // must show exactly that snip, not every title match.
+            var cli = new Cli { Name = "pl-app" };
+            var first = new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "pl deploy --a" };
+            var second = new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "pl deploy --b" };
+            var doc = new SnipStoreDocument { Clis = [cli], Snips = [first, second] };
+            var vm = new ShellViewModel(
+                new InMemorySnipStore(doc),
+                new FakeClipboardService(),
+                new FakeClock(DateTimeOffset.UtcNow),
+                new FakeShellInteractions(),
+                new FakeIconAssetStorage(),
+                new FakeExternalLinkService());
+            await vm.LoadAsync();
+
+            var result = vm.GetSearchSuggestions("deploy").Single(r => r.SnipId == second.Id);
+            vm.SelectSearchResult(result);
+
+            var content = Assert.IsType<CliViewModel>(vm.CurrentContent);
+            Assert.Equal(second.Id, Assert.Single(content.Snips).Snip.Id);
+        }
+
+        [Fact]
         public async Task ApplySearch_from_home_moves_to_the_filtered_snip_list()
         {
             var (vm, _, _, _) = await BuildAsync();

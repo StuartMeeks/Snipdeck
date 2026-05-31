@@ -31,11 +31,15 @@
                        VerticalAlignment="Center"
                        Margin="12,0,0,0" />
 
-            <!-- Search and switcher, centred as a group in the bar. -->
-            <StackPanel Orientation="Horizontal"
+            <!-- Search and switcher, centred as a group in the bar. The bar is the
+                 drag region; this group is registered as a passthrough region (in
+                 code-behind) so its controls receive input. -->
+            <StackPanel x:Name="TitleBarControls"
+                        Orientation="Horizontal"
                         Spacing="12"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
+                        VerticalAlignment="Center"
+                        SizeChanged="OnTitleBarControlsChanged">
                 <AutoSuggestBox x:Name="SearchBox"
                                 VerticalAlignment="Center"
                                 Width="280"

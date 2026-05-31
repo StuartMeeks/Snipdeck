@@ -104,19 +104,24 @@
                                    Text="{x:Bind Name}"
                                    Style="{ThemeResource TitleTextBlockStyle}"
                                    VerticalAlignment="Center" />
+                        <!-- CLI-specific actions: hidden in the synthetic "All" scope,
+                             where there is no single CLI to edit/delete or add a snip to. -->
                         <Button Grid.Column="1"
                                 Margin="0,0,8,0"
                                 Content="Edit CLI"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
                                 Click="OnEditCliClicked" />
                         <Button Grid.Column="2"
                                 Margin="0,0,8,0"
                                 Content="Delete CLI"
                                 Style="{StaticResource DangerButtonStyle}"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
                                 Click="OnDeleteCliClicked" />
                         <Button Grid.Column="3"
                                 Content="New snip"
-                                Click="OnNewSnipClicked"
-                                Style="{ThemeResource AccentButtonStyle}" />
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Click="OnNewSnipClicked" />
                     </Grid>
 
                     <TextBlock Text="No snips match the current filter."

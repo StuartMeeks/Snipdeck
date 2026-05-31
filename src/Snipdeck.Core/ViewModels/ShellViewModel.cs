@@ -33,6 +33,9 @@ namespace Snipdeck.Core.ViewModels
         private readonly IExternalLinkService _externalLinks;
         private SnipStoreDocument _document = new();
         private bool _suppressShellRefresh;
+        // When set (via a chosen search result), the snip list shows exactly this
+        // snip rather than every title/tag match. Cleared by any other navigation.
+        private Guid? _focusedSnipId;
 
         [ObservableProperty]
         public partial string SearchText { get; set; } = string.Empty;
@@ -196,19 +199,27 @@ namespace Snipdeck.Core.ViewModels
         {
             ArgumentNullException.ThrowIfNull(result);
 
-            var choice = CliChoices.FirstOrDefault(c => c.Cli?.Id == result.CliId);
-            if (choice is not null && !ReferenceEquals(choice, SelectedCliChoice))
+            // Move to the chosen snip's CLI scope and show the snip list, then
+            // constrain it to exactly that snip — all under suppression so the
+            // property handlers don't clear the focus or refresh twice.
+            _suppressShellRefresh = true;
+            try
             {
-                // Switching the CLI shows that scope's snips (selects the "All" tag).
-                SelectedCliChoice = choice;
+                var choice = CliChoices.FirstOrDefault(c => c.Cli?.Id == result.CliId);
+                if (choice is not null)
+                {
+                    SelectedCliChoice = choice;
+                }
+                RebuildTags();
+                SelectedTagItem = Tags.FirstOrDefault(t => t.IsAll);
+                _focusedSnipId = result.SnipId;
+                SearchText = result.Title;
             }
-            else
+            finally
             {
-                // Same scope but possibly on Home — move to the snip list.
-                SelectedTagItem ??= Tags.FirstOrDefault(t => t.IsAll);
+                _suppressShellRefresh = false;
             }
-
-            SearchText = result.Title;
+            ApplyShellContent();
         }
 
         /// <summary>Filter the snip list by free-text search, moving off Home if needed.</summary>
@@ -502,6 +513,7 @@ namespace Snipdeck.Core.ViewModels
             {
                 return;
             }
+            _focusedSnipId = null; // a user CLI switch drops any focused search result
             _suppressShellRefresh = true;
             try
             {
@@ -523,6 +535,7 @@ namespace Snipdeck.Core.ViewModels
             {
                 return;
             }
+            _focusedSnipId = null; // changing the tag filter drops any focused search result
             ApplyShellContent();
         }
 
@@ -539,6 +552,7 @@ namespace Snipdeck.Core.ViewModels
             {
                 return;
             }
+            _focusedSnipId = null; // typing a new search drops any focused search result
             ApplyShellContent();
         }
 
@@ -578,12 +592,22 @@ namespace Snipdeck.Core.ViewModels
             // list for the current scope, filtered by that tag and the search text.
             if (SelectedTagItem is null)
             {
+                _focusedSnipId = null; // Home shows the launcher; drop any focused snip.
                 CurrentContent = new HomeViewModel(_document, SearchText);
                 return;
             }
 
-            var effectiveTag = SelectedTagItem.IsAll ? null : SelectedTagItem.Name;
-            var filtered = SnipFilter.Apply(ScopedSnips(), SearchText, effectiveTag).ToList();
+            List<Snip> filtered;
+            if (_focusedSnipId is { } focusId)
+            {
+                // A chosen search result: show exactly that snip (never a trashed one).
+                filtered = [.. ScopedSnips().Where(s => s.Id == focusId && !s.IsTrash)];
+            }
+            else
+            {
+                var effectiveTag = SelectedTagItem.IsAll ? null : SelectedTagItem.Name;
+                filtered = [.. SnipFilter.Apply(ScopedSnips(), SearchText, effectiveTag)];
+            }
             CurrentContent = new CliViewModel(SelectedCliChoice?.Cli, filtered);
         }
 
