@@ -748,7 +748,14 @@ namespace Snipdeck.Core.ViewModels
             if (SelectedTagItem is null)
             {
                 _focusedSnipId = null; // Home shows the launcher; drop any focused snip.
-                CurrentContent = new HomeViewModel(_document, SearchText);
+                var home = new HomeViewModel(_document, SearchText);
+                // Preserve the selected category across save-driven refreshes so a
+                // card action (copy / favourite / delete) doesn't jump back to Most used.
+                if (CurrentContent is HomeViewModel previous)
+                {
+                    home.SelectedCategory = previous.SelectedCategory;
+                }
+                CurrentContent = home;
                 return;
             }
 

@@ -470,6 +470,27 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task Home_category_is_preserved_across_a_save_refresh()
+        {
+            Cli cli = null!;
+            var (vm, _, clip, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Fav", CommandTemplate = "x", IsFavourite = true });
+            });
+
+            var home = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            home.SelectedCategory = HomeSnipCategory.Favourites;
+            var card = Assert.Single(home.FavouriteSnips);
+
+            await vm.CopySnipCommand.ExecuteAsync(card); // copies + SaveAndRefreshAsync rebuilds Home
+
+            var refreshed = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            Assert.Equal(HomeSnipCategory.Favourites, refreshed.SelectedCategory);
+        }
+
+        [Fact]
         public async Task OpenTrash_shows_only_trashed_snips()
         {
             Cli cli = null!;
