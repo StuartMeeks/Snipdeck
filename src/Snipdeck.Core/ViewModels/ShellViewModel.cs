@@ -167,11 +167,26 @@ namespace Snipdeck.Core.ViewModels
             tags.StatusMessage = "Saved.";
         }
 
-        /// <summary>Show the Home launcher (no tag selected). Scope is unchanged.</summary>
+        /// <summary>
+        /// Show the Home launcher: reset the switcher to the "All" scope and clear
+        /// the tag selection. Done under suppression so switching scope doesn't bounce
+        /// to the snip list before Home is applied.
+        /// </summary>
         public void ShowHome()
         {
-            SelectedTagItem = null;
+            _suppressShellRefresh = true;
+            try
+            {
+                SelectedCliChoice = CliChoices.FirstOrDefault(c => c.IsAll) ?? CliChoices.FirstOrDefault();
+                RebuildTags();
+                SelectedTagItem = null;
+            }
+            finally
+            {
+                _suppressShellRefresh = false;
+            }
             ApplyShellContent();
+            OnPropertyChanged(nameof(CanCreateNewSnip));
         }
 
         /// <summary>Open the project documentation (GitHub readme) in the browser.</summary>

@@ -135,7 +135,8 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
             Assert.Null(vm.SelectedTagItem); // no tag selected on Home
-            // The scope's tag list stays populated in the nav (Home is just a content destination).
+            Assert.True(vm.SelectedCliChoice!.IsAll); // Home also resets the switcher to All
+            // The All-scope tag list is populated in the nav (Home is just a content destination).
             Assert.Contains("deploy", vm.Tags.Select(t => t.Name));
         }
 

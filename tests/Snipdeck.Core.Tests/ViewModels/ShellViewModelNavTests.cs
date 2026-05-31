@@ -74,6 +74,7 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
             Assert.Null(vm.SelectedTagItem);
+            Assert.True(vm.SelectedCliChoice!.IsAll); // switcher resets to the All scope
         }
 
         [Fact]
