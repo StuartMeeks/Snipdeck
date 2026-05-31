@@ -397,24 +397,25 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
-        public async Task EditSharedParameters_persists_the_modal_result_to_the_global_set()
+        public async Task AddSharedParameter_appends_the_modal_result_to_the_global_set()
         {
             var (vm, store, _, ix, _) = await BuildAsync();
             vm.OpenGlobalParameters();
 
-            ix.NextEditParametersResult = [new Parameter { Name = "tenant", Default = "acme" }];
-            await vm.EditSharedParametersCommand.ExecuteAsync(null);
+            ix.NextEditParameterResult = new Parameter { Name = "tenant", Default = "acme" };
+            await vm.AddSharedParameterCommand.ExecuteAsync(null);
 
             var saved = Assert.Single(store.Document.GlobalParameters);
             Assert.Equal("tenant", saved.Name);
             Assert.Equal("acme", saved.Default);
+            Assert.Null(ix.LastEditParameterExisting); // "Add" passes no existing parameter
             // The read-only view refreshes to show the saved definition.
             var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
             Assert.Equal("tenant", Assert.Single(view.Parameters).Name);
         }
 
         [Fact]
-        public async Task EditSharedParameters_persists_to_the_selected_cli_when_cli_scoped()
+        public async Task AddSharedParameter_appends_to_the_selected_cli_when_cli_scoped()
         {
             Cli cli = null!;
             var (vm, store, _, ix, _) = await BuildAsync(d =>
@@ -425,15 +426,47 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
             vm.OpenCliParametersCommand.Execute(null);
-            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
-            Assert.False(view.IsGlobal);
+            Assert.False(Assert.IsType<SharedParametersViewModel>(vm.CurrentContent).IsGlobal);
 
-            ix.NextEditParametersResult = [new Parameter { Name = "region", Default = "eu" }];
-            await vm.EditSharedParametersCommand.ExecuteAsync(null);
+            ix.NextEditParameterResult = new Parameter { Name = "region", Default = "eu" };
+            await vm.AddSharedParameterCommand.ExecuteAsync(null);
 
-            var savedCli = Assert.Single(store.Document.Clis);
-            Assert.Equal("region", Assert.Single(savedCli.Parameters).Name);
+            Assert.Equal("region", Assert.Single(Assert.Single(store.Document.Clis).Parameters).Name);
             Assert.Empty(store.Document.GlobalParameters);
+        }
+
+        [Fact]
+        public async Task EditSharedParameter_replaces_the_chosen_parameter()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                d.GlobalParameters.Add(new Parameter { Name = "a" });
+                d.GlobalParameters.Add(new Parameter { Name = "b" });
+            });
+            vm.OpenGlobalParameters();
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+
+            ix.NextEditParameterResult = new Parameter { Name = "b2" };
+            await vm.EditSharedParameterCommand.ExecuteAsync(view.Parameters[1]);
+
+            Assert.Equal("b", ix.LastEditParameterExisting!.Name); // seeded with the chosen one
+            Assert.Equal(["a", "b2"], store.Document.GlobalParameters.Select(p => p.Name));
+        }
+
+        [Fact]
+        public async Task DeleteSharedParameter_removes_the_chosen_parameter()
+        {
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                d.GlobalParameters.Add(new Parameter { Name = "a" });
+                d.GlobalParameters.Add(new Parameter { Name = "b" });
+            });
+            vm.OpenGlobalParameters();
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+
+            await vm.DeleteSharedParameterCommand.ExecuteAsync(view.Parameters[0]);
+
+            Assert.Equal("b", Assert.Single(store.Document.GlobalParameters).Name);
         }
 
         [Fact]

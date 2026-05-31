@@ -26,10 +26,11 @@ namespace Snipdeck.Core.Abstractions
         Task<CliEditResult?> EditCliAsync(Cli cli);
 
         /// <summary>
-        /// Opens the shared-parameters edit modal seeded with <paramref name="current"/>.
-        /// Returns the edited definitions, or <c>null</c> if the user cancelled.
+        /// Opens the single-parameter edit modal. Pass <paramref name="existing"/> to
+        /// edit it, or <c>null</c> to add a new one. Returns the edited parameter, or
+        /// <c>null</c> if the user cancelled.
         /// </summary>
-        Task<IReadOnlyList<Parameter>?> EditParametersAsync(string title, IReadOnlyList<Parameter> current);
+        Task<Parameter?> EditParameterAsync(string title, Parameter? existing);
 
         Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters);
     }

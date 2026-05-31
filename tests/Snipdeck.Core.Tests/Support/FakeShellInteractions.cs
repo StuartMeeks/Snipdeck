@@ -18,9 +18,11 @@ namespace Snipdeck.Core.Tests.Support
 
         public ParameterFillResult? NextParameterFillResult { get; set; }
 
-        public IReadOnlyList<Parameter>? NextEditParametersResult { get; set; }
+        public Parameter? NextEditParameterResult { get; set; }
 
-        public string? LastEditParametersTitle { get; private set; }
+        public string? LastEditParameterTitle { get; private set; }
+
+        public Parameter? LastEditParameterExisting { get; private set; }
 
         public string? LastConfirmTitle { get; private set; }
 
@@ -67,10 +69,11 @@ namespace Snipdeck.Core.Tests.Support
             return Task.FromResult(NextCliEditResult);
         }
 
-        public Task<IReadOnlyList<Parameter>?> EditParametersAsync(string title, IReadOnlyList<Parameter> current)
+        public Task<Parameter?> EditParameterAsync(string title, Parameter? existing)
         {
-            LastEditParametersTitle = title;
-            return Task.FromResult(NextEditParametersResult);
+            LastEditParameterTitle = title;
+            LastEditParameterExisting = existing;
+            return Task.FromResult(NextEditParameterResult);
         }
 
         public Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)

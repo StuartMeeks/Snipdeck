@@ -164,37 +164,79 @@ namespace Snipdeck.Core.ViewModels
                     _document.GlobalParameters);
         }
 
-        [RelayCommand]
-        private async Task EditSharedParametersAsync()
+        // The live parameter list backing the current Shared-parameters view.
+        private List<Parameter>? CurrentSharedParameterList()
         {
-            if (CurrentContent is not SharedParametersViewModel view)
+            return CurrentContent is not SharedParametersViewModel view
+                ? null
+                : view.IsGlobal
+                    ? _document.GlobalParameters
+                    : _document.Clis.FirstOrDefault(c => c.Id == _sharedParametersCliId)?.Parameters;
+        }
+
+        // Shared parameters only affect fill-time resolution, so just persist and
+        // rebuild the read-only view — no full shell refresh needed.
+        private async Task PersistSharedParametersAsync()
+        {
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+            CurrentContent = BuildSharedParametersView();
+        }
+
+        [RelayCommand]
+        private async Task AddSharedParameterAsync()
+        {
+            if (CurrentSharedParameterList() is not { } list)
             {
                 return;
             }
+            var added = await _interactions.EditParameterAsync("Add parameter", existing: null).ConfigureAwait(true);
+            if (added is null)
+            {
+                return;
+            }
+            list.Add(added);
+            await PersistSharedParametersAsync().ConfigureAwait(true);
+        }
 
-            var current = view.IsGlobal
-                ? _document.GlobalParameters
-                : _document.Clis.FirstOrDefault(c => c.Id == _sharedParametersCliId)?.Parameters ?? [];
-
-            var edited = await _interactions.EditParametersAsync(view.Title, current).ConfigureAwait(true);
+        [RelayCommand]
+        private async Task EditSharedParameterAsync(ParameterDisplayViewModel? row)
+        {
+            if (row is null
+                || CurrentContent is not SharedParametersViewModel view
+                || CurrentSharedParameterList() is not { } list)
+            {
+                return;
+            }
+            var index = view.Parameters.IndexOf(row);
+            if (index < 0 || index >= list.Count)
+            {
+                return;
+            }
+            var edited = await _interactions.EditParameterAsync("Edit parameter", list[index]).ConfigureAwait(true);
             if (edited is null)
             {
                 return;
             }
+            list[index] = edited;
+            await PersistSharedParametersAsync().ConfigureAwait(true);
+        }
 
-            // Shared parameters only affect fill-time resolution, so persist and
-            // rebuild the read-only view — no full shell refresh needed.
-            if (view.IsGlobal)
+        [RelayCommand]
+        private async Task DeleteSharedParameterAsync(ParameterDisplayViewModel? row)
+        {
+            if (row is null
+                || CurrentContent is not SharedParametersViewModel view
+                || CurrentSharedParameterList() is not { } list)
             {
-                _document.GlobalParameters = [.. edited];
+                return;
             }
-            else if (_document.Clis.FirstOrDefault(c => c.Id == _sharedParametersCliId) is { } cli)
+            var index = view.Parameters.IndexOf(row);
+            if (index < 0 || index >= list.Count)
             {
-                cli.Parameters = [.. edited];
+                return;
             }
-
-            await _store.SaveAsync(_document).ConfigureAwait(true);
-            CurrentContent = BuildSharedParametersView();
+            list.RemoveAt(index);
+            await PersistSharedParametersAsync().ConfigureAwait(true);
         }
 
         public void OpenTagIcons()

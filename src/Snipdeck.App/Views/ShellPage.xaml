@@ -355,7 +355,7 @@
 
         <DataTemplate x:Key="TrashContentTemplate" x:DataType="vm:TrashViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
                     <TextBlock Text="Trash"
                                Style="{ThemeResource TitleTextBlockStyle}" />
                     <TextBlock Text="Deleted snips are kept here. Restore a snip to put it back in its CLI, or delete it permanently."
@@ -425,7 +425,7 @@
 
         <DataTemplate x:Key="SharedParametersContentTemplate" x:DataType="vm:SharedParametersViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -440,13 +440,13 @@
                                        TextWrapping="Wrap" />
                         </StackPanel>
                         <Button Grid.Column="1"
-                                Content="Edit"
+                                Content="Add parameter"
                                 Style="{ThemeResource AccentButtonStyle}"
                                 VerticalAlignment="Top"
-                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.EditSharedParametersCommand}" />
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.AddSharedParameterCommand}" />
                     </Grid>
 
-                    <TextBlock Text="No shared parameters yet. Click Edit to add one."
+                    <TextBlock Text="No shared parameters yet. Click Add parameter to define one."
                                Style="{ThemeResource BodyTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
@@ -464,40 +464,60 @@
                                         BorderThickness="1"
                                         CornerRadius="8"
                                         Padding="16">
-                                    <StackPanel Spacing="6">
-                                        <Grid ColumnSpacing="12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{x:Bind Name}"
-                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis" />
-                                            <Border Grid.Column="1"
-                                                    Background="{ThemeResource AccentFillColorSecondaryBrush}"
-                                                    CornerRadius="10"
-                                                    Padding="8,2"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="{x:Bind TypeDisplay}"
-                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                                            </Border>
-                                        </Grid>
-                                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                   Visibility="{x:Bind HasDefault, Converter={StaticResource BoolToVisibility}}">
-                                            <Run Text="Default:" />
-                                            <Run Text="{x:Bind Default}" />
-                                        </TextBlock>
-                                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                   TextWrapping="Wrap"
-                                                   Visibility="{x:Bind HasOptions, Converter={StaticResource BoolToVisibility}}">
-                                            <Run Text="Options:" />
-                                            <Run Text="{x:Bind OptionsDisplay}" />
-                                        </TextBlock>
-                                    </StackPanel>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="6">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind Name}"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <Border Grid.Column="1"
+                                                        Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                                        CornerRadius="10"
+                                                        Padding="8,2"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind TypeDisplay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Visibility="{x:Bind HasDefault, Converter={StaticResource BoolToVisibility}}">
+                                                <Run Text="Default:" />
+                                                <Run Text="{x:Bind Default}" />
+                                            </TextBlock>
+                                            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{x:Bind HasOptions, Converter={StaticResource BoolToVisibility}}">
+                                                <Run Text="Options:" />
+                                                <Run Text="{x:Bind OptionsDisplay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Top">
+                                            <Button Content="Edit"
+                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.EditSharedParameterCommand}"
+                                                    CommandParameter="{x:Bind}" />
+                                            <Button Style="{StaticResource DangerButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete parameter"
+                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSharedParameterCommand}"
+                                                    CommandParameter="{x:Bind}">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -508,7 +528,7 @@
 
         <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
