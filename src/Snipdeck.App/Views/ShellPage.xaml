@@ -64,7 +64,7 @@
                          edge fades to transparent, revealing the page's Mica behind
                          it. The title sits top-left; the CLI carousel below is pulled
                          up so the cards straddle the hero's bottom edge. -->
-                    <Grid Height="360">
+                    <Grid Height="316">
                         <!-- Composition-masked hero image is set as this Border's
                              child visual in code-behind (theme-aware, size-tracked). -->
                         <Border x:Name="HeroHost"
