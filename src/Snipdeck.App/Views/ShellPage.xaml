@@ -14,7 +14,22 @@
     x:Name="ShellRoot">
 
     <UserControl.Resources>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <ResourceDictionary>
+            <!-- Theme-specific hero image: drop HomeHeroLight.png / HomeHeroDark.png
+                 into Assets and the header swaps them with the selected theme. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroLight.png" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <converters:BoolToVisibilityConverter x:Key="InvertedBoolToVisibility" Invert="True" />
         <converters:CountToVisibilityConverter x:Key="CountToVisibility" />
         <converters:CountToVisibilityConverter x:Key="InvertedCountToVisibility" Invert="True" />
@@ -36,7 +51,7 @@
                         </Grid.RowDefinitions>
 
                         <Image Grid.Row="0" Grid.RowSpan="2"
-                               Source="ms-appx:///Assets/HomeHero.png"
+                               Source="{ThemeResource HomeHeroImage}"
                                Stretch="UniformToFill"
                                HorizontalAlignment="Stretch"
                                VerticalAlignment="Top" />
@@ -610,6 +625,7 @@
                                              TrashTemplate="{StaticResource TrashContentTemplate}"
                                              SharedParametersTemplate="{StaticResource SharedParametersContentTemplate}"
                                              TagIconsTemplate="{StaticResource TagIconsContentTemplate}" />
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <NavigationView x:Name="ShellNavigation"

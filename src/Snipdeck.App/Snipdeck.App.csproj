@@ -28,9 +28,12 @@
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
-	<!-- Hero image is optional: packaged only once the user drops it in. -->
-	<ItemGroup Condition="Exists('Assets\HomeHero.png')">
-		<Content Include="Assets\HomeHero.png" CopyToOutputDirectory="PreserveNewest" />
+	<!-- Theme hero images are optional: packaged only once the user drops them in. -->
+	<ItemGroup Condition="Exists('Assets\HomeHeroLight.png')">
+		<Content Include="Assets\HomeHeroLight.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+	<ItemGroup Condition="Exists('Assets\HomeHeroDark.png')">
+		<Content Include="Assets\HomeHeroDark.png" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>

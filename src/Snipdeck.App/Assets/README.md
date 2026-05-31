@@ -1,9 +1,16 @@
 # Assets
 
-## HomeHero.png
+## Home hero images (theme-specific)
 
-The Home page hero banner. Drop a `HomeHero.png` here (≈2000×625, 16:5) and it
-will fill the banner at the top of the Home page. Until one is present, the
-banner shows an accent gradient placeholder.
+The Home page hero banner uses a theme-specific image:
 
-See the Firefly prompt in the project history for generating one.
+- `HomeHeroLight.png` — shown in the Light theme
+- `HomeHeroDark.png` — shown in the Dark (and High Contrast) theme
+
+Drop both here (≈2400×1000, wide) and the header swaps them with the selected
+theme. Keep the **upper-left area light/clear** in the light image (and suitably
+contrasted in the dark image) — the title text uses the theme foreground colour
+and sits top-left. The image's lower edge fades into the header background.
+
+Until the files are present, the header shows its background colour. See the
+Firefly prompt in the project history for generating them.
