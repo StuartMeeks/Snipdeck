@@ -60,11 +60,12 @@ namespace Snipdeck.Core.ViewModels
 
         /// <summary>
         /// The tag→glyph map to persist: only rows with a non-default glyph, so
-        /// default "#" tags stay implicit and the map stays small.
+        /// default-glyph tags stay implicit and the map stays small. Keyed
+        /// case-insensitively to match how tags are matched across the shell.
         /// </summary>
         public Dictionary<string, string> BuildTagIcons()
         {
-            var map = new Dictionary<string, string>(StringComparer.Ordinal);
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var row in Rows)
             {
                 // Store the resolved character, so a typed code point ("E8EC") is

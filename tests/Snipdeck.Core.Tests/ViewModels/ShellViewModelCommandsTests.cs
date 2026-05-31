@@ -363,6 +363,25 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task Tag_icons_apply_case_insensitively_to_the_nav()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // Snip tag casing differs from the persisted icon-map key.
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Deploy", Tags = ["Deploy"] });
+                d.TagIcons["deploy"] = "X";
+            });
+
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            var tag = vm.Tags.Single(t => string.Equals(t.Name, "Deploy", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal("X", tag.Glyph);
+        }
+
+        [Fact]
         public async Task OpenGlobalParameters_shows_a_global_read_only_view()
         {
             var (vm, _, _, _, _) = await BuildAsync(d =>

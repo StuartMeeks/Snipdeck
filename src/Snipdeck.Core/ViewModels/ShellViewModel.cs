@@ -87,6 +87,16 @@ namespace Snipdeck.Core.ViewModels
             // an ObservableCollection that XAML is already bound to, and WinRT
             // collection-change marshalling requires the original thread.
             _document = await _store.LoadAsync(cancellationToken).ConfigureAwait(true);
+            // Tags are matched case-insensitively throughout the shell, so the
+            // persisted tag-icon map (deserialised with an ordinal comparer) is
+            // re-keyed case-insensitively. Built manually so any stray casing
+            // duplicates collapse (last wins) instead of throwing.
+            var tagIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (tag, glyph) in _document.TagIcons)
+            {
+                tagIcons[tag] = glyph;
+            }
+            _document.TagIcons = tagIcons;
             RebuildCliChoices();
             // Start on Home (no tag selected), scope = "All". Suppress so setting
             // the choice doesn't auto-switch to the snip list (that's the
