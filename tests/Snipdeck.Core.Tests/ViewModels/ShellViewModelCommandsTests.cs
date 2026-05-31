@@ -470,6 +470,25 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task DeleteCli_returns_to_Home()
+        {
+            Cli cli = null!;
+            var (vm, _, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" }; // empty CLI, so the delete is allowed
+                d.Clis.Add(cli);
+            });
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            _ = Assert.IsType<CliViewModel>(vm.CurrentContent);
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            Assert.True(vm.SelectedCliChoice!.IsAll);
+        }
+
+        [Fact]
         public async Task Home_category_is_preserved_across_a_save_refresh()
         {
             Cli cli = null!;

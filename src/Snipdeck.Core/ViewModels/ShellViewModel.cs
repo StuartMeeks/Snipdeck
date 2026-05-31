@@ -647,9 +647,11 @@ namespace Snipdeck.Core.ViewModels
             _ = _document.Snips.RemoveAll(s => s.CliId == cli.Id);
             _ = _document.Clis.RemoveAll(c => c.Id == cli.Id);
 
-            // Persist the removal first; the deleted CLI is no longer in CliChoices
-            // so SaveAndRefreshAsync falls back to the first choice (Home).
+            // Persist the removal, then go Home: the CLI the user was viewing is
+            // gone, so returning to the snip list (the All scope) would otherwise
+            // strand them on an empty page with no New CLI call-to-action.
             await SaveAndRefreshAsync().ConfigureAwait(true);
+            ShowHome();
 
             // Only after the store is safely persisted do we clean up the icon —
             // a best-effort side effect. Doing it earlier would risk deleting the
