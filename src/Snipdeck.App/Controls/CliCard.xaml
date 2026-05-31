@@ -14,52 +14,58 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
     </UserControl.Resources>
 
-    <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-          BorderThickness="1"
-          CornerRadius="8"
-          Padding="16"
-          Width="232"
-          Height="172"
-          Tapped="OnTapped">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <!-- A Button so the card gets the same hover/press animation as the New CLI tile. -->
+    <Button Width="232"
+            Height="172"
+            Padding="16"
+            CornerRadius="8"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            Command="{x:Bind NavigateCommand, Mode=OneWay}"
+            CommandParameter="{x:Bind ViewModel, Mode=OneWay}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <controls:Identicon
-            Grid.Row="0"
-            Seed="{x:Bind ViewModel.Id, Mode=OneWay}"
-            IconRef="{x:Bind ViewModel.IconRef, Mode=OneWay}"
-            HorizontalAlignment="Left"
-            Width="40"
-            Height="40" />
+            <controls:Identicon
+                Grid.Row="0"
+                Seed="{x:Bind ViewModel.Id, Mode=OneWay}"
+                IconRef="{x:Bind ViewModel.IconRef, Mode=OneWay}"
+                HorizontalAlignment="Left"
+                Width="40"
+                Height="40" />
 
-        <TextBlock
-            Grid.Row="1"
-            Text="{x:Bind ViewModel.Name, Mode=OneWay}"
-            Style="{ThemeResource BodyStrongTextBlockStyle}"
-            TextTrimming="CharacterEllipsis"
-            Margin="0,12,0,0" />
+            <TextBlock
+                Grid.Row="1"
+                Text="{x:Bind ViewModel.Name, Mode=OneWay}"
+                Style="{ThemeResource BodyStrongTextBlockStyle}"
+                TextTrimming="CharacterEllipsis"
+                Margin="0,12,0,0" />
 
-        <TextBlock
-            Grid.Row="2"
-            Text="{x:Bind ViewModel.Description, Mode=OneWay}"
-            Style="{ThemeResource CaptionTextBlockStyle}"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            TextWrapping="Wrap"
-            TextTrimming="CharacterEllipsis"
-            MaxLines="3"
-            Visibility="{x:Bind ViewModel.HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
-            Margin="0,4,0,0" />
+            <TextBlock
+                Grid.Row="2"
+                Text="{x:Bind ViewModel.Description, Mode=OneWay}"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap"
+                TextTrimming="CharacterEllipsis"
+                MaxLines="3"
+                Visibility="{x:Bind ViewModel.HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                Margin="0,4,0,0" />
 
-        <TextBlock
-            Grid.Row="3"
-            Text="{x:Bind ViewModel.SnipCountDisplay, Mode=OneWay}"
-            Style="{ThemeResource CaptionTextBlockStyle}"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            Margin="0,8,0,0" />
-    </Grid>
+            <TextBlock
+                Grid.Row="3"
+                Text="{x:Bind ViewModel.SnipCountDisplay, Mode=OneWay}"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Margin="0,8,0,0" />
+        </Grid>
+    </Button>
 </UserControl>

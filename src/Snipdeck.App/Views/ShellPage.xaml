@@ -20,12 +20,30 @@
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroLight.png" />
+                    <!-- Fades from the page background at 0 alpha to opaque, so the
+                         hero blends into the background with no white haze (a plain
+                         "Transparent" stop is transparent *white*, which is the bug). -->
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00F3F3F3" Offset="0" />
+                        <GradientStop Color="#00F3F3F3" Offset="0.5" />
+                        <GradientStop Color="#FFF3F3F3" Offset="1" />
+                    </LinearGradientBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00202020" Offset="0" />
+                        <GradientStop Color="#00202020" Offset="0.5" />
+                        <GradientStop Color="#FF202020" Offset="1" />
+                    </LinearGradientBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="HighContrast">
                     <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00202020" Offset="0" />
+                        <GradientStop Color="#00202020" Offset="0.5" />
+                        <GradientStop Color="#FF202020" Offset="1" />
+                    </LinearGradientBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -40,35 +58,29 @@
                 <!-- No outer padding: the hero header is full-bleed. -->
                 <StackPanel Spacing="0">
 
-                    <!-- Hero header (WinUI Gallery layout): the image is the full-width
-                         background spanning the title row and the CLI tiles row; the
-                         title sits top-left and the tiles sit below, over the image's
-                         lower edge which fades out via the opacity mask. -->
-                    <Grid Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                    <!-- Hero header (WinUI Gallery layout): a FIXED-height image as
+                         the full-width background; the title sits top-left and the
+                         CLI tiles sit at the bottom, over the image's lower edge
+                         which fades into the header background. Fixed height keeps
+                         the layout stable instead of scaling with the window. -->
+                    <Grid Height="320" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <Image Grid.Row="0" Grid.RowSpan="2"
                                Source="{ThemeResource HomeHeroImage}"
                                Stretch="UniformToFill"
                                HorizontalAlignment="Stretch"
-                               VerticalAlignment="Top" />
+                               VerticalAlignment="Stretch" />
 
-                        <!-- Fade the image's lower edge into the header background
-                             (WinUI Image has no OpacityMask, so overlay a gradient
-                             that ends at the header's own background colour). -->
-                        <Border Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="Transparent" Offset="0.55" />
-                                    <GradientStop Color="{ThemeResource SolidBackgroundFillColorBase}" Offset="1" />
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                        <!-- Fade the image's lower edge into the header background. -->
+                        <Border Grid.Row="0" Grid.RowSpan="2"
+                                IsHitTestVisible="False"
+                                Background="{ThemeResource HomeHeroFadeBrush}" />
 
-                        <StackPanel Grid.Row="0" Margin="36,48,36,0" Spacing="4">
+                        <StackPanel Grid.Row="0" Margin="36,32,36,0" Spacing="4">
                             <TextBlock Text="Next Iteration"
                                        FontSize="18"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -77,9 +89,10 @@
                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                         </StackPanel>
 
-                        <!-- CLI launcher: horizontal carousel sitting within the header. -->
+                        <!-- CLI launcher: horizontal carousel anchored to the header bottom. -->
                         <ScrollViewer Grid.Row="1"
-                                      Margin="0,56,0,16"
+                                      VerticalAlignment="Bottom"
+                                      Margin="0,0,0,16"
                                       Padding="36,0,36,0"
                                       HorizontalScrollBarVisibility="Auto"
                                       VerticalScrollBarVisibility="Disabled"
@@ -153,7 +166,7 @@
                         <GridView ItemsSource="{x:Bind ActiveSnips, Mode=OneWay}"
                                   SelectionMode="None"
                                   IsItemClickEnabled="False"
-                                  HorizontalAlignment="Center">
+                                  HorizontalAlignment="Left">
                             <GridView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SnipCardViewModel">
                                     <controls:SnipCard
