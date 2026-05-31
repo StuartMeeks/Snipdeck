@@ -21,8 +21,28 @@
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="24">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+                <StackPanel Padding="24" Spacing="28">
+
+                    <!-- Hero banner: accent gradient with the headings overlaid. -->
+                    <Border Height="160" CornerRadius="8" Padding="32">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />
+                                <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel VerticalAlignment="Bottom" Spacing="2">
+                            <TextBlock Text="Next Iteration"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       Foreground="{ThemeResource TextOnAccentFillColorSecondaryBrush}" />
+                            <TextBlock Text="Snipdeck"
+                                       Style="{ThemeResource TitleLargeTextBlockStyle}"
+                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CLIs -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -52,27 +72,45 @@
                         </GridView.ItemTemplate>
                     </GridView>
 
+                    <!-- Snip categories: Most used / Recent / Favourites (unscoped). -->
                     <StackPanel Spacing="12"
-                                Visibility="{x:Bind MostUsedSnips.Count, Converter={StaticResource CountToVisibility}, Mode=OneWay}">
-                        <TextBlock Text="Most used"
-                                   Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <ItemsControl ItemsSource="{x:Bind MostUsedSnips}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
+                                Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ToggleButton Content="Most used"
+                                          IsChecked="{x:Bind IsMostUsedSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectMostUsedCommand}"
+                                          Click="OnHomeCategoryToggled" />
+                            <ToggleButton Content="Recent"
+                                          IsChecked="{x:Bind IsRecentSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectRecentCommand}"
+                                          Click="OnHomeCategoryToggled" />
+                            <ToggleButton Content="Favourites"
+                                          IsChecked="{x:Bind IsFavouritesSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectFavouritesCommand}"
+                                          Click="OnHomeCategoryToggled" />
+                        </StackPanel>
+
+                        <GridView ItemsSource="{x:Bind ActiveSnips, Mode=OneWay}"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False">
+                            <GridView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SnipCardViewModel">
                                     <controls:SnipCard
+                                        Width="320"
+                                        Margin="0,0,12,12"
                                         ViewModel="{x:Bind}"
                                         CopyCommand="{Binding ElementName=ShellRoot, Path=ViewModel.CopySnipCommand}"
                                         EditCommand="{Binding ElementName=ShellRoot, Path=ViewModel.EditSnipCommand}"
                                         DeleteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSnipCommand}"
                                         FavouriteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.ToggleFavouriteCommand}" />
                                 </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            </GridView.ItemTemplate>
+                        </GridView>
+
+                        <TextBlock Text="Nothing here yet."
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Visibility="{x:Bind HasActiveSnips, Mode=OneWay, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 
                     <StackPanel Spacing="8"

@@ -32,8 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
 
 ### Added
+- **Redesigned Home page.** A gradient hero banner heads the page, the CLI
+  launcher uses landscape tiles (232×172) showing each CLI's description, and a
+  segmented selector below switches between **Most used**, **Recent** and
+  **Favourites** snips (drawn from every CLI) shown as a card grid.
+- **CLI descriptions.** A CLI can carry a short description, edited in the CLI
+  editor and shown on its Home card. (Store schema is now v4; an older build
+  refuses a v4 store rather than dropping descriptions.)
 - **Tag icons in the navigation.** Tags can carry a Segoe Fluent Icons glyph,
-  shown beside the tag in the left navigation (tags default to `#`). A new
+  shown beside the tag in the left navigation (new tags default to a tag glyph). A new
   "Tags" entry in the left-pane footer lets you set each tag's icon. Icons are
   nav-only — snip tag chips are unchanged. (Store schema is now v3; an older
   build refuses a v3 store rather than dropping tag icons.)

@@ -61,7 +61,9 @@
                 Text="{x:Bind ViewModel.CommandTemplate, Mode=OneWay}"
                 FontFamily="Cascadia Mono, Consolas, Courier New"
                 FontSize="12"
-                TextWrapping="Wrap" />
+                TextWrapping="Wrap"
+                MaxLines="3"
+                TextTrimming="CharacterEllipsis" />
         </Border>
 
         <ItemsControl

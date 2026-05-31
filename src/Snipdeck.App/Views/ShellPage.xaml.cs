@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 
 using Snipdeck.Core.ViewModels;
@@ -137,6 +138,13 @@ namespace Snipdeck.App.Views
         private void OnTagsClicked(object sender, RoutedEventArgs e)
         {
             ViewModel.OpenTagIcons();
+        }
+
+        // Keep the active category toggle checked even when it's re-clicked (the
+        // category command is a no-op then, so the OneWay binding wouldn't re-assert).
+        private void OnHomeCategoryToggled(object sender, RoutedEventArgs e)
+        {
+            ((ToggleButton)sender).IsChecked = true;
         }
 
         private void OnNewCliClicked(object sender, RoutedEventArgs e)

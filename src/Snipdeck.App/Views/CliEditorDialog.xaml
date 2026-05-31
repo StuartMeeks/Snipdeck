@@ -18,6 +18,13 @@
             <TextBox Header="Name"
                      Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
+            <TextBox Header="Description"
+                     PlaceholderText="A short summary, shown on the CLI's Home card"
+                     Text="{x:Bind ViewModel.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="64" />
+
             <StackPanel Spacing="6">
                 <TextBlock Text="Icon"
                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
