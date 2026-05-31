@@ -12,17 +12,18 @@ namespace Snipdeck.Core.ViewModels
         private readonly Dictionary<string, string?> _values = new(StringComparer.Ordinal);
         private readonly bool _hasParameters;
 
-        public ParameterFillViewModel(Snip snip)
+        public ParameterFillViewModel(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             ArgumentNullException.ThrowIfNull(snip);
+            ArgumentNullException.ThrowIfNull(parameters);
 
             Snip = snip;
             // Captured before building Inputs: a parameter with a default fires its
             // change callback (→ UpdateResolution) during construction, before the
             // Inputs collection is assigned, so UpdateResolution can't read Inputs.
-            _hasParameters = snip.Parameters.Count > 0;
+            _hasParameters = parameters.Count > 0;
             Inputs = new ObservableCollection<ParameterInputViewModel>(
-                snip.Parameters.Select(p => new ParameterInputViewModel(p, OnInputValueChanged)));
+                parameters.Select(p => new ParameterInputViewModel(p, OnInputValueChanged)));
 
             foreach (var input in Inputs)
             {

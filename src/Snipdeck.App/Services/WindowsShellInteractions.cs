@@ -32,7 +32,7 @@ namespace Snipdeck.App.Services
             _filePicker = filePicker;
         }
 
-        public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel")
+        public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel", bool destructive = false)
         {
             var dialog = new ContentDialog
             {
@@ -40,9 +40,17 @@ namespace Snipdeck.App.Services
                 Content = message,
                 PrimaryButtonText = confirmButtonText,
                 CloseButtonText = cancelButtonText,
-                DefaultButton = ContentDialogButton.Primary,
+                // For destructive confirms, make Cancel the default: it's the safe
+                // choice, and it stops the default-button accent treatment from
+                // overriding the primary button's subtle-red foreground.
+                DefaultButton = destructive ? ContentDialogButton.Close : ContentDialogButton.Primary,
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
+            if (destructive && Application.Current.Resources["DangerDialogPrimaryButtonStyle"] is Style dangerStyle)
+            {
+                dialog.PrimaryButtonStyle = dangerStyle;
+            }
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary;
         }
@@ -56,6 +64,7 @@ namespace Snipdeck.App.Services
                 CloseButtonText = buttonText,
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             _ = await dialog.ShowAsync();
         }
@@ -67,6 +76,7 @@ namespace Snipdeck.App.Services
             var dialog = new SnipEditorDialog(editor)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary
@@ -81,6 +91,7 @@ namespace Snipdeck.App.Services
             var dialog = new CliEditorDialog(editor, _iconNormaliser, _filePicker)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary
@@ -88,13 +99,27 @@ namespace Snipdeck.App.Services
                 : null;
         }
 
-        public async Task<ParameterFillResult?> FillParametersAsync(Snip snip)
+        public async Task<Parameter?> EditParameterAsync(string title, Parameter? existing)
+        {
+            var row = new ParameterEditorRowViewModel(existing ?? new Parameter { Name = "param" });
+            var dialog = new ParameterEditorDialog(title, row)
+            {
+                XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
+            };
+            var result = await dialog.ShowAsync();
+            return result == ContentDialogResult.Primary ? row.BuildParameter() : null;
+        }
+
+        public async Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             ArgumentNullException.ThrowIfNull(snip);
-            var fill = new ParameterFillViewModel(snip);
+            ArgumentNullException.ThrowIfNull(parameters);
+            var fill = new ParameterFillViewModel(snip, parameters);
             var dialog = new ParameterFillDialog(fill)
             {
                 XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary && fill.IsCopyEnabled
@@ -110,5 +135,15 @@ namespace Snipdeck.App.Services
             return ((FrameworkElement)content).XamlRoot;
         }
 
+        // Dialogs are separate visual roots, so they don't inherit the in-app theme
+        // (applied via RequestedTheme on the main window content). Mirror it so a
+        // dialog opened after a Light/Dark switch matches, instead of the OS theme.
+        private ElementTheme CurrentTheme()
+        {
+            var mainWindow = (MainWindow)_services.GetService(typeof(MainWindow))!;
+            return mainWindow.Content is FrameworkElement content
+                ? content.RequestedTheme
+                : ElementTheme.Default;
+        }
     }
 }

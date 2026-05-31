@@ -94,8 +94,82 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             Assert.Empty(vm.CliCards);
             Assert.Empty(vm.MostUsedSnips);
+            Assert.Empty(vm.RecentSnips);
+            Assert.Empty(vm.FavouriteSnips);
             Assert.False(vm.HasCliCards);
-            Assert.False(vm.HasMostUsedSnips);
+            Assert.False(vm.HasActiveSnips);
+        }
+
+        [Fact]
+        public void RecentSnips_are_ordered_by_last_used_desc_and_exclude_never_used()
+        {
+            var cli = new Cli { Name = "a" };
+            var now = DateTimeOffset.UtcNow;
+            var doc = Document(d =>
+            {
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "older", UsageCount = 1, LastUsedAt = now.AddHours(-2) });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "newer", UsageCount = 1, LastUsedAt = now });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "unused" });
+            });
+
+            var vm = new HomeViewModel(doc, searchText: null);
+
+            Assert.Collection(vm.RecentSnips,
+                s => Assert.Equal("newer", s.Title),
+                s => Assert.Equal("older", s.Title));
+        }
+
+        [Fact]
+        public void FavouriteSnips_contains_only_favourites()
+        {
+            var cli = new Cli { Name = "a" };
+            var doc = Document(d =>
+            {
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "fav", IsFavourite = true });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "plain" });
+            });
+
+            var vm = new HomeViewModel(doc, searchText: null);
+
+            Assert.Equal("fav", Assert.Single(vm.FavouriteSnips).Title);
+        }
+
+        [Fact]
+        public void SelectedCategory_switches_the_active_snip_list()
+        {
+            var cli = new Cli { Name = "a" };
+            var doc = Document(d =>
+            {
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "used", UsageCount = 3 });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "fav", IsFavourite = true });
+            });
+
+            var vm = new HomeViewModel(doc, searchText: null);
+
+            Assert.Same(vm.MostUsedSnips, vm.ActiveSnips); // default
+            Assert.True(vm.IsMostUsedSelected);
+
+            vm.SelectFavouritesCommand.Execute(null);
+
+            Assert.Same(vm.FavouriteSnips, vm.ActiveSnips);
+            Assert.True(vm.IsFavouritesSelected);
+            Assert.False(vm.IsMostUsedSelected);
+        }
+
+        [Fact]
+        public void CliCard_exposes_its_description()
+        {
+            var cli = new Cli { Name = "pl-app", Description = "Platform CLI." };
+            var doc = Document(d => d.Clis.Add(cli));
+
+            var vm = new HomeViewModel(doc, searchText: null);
+
+            var card = Assert.Single(vm.CliCards);
+            Assert.Equal("Platform CLI.", card.Description);
+            Assert.True(card.HasDescription);
         }
     }
 }

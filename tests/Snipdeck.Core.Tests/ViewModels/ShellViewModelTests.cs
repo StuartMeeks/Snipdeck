@@ -1,5 +1,6 @@
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
+using Snipdeck.Core.Services;
 using Snipdeck.Core.Tests.Support;
 using Snipdeck.Core.ViewModels;
 
@@ -29,6 +30,11 @@ namespace Snipdeck.Core.Tests.ViewModels
                 new FakeSettingsStore(),
                 new FakeThemeApplier(),
                 new FakeUpdateService(),
+                new FakeHotkeyService(),
+                new FakeFolderPickerService(),
+                new StorageRelocationService(),
+                new FakeAppRestartService(),
+                new FakeShellInteractions(),
                 new FakePathProvider(),
                 new AppConfig());
         }
@@ -45,7 +51,8 @@ namespace Snipdeck.Core.Tests.ViewModels
                 clipboard ?? new FakeClipboardService(),
                 clock ?? new FakeClock(DateTimeOffset.UtcNow),
                 interactions ?? new FakeShellInteractions(),
-                icons ?? new FakeIconAssetStorage());
+                icons ?? new FakeIconAssetStorage(),
+                new FakeExternalLinkService());
         }
 
         private static SnipStoreDocument SampleDocument(out Guid plAppId, out Guid mptAppId)
@@ -79,7 +86,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.LoadAsync();
 
             Assert.NotNull(vm.SelectedCliChoice);
-            Assert.True(vm.SelectedCliChoice!.IsHome);
+            Assert.True(vm.SelectedCliChoice!.IsAll);
             _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
         }
 
@@ -92,7 +99,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.LoadAsync();
 
             Assert.Equal(3, vm.CliChoices.Count);
-            Assert.True(vm.CliChoices[0].IsHome);
+            Assert.True(vm.CliChoices[0].IsAll);
             Assert.Equal("mpt-app", vm.CliChoices[1].Display);
             Assert.Equal("pl-app", vm.CliChoices[2].Display);
         }
@@ -108,25 +115,29 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             var cliVm = Assert.IsType<CliViewModel>(vm.CurrentContent);
             Assert.Equal("pl-app", cliVm.Name);
-            Assert.Contains(ShellViewModel.AllTagsSentinel, vm.Tags);
-            Assert.Contains("read", vm.Tags);
-            Assert.Contains("deploy", vm.Tags);
-            Assert.Contains("orgs", vm.Tags);
+            var tagNames = vm.Tags.Select(t => t.Name).ToList();
+            Assert.Contains(ShellViewModel.AllTagsSentinel, tagNames);
+            Assert.Contains("read", tagNames);
+            Assert.Contains("deploy", tagNames);
+            Assert.Contains("orgs", tagNames);
             Assert.Equal(ShellViewModel.AllTagsSentinel, vm.SelectedTag);
         }
 
         [Fact]
-        public async Task Selecting_home_clears_tags_and_resets_to_home_content()
+        public async Task ShowHome_shows_the_launcher_and_clears_the_tag_selection()
         {
             var doc = SampleDocument(out var plAppId, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
             await vm.LoadAsync();
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
-            vm.GoHome();
+            vm.ShowHome();
 
-            Assert.Empty(vm.Tags);
             _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            Assert.Null(vm.SelectedTagItem); // no tag selected on Home
+            Assert.True(vm.SelectedCliChoice!.IsAll); // Home also resets the switcher to All
+            // The All-scope tag list is populated in the nav (Home is just a content destination).
+            Assert.Contains("deploy", vm.Tags.Select(t => t.Name));
         }
 
         [Fact]

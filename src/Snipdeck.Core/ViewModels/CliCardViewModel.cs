@@ -19,6 +19,10 @@ namespace Snipdeck.Core.ViewModels
 
         public string Name => Cli.Name;
 
+        public string Description => Cli.Description;
+
+        public bool HasDescription => !string.IsNullOrWhiteSpace(Cli.Description);
+
         public string? IconRef => Cli.IconRef;
 
         public int SnipCount { get; }

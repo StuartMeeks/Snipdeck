@@ -1,0 +1,84 @@
+using Snipdeck.Core.Abstractions;
+
+namespace Snipdeck.Core.Services
+{
+    /// <summary>
+    /// Filesystem implementation of <see cref="IStorageRelocationService"/>.
+    /// Relocates the store file plus the icons subdirectory and leaves the
+    /// settings/backups alone (those have their own locations).
+    /// </summary>
+    public sealed class StorageRelocationService : IStorageRelocationService
+    {
+        private const string _iconsSubdirectory = "icons";
+
+        public StorageRelocationService(string storeFileName = "store.json")
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(storeFileName);
+            StoreFileName = storeFileName;
+        }
+
+        public string StoreFileName { get; }
+
+        public StorageChangeOutcome Inspect(string currentDirectory, string targetDirectory)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
+            ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
+
+            return PathsEqual(currentDirectory, targetDirectory) ? StorageChangeOutcome.NoChange
+                : IsNested(targetDirectory, currentDirectory) || IsNested(currentDirectory, targetDirectory) ? StorageChangeOutcome.Invalid
+                : File.Exists(StorePath(targetDirectory)) ? StorageChangeOutcome.AdoptTarget
+                : File.Exists(StorePath(currentDirectory)) ? StorageChangeOutcome.MoveToTarget
+                : StorageChangeOutcome.SetEmptyTarget;
+        }
+
+        public void CopyStore(string currentDirectory, string targetDirectory)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
+            ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
+
+            _ = Directory.CreateDirectory(targetDirectory);
+
+            var sourceStore = StorePath(currentDirectory);
+            if (File.Exists(sourceStore))
+            {
+                File.Copy(sourceStore, StorePath(targetDirectory), overwrite: true);
+            }
+
+            var sourceIcons = Path.Combine(currentDirectory, _iconsSubdirectory);
+            if (Directory.Exists(sourceIcons))
+            {
+                CopyDirectory(sourceIcons, Path.Combine(targetDirectory, _iconsSubdirectory));
+            }
+        }
+
+        private string StorePath(string directory) => Path.Combine(directory, StoreFileName);
+
+        private static bool PathsEqual(string a, string b) =>
+            string.Equals(Normalize(a), Normalize(b), StringComparison.OrdinalIgnoreCase);
+
+        // True when "descendant" is a proper subdirectory of "ancestor".
+        private static bool IsNested(string descendant, string ancestor)
+        {
+            var d = Normalize(descendant);
+            var a = Normalize(ancestor);
+            return d.Length > a.Length
+                && d.StartsWith(a + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string Normalize(string path) =>
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+
+        private static void CopyDirectory(string source, string destination)
+        {
+            _ = Directory.CreateDirectory(destination);
+            foreach (var file in Directory.EnumerateFiles(source))
+            {
+                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
+            }
+            foreach (var directory in Directory.EnumerateDirectories(source))
+            {
+                CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+            }
+        }
+    }
+}

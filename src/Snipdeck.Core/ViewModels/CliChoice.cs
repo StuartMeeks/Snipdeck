@@ -3,9 +3,9 @@ using Snipdeck.Core.Models;
 namespace Snipdeck.Core.ViewModels
 {
     /// <summary>
-    /// One entry in the CLI switcher dropdown. <see cref="IsHome"/> is true for
-    /// the synthetic "All / Home" entry that sits at the top of the list; for
-    /// every other entry <see cref="Cli"/> points at a real <see cref="Cli"/>.
+    /// One entry in the CLI switcher (title bar). <see cref="IsAll"/> is true for
+    /// the synthetic "All" entry at the top — the unscoped view across every CLI;
+    /// for every other entry <see cref="Cli"/> points at a real <see cref="Cli"/>.
     /// </summary>
     public sealed class CliChoice
     {
@@ -13,7 +13,7 @@ namespace Snipdeck.Core.ViewModels
 
         public string Display { get; init; } = string.Empty;
 
-        public bool IsHome => Cli is null;
+        public bool IsAll => Cli is null;
 
         public override string ToString()
         {

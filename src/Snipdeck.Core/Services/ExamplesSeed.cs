@@ -15,7 +15,11 @@ namespace Snipdeck.Core.Services
 
         public static SnipStoreDocument Build()
         {
-            var cli = new Cli { Name = CliName };
+            var cli = new Cli
+            {
+                Name = CliName,
+                Description = "A starter CLI with a few representative snips. Delete it once you're oriented.",
+            };
             var document = new SnipStoreDocument();
             document.Clis.Add(cli);
 

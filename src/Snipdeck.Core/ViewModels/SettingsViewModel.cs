@@ -18,6 +18,12 @@ namespace Snipdeck.Core.ViewModels
         private readonly ISettingsStore _settingsStore;
         private readonly IThemeApplier _themeApplier;
         private readonly IUpdateService _updateService;
+        private readonly IHotkeyService _hotkeyService;
+        private readonly IFolderPickerService _folderPicker;
+        private readonly IStorageRelocationService _relocation;
+        private readonly IAppRestartService _restart;
+        private readonly IShellInteractions _interactions;
+        private readonly IPathProvider _pathProvider;
         private readonly AppConfig _config;
         private bool _suppressPersist;
 
@@ -25,18 +31,34 @@ namespace Snipdeck.Core.ViewModels
             ISettingsStore settingsStore,
             IThemeApplier themeApplier,
             IUpdateService updateService,
+            IHotkeyService hotkeyService,
+            IFolderPickerService folderPicker,
+            IStorageRelocationService relocation,
+            IAppRestartService restart,
+            IShellInteractions interactions,
             IPathProvider pathProvider,
             AppConfig config)
         {
             ArgumentNullException.ThrowIfNull(settingsStore);
             ArgumentNullException.ThrowIfNull(themeApplier);
             ArgumentNullException.ThrowIfNull(updateService);
+            ArgumentNullException.ThrowIfNull(hotkeyService);
+            ArgumentNullException.ThrowIfNull(folderPicker);
+            ArgumentNullException.ThrowIfNull(relocation);
+            ArgumentNullException.ThrowIfNull(restart);
+            ArgumentNullException.ThrowIfNull(interactions);
             ArgumentNullException.ThrowIfNull(pathProvider);
             ArgumentNullException.ThrowIfNull(config);
 
             _settingsStore = settingsStore;
             _themeApplier = themeApplier;
             _updateService = updateService;
+            _hotkeyService = hotkeyService;
+            _folderPicker = folderPicker;
+            _relocation = relocation;
+            _restart = restart;
+            _interactions = interactions;
+            _pathProvider = pathProvider;
             _config = config;
 
             _suppressPersist = true;
@@ -44,7 +66,7 @@ namespace Snipdeck.Core.ViewModels
             ThemeIndex = ThemeIndexFor(config.Theme);
             CloseBehaviour = config.CloseBehaviour;
             CloseBehaviourIndex = CloseBehaviourIndexFor(config.CloseBehaviour);
-            HotkeyDisplay = FormatHotkey(config.Hotkey);
+            HotkeyDisplay = config.Hotkey.ToDisplayString();
             StorageDirectory = config.StoragePath ?? pathProvider.DefaultStorageDirectory;
             BackupDirectory = config.BackupDirectory ?? pathProvider.DefaultBackupDirectory;
             BackupRetention = config.BackupRetention;
@@ -68,11 +90,16 @@ namespace Snipdeck.Core.ViewModels
 
         public string CopyrightDisplay { get; }
 
-        public string StorageDirectory { get; }
+        [ObservableProperty]
+        public partial string StorageDirectory { get; set; } = string.Empty;
 
         public string BackupDirectory { get; }
 
-        public string HotkeyDisplay { get; }
+        [ObservableProperty]
+        public partial string HotkeyDisplay { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string HotkeyError { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial ThemePreference Theme { get; set; }
@@ -155,6 +182,129 @@ namespace Snipdeck.Core.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void RebindHotkey(HotkeyBinding? binding)
+        {
+            if (binding is null || !binding.IsValid)
+            {
+                HotkeyError = "Use at least one modifier (Ctrl, Alt or Shift) plus a key.";
+                return;
+            }
+
+            var previous = _config.Hotkey;
+            if (_hotkeyService.TryRegister(binding))
+            {
+                _config.Hotkey = binding;
+                HotkeyDisplay = binding.ToDisplayString();
+                HotkeyError = string.Empty;
+                _ = PersistAsync();
+                return;
+            }
+
+            // TryRegister unregisters the old binding before attempting the new
+            // one, so on failure (chord already taken by another app) the old
+            // hotkey is gone — restore it so the user isn't left with nothing.
+            _ = _hotkeyService.TryRegister(previous);
+            HotkeyDisplay = previous.ToDisplayString();
+            HotkeyError = $"Couldn't set {binding.ToDisplayString()} — it may already be in use by another app.";
+        }
+
+        [RelayCommand]
+        private void ResetHotkey()
+        {
+            RebindHotkey(HotkeyBinding.Default);
+        }
+
+        [RelayCommand]
+        private async Task ChangeStoragePathAsync()
+        {
+            var target = await _folderPicker.PickFolderAsync().ConfigureAwait(true);
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                return;
+            }
+
+            var current = _config.StoragePath ?? _pathProvider.DefaultStorageDirectory;
+            var outcome = _relocation.Inspect(current, target);
+
+            // The storage path is only read at startup, so apply-then-restart keeps
+            // the immutable startup state consistent and avoids the running app
+            // writing snips to the old location after the switch.
+            switch (outcome)
+            {
+                case StorageChangeOutcome.NoChange:
+                    return;
+
+                case StorageChangeOutcome.Invalid:
+                    await _interactions.NotifyAsync(
+                        "Can't use that folder",
+                        "Choose a folder that isn't inside (or a parent of) your current storage folder.").ConfigureAwait(true);
+                    return;
+
+                case StorageChangeOutcome.AdoptTarget:
+                    if (!await _interactions.ConfirmAsync(
+                        "Use this folder?",
+                        $"“{target}” already contains a Snipdeck store. Snipdeck will use it from now on; the snips in your current folder won't be moved. Snipdeck will restart to apply this.",
+                        "Use it",
+                        "Cancel").ConfigureAwait(true))
+                    {
+                        return;
+                    }
+                    break;
+
+                case StorageChangeOutcome.MoveToTarget:
+                    if (!await _interactions.ConfirmAsync(
+                        "Move storage?",
+                        $"Move your snips to “{target}”? Snipdeck will restart to apply this.",
+                        "Move",
+                        "Cancel").ConfigureAwait(true))
+                    {
+                        return;
+                    }
+                    // Copy the snips to the target; the originals are left as a
+                    // safety copy and never deleted from the running process (a
+                    // failed restart must not leave us writing to a removed dir).
+                    _relocation.CopyStore(current, target);
+                    break;
+
+                case StorageChangeOutcome.SetEmptyTarget:
+                    if (!await _interactions.ConfirmAsync(
+                        "Change storage location?",
+                        $"Use “{target}” as the storage location? Snipdeck will restart to apply this.",
+                        "Change",
+                        "Cancel").ConfigureAwait(true))
+                    {
+                        return;
+                    }
+                    break;
+
+                default:
+                    return;
+            }
+
+            var previousPath = _config.StoragePath;
+            _config.StoragePath = target;
+            await PersistAsync().ConfigureAwait(true);
+            StorageDirectory = target;
+
+            // On success the process terminates inside Restart() and nothing below
+            // runs. If it returns false the relaunch didn't happen, so the running
+            // app is still bound to the old location — roll the persisted switch
+            // back so this session and future launches stay on the old store
+            // (otherwise edits made before a manual restart would land in the old
+            // store and vanish once the new one loads). The copied target files are
+            // left as a harmless backup.
+            if (!_restart.Restart())
+            {
+                _config.StoragePath = previousPath;
+                await PersistAsync().ConfigureAwait(true);
+                StorageDirectory = previousPath ?? _pathProvider.DefaultStorageDirectory;
+                await _interactions.NotifyAsync(
+                    "Couldn't change storage location",
+                    "Snipdeck couldn't restart, so the storage location is unchanged. Please try again.").ConfigureAwait(true);
+            }
+        }
+
         private async Task PersistAsync()
         {
             if (_suppressPersist)
@@ -164,6 +314,7 @@ namespace Snipdeck.Core.ViewModels
             _config.Theme = Theme;
             _config.CloseBehaviour = CloseBehaviour;
             _config.BackupRetention = BackupRetention;
+            // _config.Hotkey is set directly by RebindHotkey before this runs.
             await _settingsStore.SaveAsync(_config).ConfigureAwait(true);
         }
 
@@ -181,32 +332,5 @@ namespace Snipdeck.Core.ViewModels
             CloseBehaviour.Exit => 1,
             _ => 0,
         };
-
-        private static string FormatHotkey(HotkeyBinding binding)
-        {
-            if (binding.IsEmpty)
-            {
-                return "(unbound)";
-            }
-            var parts = new List<string>();
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Control))
-            {
-                parts.Add("Ctrl");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Alt))
-            {
-                parts.Add("Alt");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Shift))
-            {
-                parts.Add("Shift");
-            }
-            if (binding.Modifiers.HasFlag(HotkeyModifiers.Windows))
-            {
-                parts.Add("Win");
-            }
-            parts.Add(binding.Key);
-            return string.Join('+', parts);
-        }
     }
 }

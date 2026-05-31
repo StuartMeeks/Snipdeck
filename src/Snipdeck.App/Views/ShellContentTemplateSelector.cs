@@ -19,6 +19,10 @@ namespace Snipdeck.App.Views
 
         public DataTemplate? TrashTemplate { get; set; }
 
+        public DataTemplate? SharedParametersTemplate { get; set; }
+
+        public DataTemplate? TagIconsTemplate { get; set; }
+
         protected override DataTemplate? SelectTemplateCore(object item)
         {
             return item switch
@@ -27,6 +31,8 @@ namespace Snipdeck.App.Views
                 CliViewModel => CliTemplate,
                 SettingsViewModel => SettingsTemplate,
                 TrashViewModel => TrashTemplate,
+                SharedParametersViewModel => SharedParametersTemplate,
+                TagIconsViewModel => TagIconsTemplate,
                 _ => null,
             };
         }

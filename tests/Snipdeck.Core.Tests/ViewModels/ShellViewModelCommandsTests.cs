@@ -34,7 +34,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var clip = new FakeClipboardService();
             var ix = new FakeShellInteractions();
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
-            var vm = new ShellViewModel(store, clip, clock, ix, new FakeIconAssetStorage());
+            var vm = new ShellViewModel(store, clip, clock, ix, new FakeIconAssetStorage(), new FakeExternalLinkService());
             await vm.LoadAsync();
             return (vm, store, clip, ix, clock);
         }
@@ -193,6 +193,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.DeleteSnipCommand.ExecuteAsync(card);
 
             Assert.True(store.Document.Snips[0].IsTrash);
+            Assert.True(ix.LastConfirmDestructive); // delete confirms get the danger styling
         }
 
         [Fact]
@@ -298,7 +299,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.Empty(store.Document.Clis);
             Assert.Empty(store.Document.Snips);
             Assert.Equal(1, store.SaveCount);
-            Assert.True(vm.SelectedCliChoice?.IsHome);
+            Assert.True(vm.SelectedCliChoice?.IsAll);
         }
 
         [Fact]
@@ -310,7 +311,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             doc.Clis.Add(cli);
             var store = new InMemorySnipStore(doc);
             var ix = new FakeShellInteractions { NextConfirmResult = true };
-            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons);
+            var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons, new FakeExternalLinkService());
             await vm.LoadAsync();
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
 
@@ -332,6 +333,180 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.Single(store.Document.Clis);
             Assert.Equal(0, ix.NotifyCount);
             Assert.Equal(0, store.SaveCount);
+        }
+
+        [Fact]
+        public async Task SaveTagIcons_persists_glyphs_and_refreshes_the_nav()
+        {
+            Cli cli = null!;
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "x", Tags = ["deploy"] });
+            });
+
+            // Select the CLI so its tags populate the nav (default tag glyph).
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            Assert.Equal(TagItemViewModel.DefaultGlyph, vm.Tags.Single(t => t.Name == "deploy").Glyph);
+
+            vm.OpenTagIcons();
+            var tagsVm = Assert.IsType<TagIconsViewModel>(vm.CurrentContent);
+            tagsVm.Rows.Single(r => r.TagName == "deploy").Glyph = "X";
+
+            await vm.SaveTagIconsCommand.ExecuteAsync(null);
+
+            Assert.Equal("X", store.Document.TagIcons["deploy"]);
+            // Nav glyph refreshed in place; the view stays on the Tags editor.
+            Assert.Equal("X", vm.Tags.Single(t => t.Name == "deploy").Glyph);
+            Assert.IsType<TagIconsViewModel>(vm.CurrentContent);
+        }
+
+        [Fact]
+        public async Task Tag_icons_apply_case_insensitively_to_the_nav()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                // Snip tag casing differs from the persisted icon-map key.
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Deploy", Tags = ["Deploy"] });
+                d.TagIcons["deploy"] = "X";
+            });
+
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+
+            var tag = vm.Tags.Single(t => string.Equals(t.Name, "Deploy", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal("X", tag.Glyph);
+        }
+
+        [Fact]
+        public async Task OpenGlobalParameters_shows_a_global_read_only_view()
+        {
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+                d.GlobalParameters.Add(new Parameter { Name = "tenant", Default = "acme" }));
+
+            vm.OpenGlobalParameters();
+
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+            Assert.True(view.IsGlobal);
+            var p = Assert.Single(view.Parameters);
+            Assert.Equal("tenant", p.Name);
+            Assert.Equal("acme", p.Default);
+        }
+
+        [Fact]
+        public async Task AddSharedParameter_appends_the_modal_result_to_the_global_set()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync();
+            vm.OpenGlobalParameters();
+
+            ix.NextEditParameterResult = new Parameter { Name = "tenant", Default = "acme" };
+            await vm.AddSharedParameterCommand.ExecuteAsync(null);
+
+            var saved = Assert.Single(store.Document.GlobalParameters);
+            Assert.Equal("tenant", saved.Name);
+            Assert.Equal("acme", saved.Default);
+            Assert.Null(ix.LastEditParameterExisting); // "Add" passes no existing parameter
+            // The read-only view refreshes to show the saved definition.
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+            Assert.Equal("tenant", Assert.Single(view.Parameters).Name);
+        }
+
+        [Fact]
+        public async Task AddSharedParameter_appends_to_the_selected_cli_when_cli_scoped()
+        {
+            Cli cli = null!;
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+            });
+
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            vm.OpenCliParametersCommand.Execute(null);
+            Assert.False(Assert.IsType<SharedParametersViewModel>(vm.CurrentContent).IsGlobal);
+
+            ix.NextEditParameterResult = new Parameter { Name = "region", Default = "eu" };
+            await vm.AddSharedParameterCommand.ExecuteAsync(null);
+
+            Assert.Equal("region", Assert.Single(Assert.Single(store.Document.Clis).Parameters).Name);
+            Assert.Empty(store.Document.GlobalParameters);
+        }
+
+        [Fact]
+        public async Task EditSharedParameter_replaces_the_chosen_parameter()
+        {
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                d.GlobalParameters.Add(new Parameter { Name = "a" });
+                d.GlobalParameters.Add(new Parameter { Name = "b" });
+            });
+            vm.OpenGlobalParameters();
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+
+            ix.NextEditParameterResult = new Parameter { Name = "b2" };
+            await vm.EditSharedParameterCommand.ExecuteAsync(view.Parameters[1]);
+
+            Assert.Equal("b", ix.LastEditParameterExisting!.Name); // seeded with the chosen one
+            Assert.Equal(["a", "b2"], store.Document.GlobalParameters.Select(p => p.Name));
+        }
+
+        [Fact]
+        public async Task DeleteSharedParameter_removes_the_chosen_parameter()
+        {
+            var (vm, store, _, _, _) = await BuildAsync(d =>
+            {
+                d.GlobalParameters.Add(new Parameter { Name = "a" });
+                d.GlobalParameters.Add(new Parameter { Name = "b" });
+            });
+            vm.OpenGlobalParameters();
+            var view = Assert.IsType<SharedParametersViewModel>(vm.CurrentContent);
+
+            await vm.DeleteSharedParameterCommand.ExecuteAsync(view.Parameters[0]);
+
+            Assert.Equal("b", Assert.Single(store.Document.GlobalParameters).Name);
+        }
+
+        [Fact]
+        public async Task DeleteCli_returns_to_Home()
+        {
+            Cli cli = null!;
+            var (vm, _, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" }; // empty CLI, so the delete is allowed
+                d.Clis.Add(cli);
+            });
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
+            _ = Assert.IsType<CliViewModel>(vm.CurrentContent);
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
+
+            _ = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            Assert.True(vm.SelectedCliChoice!.IsAll);
+        }
+
+        [Fact]
+        public async Task Home_category_is_preserved_across_a_save_refresh()
+        {
+            Cli cli = null!;
+            var (vm, _, clip, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Fav", CommandTemplate = "x", IsFavourite = true });
+            });
+
+            var home = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            home.SelectedCategory = HomeSnipCategory.Favourites;
+            var card = Assert.Single(home.FavouriteSnips);
+
+            await vm.CopySnipCommand.ExecuteAsync(card); // copies + SaveAndRefreshAsync rebuilds Home
+
+            var refreshed = Assert.IsType<HomeViewModel>(vm.CurrentContent);
+            Assert.Equal(HomeSnipCategory.Favourites, refreshed.SelectedCategory);
         }
 
         [Fact]
@@ -397,7 +572,7 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             // Select the CLI: its pane tags should not yet include the trashed snip's tag.
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
-            Assert.DoesNotContain("incident", vm.Tags);
+            Assert.DoesNotContain("incident", vm.Tags.Select(t => t.Name));
 
             // Restore from Trash while that CLI is still the selected one.
             vm.OpenTrash();
@@ -405,7 +580,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             await vm.RestoreSnipCommand.ExecuteAsync(card);
 
             // The pane tag list must now reflect the restored snip, and we stay on Trash.
-            Assert.Contains("incident", vm.Tags);
+            Assert.Contains("incident", vm.Tags.Select(t => t.Name));
             Assert.IsType<TrashViewModel>(vm.CurrentContent);
         }
 
@@ -447,7 +622,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             // Replace the icon storage so we can inspect — rebuild the VM
             var clip = new FakeClipboardService();
             var clock = new FakeClock(DateTimeOffset.UtcNow);
-            var vmWithIcons = new ShellViewModel(store, clip, clock, ix, icons);
+            var vmWithIcons = new ShellViewModel(store, clip, clock, ix, icons, new FakeExternalLinkService());
             await vmWithIcons.LoadAsync();
 
             await vmWithIcons.NewCliCommand.ExecuteAsync(null);
