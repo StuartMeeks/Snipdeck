@@ -6,6 +6,9 @@ namespace Snipdeck.Core.Models
 
         public string Name { get; set; } = string.Empty;
 
+        /// <summary>Short, free-text summary shown on the CLI's Home card.</summary>
+        public string Description { get; set; } = string.Empty;
+
         public string? IconRef { get; set; }
 
         /// <summary>

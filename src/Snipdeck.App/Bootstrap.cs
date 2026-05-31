@@ -44,6 +44,7 @@ namespace Snipdeck.App
                 .AddSingleton<IFilePickerService, WindowsFilePickerService>()
                 .AddSingleton<IFolderPickerService, WindowsFolderPickerService>()
                 .AddSingleton<IAppRestartService, WindowsAppRestartService>()
+                .AddSingleton<IExternalLinkService, WindowsExternalLinkService>()
                 .AddSingleton<IStorageRelocationService>(new StorageRelocationService(_snipStoreFileName))
                 .AddSingleton<IHotkeyService, WindowsHotkeyService>()
                 .AddSingleton<ITrayService, HNotifyIconTrayService>()

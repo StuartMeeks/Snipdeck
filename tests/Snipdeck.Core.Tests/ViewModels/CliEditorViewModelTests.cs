@@ -19,6 +19,18 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public void BuildUpdatedCli_round_trips_the_trimmed_description()
+        {
+            var cli = new Cli { Name = "pl-app", Description = "Platform CLI." };
+            var vm = new CliEditorViewModel(cli);
+
+            Assert.Equal("Platform CLI.", vm.Description);
+
+            vm.Description = "  Updated summary.  ";
+            Assert.Equal("Updated summary.", vm.BuildUpdatedCli().Description);
+        }
+
+        [Fact]
         public void Loads_and_rebuilds_shared_parameters_through_editor_rows()
         {
             // Existing CLI params load into editor rows and round-trip on save.

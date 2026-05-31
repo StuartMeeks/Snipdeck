@@ -28,6 +28,14 @@
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
+	<!-- Theme hero images are optional: packaged only once the user drops them in. -->
+	<ItemGroup Condition="Exists('Assets\HomeHeroLight.png')">
+		<Content Include="Assets\HomeHeroLight.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+	<ItemGroup Condition="Exists('Assets\HomeHeroDark.png')">
+		<Content Include="Assets\HomeHeroDark.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
 		<PackageReference Include="H.NotifyIcon.WinUI" />

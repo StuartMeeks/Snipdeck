@@ -12,10 +12,18 @@
     CloseButtonText="Cancel"
     DefaultButton="Primary">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
+    <!-- Right padding leaves a gutter for the overlay scrollbar. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560" Padding="0,0,12,0">
         <StackPanel MinWidth="400" Spacing="12">
             <TextBox Header="Name"
                      Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBox Header="Description"
+                     PlaceholderText="A short summary, shown on the CLI's Home card"
+                     Text="{x:Bind ViewModel.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="64" />
 
             <StackPanel Spacing="6">
                 <TextBlock Text="Icon"
@@ -39,69 +47,8 @@
                 </Grid>
             </StackPanel>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="Shared parameters"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Text="Inherited by every snip under this CLI that uses the matching {token}."
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-                <Button Grid.Column="1"
-                        VerticalAlignment="Top"
-                        Content="Add parameter"
-                        Click="OnAddParameterClicked" />
-            </Grid>
-
-            <ItemsControl ItemsSource="{x:Bind ViewModel.Parameters}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="8" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ParameterEditorRowViewModel">
-                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                CornerRadius="6"
-                                Padding="12">
-                            <StackPanel Spacing="8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0"
-                                             Header="Name"
-                                             Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <Button Grid.Column="1"
-                                            Margin="8,24,0,0"
-                                            Click="OnRemoveParameterClicked"
-                                            Tag="{x:Bind}"
-                                            ToolTipService.ToolTip="Remove parameter">
-                                        <FontIcon Glyph="&#xE74D;" FontSize="14" />
-                                    </Button>
-                                </Grid>
-                                <ComboBox Header="Type"
-                                          SelectedIndex="{x:Bind TypeIndex, Mode=TwoWay}"
-                                          HorizontalAlignment="Stretch">
-                                    <x:String>Text</x:String>
-                                    <x:String>Choice</x:String>
-                                </ComboBox>
-                                <TextBox Header="Default"
-                                         Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBox Header="Options (comma-separated, Choice only)"
-                                         Text="{x:Bind OptionsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         IsEnabled="{x:Bind IsChoice, Mode=OneWay}" />
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <!-- Shared parameters are edited on the CLI's "Shared parameters" screen
+                 (reached from the CLI view header), not here. -->
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>

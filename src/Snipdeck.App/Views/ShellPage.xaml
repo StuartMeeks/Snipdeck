@@ -14,74 +14,180 @@
     x:Name="ShellRoot">
 
     <UserControl.Resources>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <ResourceDictionary>
+            <!-- Theme-specific hero image: drop HomeHeroLight.png / HomeHeroDark.png
+                 into Assets and the header swaps them with the selected theme. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroLight.png" />
+                    <!-- Fades from the page background at 0 alpha to opaque, so the
+                         hero blends into the background with no white haze (a plain
+                         "Transparent" stop is transparent *white*, which is the bug). -->
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00F3F3F3" Offset="0" />
+                        <GradientStop Color="#00F3F3F3" Offset="0.5" />
+                        <GradientStop Color="#FFF3F3F3" Offset="1" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00202020" Offset="0" />
+                        <GradientStop Color="#00202020" Offset="0.5" />
+                        <GradientStop Color="#FF202020" Offset="1" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <BitmapImage x:Key="HomeHeroImage" UriSource="ms-appx:///Assets/HomeHeroDark.png" />
+                    <LinearGradientBrush x:Key="HomeHeroFadeBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00202020" Offset="0" />
+                        <GradientStop Color="#00202020" Offset="0.5" />
+                        <GradientStop Color="#FF202020" Offset="1" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <converters:BoolToVisibilityConverter x:Key="InvertedBoolToVisibility" Invert="True" />
         <converters:CountToVisibilityConverter x:Key="CountToVisibility" />
         <converters:CountToVisibilityConverter x:Key="InvertedCountToVisibility" Invert="True" />
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="24">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="CLIs"
-                                   Style="{ThemeResource SubtitleTextBlockStyle}"
-                                   VerticalAlignment="Center" />
-                        <Button Grid.Column="1"
-                                Content="New CLI"
-                                Click="OnNewCliClicked"
-                                Style="{ThemeResource AccentButtonStyle}" />
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <!-- No outer padding: the hero header is full-bleed. -->
+                <StackPanel Spacing="0">
+
+                    <!-- Hero header (WinUI Gallery layout): a FIXED-height hero whose
+                         image is painted by a Composition mask brush so its lower
+                         edge fades to transparent, revealing the page's Mica behind
+                         it. The title sits top-left; the CLI carousel below is pulled
+                         up so the cards straddle the hero's bottom edge. -->
+                    <Grid Height="316">
+                        <!-- Composition-masked hero image is set as this Border's
+                             child visual in code-behind (theme-aware, size-tracked). -->
+                        <Border x:Name="HeroHost"
+                                IsHitTestVisible="False"
+                                Loaded="OnHeroHostLoaded"
+                                SizeChanged="OnHeroHostSizeChanged" />
+
+                        <StackPanel VerticalAlignment="Top" Margin="36,32,36,0" Spacing="4">
+                            <TextBlock Text="Next Iteration"
+                                       FontSize="18"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Snipdeck"
+                                       Style="{ThemeResource TitleLargeTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        </StackPanel>
                     </Grid>
 
-                    <GridView ItemsSource="{x:Bind CliCards}"
-                              SelectionMode="None"
-                              IsItemClickEnabled="False"
-                              Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
-                        <GridView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:CliCardViewModel">
-                                <controls:CliCard
-                                    ViewModel="{x:Bind}"
-                                    NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}"
-                                    Margin="0,0,12,12" />
-                            </DataTemplate>
-                        </GridView.ItemTemplate>
-                    </GridView>
+                    <!-- CLI launcher: pulled up by 75% of a card's height so the cards
+                         straddle the hero's bottom edge — ~75% over the hero, ~25%
+                         spilling onto the page below. (Card height 172 → -129.) -->
+                    <ScrollViewer Margin="0,-129,0,0"
+                                  Padding="36,0,36,0"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Enabled">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <ItemsControl ItemsSource="{x:Bind CliCards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CliCardViewModel">
+                                        <controls:CliCard
+                                            ViewModel="{x:Bind}"
+                                            NavigateCommand="{Binding ElementName=ShellRoot, Path=ViewModel.SelectCliCommand}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                    <StackPanel Spacing="12"
-                                Visibility="{x:Bind MostUsedSnips.Count, Converter={StaticResource CountToVisibility}, Mode=OneWay}">
-                        <TextBlock Text="Most used"
-                                   Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <ItemsControl ItemsSource="{x:Bind MostUsedSnips}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
+                            <!-- New CLI tile at the end of the carousel (always present). -->
+                            <Button Click="OnNewCliClicked"
+                                    Width="232"
+                                    Height="172"
+                                    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="24" HorizontalAlignment="Center" />
+                                    <TextBlock Text="New CLI" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Snip categories: Most used / Recent / Favourites (unscoped). -->
+                    <StackPanel Padding="24" Spacing="16" Margin="0,8,0,0"
+                                Visibility="{x:Bind HasCliCards, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <ToggleButton CornerRadius="16"
+                                          IsChecked="{x:Bind IsMostUsedSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectMostUsedCommand}"
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                    <TextBlock Text="Most used" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton CornerRadius="16"
+                                          IsChecked="{x:Bind IsRecentSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectRecentCommand}"
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE823;" FontSize="14" />
+                                    <TextBlock Text="Recent" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton CornerRadius="16"
+                                          IsChecked="{x:Bind IsFavouritesSelected, Mode=OneWay}"
+                                          Command="{x:Bind SelectFavouritesCommand}"
+                                          Click="OnHomeCategoryToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE735;" FontSize="14" />
+                                    <TextBlock Text="Favourites" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+
+                        <GridView ItemsSource="{x:Bind ActiveSnips, Mode=OneWay}"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False"
+                                  HorizontalAlignment="Left">
+                            <GridView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SnipCardViewModel">
                                     <controls:SnipCard
+                                        Width="320"
+                                        Margin="0,0,12,12"
                                         ViewModel="{x:Bind}"
                                         CopyCommand="{Binding ElementName=ShellRoot, Path=ViewModel.CopySnipCommand}"
                                         EditCommand="{Binding ElementName=ShellRoot, Path=ViewModel.EditSnipCommand}"
                                         DeleteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSnipCommand}"
                                         FavouriteCommand="{Binding ElementName=ShellRoot, Path=ViewModel.ToggleFavouriteCommand}" />
                                 </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            </GridView.ItemTemplate>
+                        </GridView>
+
+                        <TextBlock Text="Nothing here yet."
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{x:Bind HasActiveSnips, Mode=OneWay, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 
-                    <StackPanel Spacing="8"
+                    <StackPanel Padding="24" Spacing="8"
                                 HorizontalAlignment="Center"
+                                Margin="0,24,0,0"
                                 Visibility="{x:Bind HasCliCards, Converter={StaticResource InvertedBoolToVisibility}}">
                         <TextBlock Text="Welcome to Snipdeck"
                                    Style="{ThemeResource TitleTextBlockStyle}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Start by adding a CLI."
+                        <TextBlock Text="Use the New CLI tile above to get started."
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
@@ -99,23 +205,35 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{x:Bind Name}"
                                    Style="{ThemeResource TitleTextBlockStyle}"
                                    VerticalAlignment="Center" />
+                        <!-- CLI-specific actions: hidden in the synthetic "All" scope,
+                             where there is no single CLI to edit/delete or add a snip to. -->
                         <Button Grid.Column="1"
                                 Margin="0,0,8,0"
-                                Content="Edit CLI"
-                                Click="OnEditCliClicked" />
+                                Content="Shared parameters"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.OpenCliParametersCommand}" />
                         <Button Grid.Column="2"
                                 Margin="0,0,8,0"
-                                Content="Delete CLI"
-                                Click="OnDeleteCliClicked" />
+                                Content="Edit CLI"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Click="OnEditCliClicked" />
                         <Button Grid.Column="3"
+                                Margin="0,0,8,0"
+                                Content="Delete CLI"
+                                Style="{StaticResource DangerButtonStyle}"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Click="OnDeleteCliClicked" />
+                        <Button Grid.Column="4"
                                 Content="New snip"
-                                Click="OnNewSnipClicked"
-                                Style="{ThemeResource AccentButtonStyle}" />
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Visibility="{x:Bind HasCli, Converter={StaticResource BoolToVisibility}}"
+                                Click="OnNewSnipClicked" />
                     </Grid>
 
                     <TextBlock Text="No snips match the current filter."
@@ -150,6 +268,10 @@
                     <TextBlock Text="Settings"
                                Style="{ThemeResource TitleTextBlockStyle}"
                                Margin="0,0,0,8" />
+
+                    <TextBlock Text="Appearance &amp; behaviour"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               Margin="0,4,0,4" />
 
                     <tk:SettingsCard Header="Theme"
                                      Description="Applies immediately. System follows your Windows preference.">
@@ -210,6 +332,10 @@
                                    MinWidth="120" />
                     </tk:SettingsCard>
 
+                    <TextBlock Text="About"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               Margin="0,16,0,4" />
+
                     <tk:SettingsCard Header="Updates"
                                      Description="Check the GitHub releases feed for a newer build.">
                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -225,21 +351,28 @@
                         </StackPanel>
                     </tk:SettingsCard>
 
-                    <tk:SettingsExpander Header="About">
+                    <tk:SettingsExpander Header="Snipdeck"
+                                         Description="{x:Bind CopyrightDisplay}">
+                        <!-- Collapsed: version shows on the right of the header. -->
+                        <TextBlock Text="{x:Bind VersionDisplay}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <tk:SettingsExpander.Items>
-                            <tk:SettingsCard Header="Application">
-                                <StackPanel HorizontalAlignment="Right">
-                                    <TextBlock Text="{x:Bind AppName}" />
-                                    <TextBlock Text="{x:Bind TaglineDisplay}"
-                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <tk:SettingsCard Header="To clone this repository">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Text="git clone https://github.com/StuartMeeks/Snipdeck"
+                                               FontFamily="Cascadia Mono, Consolas, Courier New"
+                                               VerticalAlignment="Center"
+                                               IsTextSelectionEnabled="True" />
+                                    <Button Click="OnCopyCloneCommandClicked"
+                                            ToolTipService.ToolTip="Copy to clipboard">
+                                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                    </Button>
                                 </StackPanel>
                             </tk:SettingsCard>
-                            <tk:SettingsCard Header="Version">
-                                <TextBlock Text="{x:Bind VersionDisplay}" />
-                            </tk:SettingsCard>
-                            <tk:SettingsCard Header="Copyright">
-                                <TextBlock Text="{x:Bind CopyrightDisplay}" />
+                            <tk:SettingsCard Header="File a bug or request a new feature">
+                                <HyperlinkButton Content="Open issues on GitHub"
+                                                 NavigateUri="https://github.com/StuartMeeks/Snipdeck/issues" />
                             </tk:SettingsCard>
                         </tk:SettingsExpander.Items>
                     </tk:SettingsExpander>
@@ -249,7 +382,7 @@
 
         <DataTemplate x:Key="TrashContentTemplate" x:DataType="vm:TrashViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
                     <TextBlock Text="Trash"
                                Style="{ThemeResource TitleTextBlockStyle}" />
                     <TextBlock Text="Deleted snips are kept here. Restore a snip to put it back in its CLI, or delete it permanently."
@@ -317,42 +450,33 @@
             </ScrollViewer>
         </DataTemplate>
 
-        <DataTemplate x:Key="GlobalParametersContentTemplate" x:DataType="vm:GlobalParametersViewModel">
+        <DataTemplate x:Key="SharedParametersContentTemplate" x:DataType="vm:SharedParametersViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Shared parameters"
+                            <TextBlock Text="{x:Bind Title}"
                                        Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Definitions available to every snip across all CLIs. A snip inherits one when its {token} matches and neither the snip nor its CLI defines that name."
+                            <TextBlock Text="{x:Bind Description}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        TextWrapping="Wrap" />
                         </StackPanel>
                         <Button Grid.Column="1"
-                                Margin="0,0,8,0"
                                 Content="Add parameter"
-                                Command="{x:Bind AddParameterCommand}" />
-                        <Button Grid.Column="2"
-                                Content="Save"
                                 Style="{ThemeResource AccentButtonStyle}"
-                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveGlobalParametersCommand}" />
+                                VerticalAlignment="Top"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.AddSharedParameterCommand}" />
                     </Grid>
 
-                    <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Visibility="{x:Bind StatusMessage, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
-
-                    <TextBlock Text="No global parameters yet. Add one to share it across every CLI."
+                    <TextBlock Text="No shared parameters yet. Click Add parameter to define one."
                                Style="{ThemeResource BodyTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Visibility="{x:Bind Parameters.Count, Mode=OneWay, Converter={StaticResource InvertedCountToVisibility}}" />
+                               Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
 
                     <ItemsControl ItemsSource="{x:Bind Parameters}">
                         <ItemsControl.ItemsPanel>
@@ -361,39 +485,136 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ParameterEditorRowViewModel">
+                            <DataTemplate x:DataType="vm:ParameterDisplayViewModel">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="6">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind Name}"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <Border Grid.Column="1"
+                                                        Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                                        CornerRadius="10"
+                                                        Padding="8,2"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind TypeDisplay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Visibility="{x:Bind HasDefault, Converter={StaticResource BoolToVisibility}}">
+                                                <Run Text="Default:" />
+                                                <Run Text="{x:Bind Default}" />
+                                            </TextBlock>
+                                            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{x:Bind HasOptions, Converter={StaticResource BoolToVisibility}}">
+                                                <Run Text="Options:" />
+                                                <Run Text="{x:Bind OptionsDisplay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Top">
+                                            <Button Content="Edit"
+                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.EditSharedParameterCommand}"
+                                                    CommandParameter="{x:Bind}" />
+                                            <Button Style="{StaticResource DangerButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete parameter"
+                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.DeleteSharedParameterCommand}"
+                                                    CommandParameter="{x:Bind}">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Tags"
+                                       Style="{ThemeResource TitleTextBlockStyle}" />
+                            <TextBlock Text="Give a tag an icon (a Segoe Fluent Icons glyph, e.g. paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default tag icon."
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="Save"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveTagIconsCommand}" />
+                    </Grid>
+
+                    <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind StatusMessage, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
+
+                    <TextBlock Text="No tags yet. Add tags to your snips, then give them icons here."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+                    <ItemsControl ItemsSource="{x:Bind Rows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TagIconRowViewModel">
                                 <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                                         CornerRadius="6"
                                         Padding="12">
-                                    <StackPanel Spacing="8">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0"
-                                                     Header="Name"
-                                                     Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                            <Button Grid.Column="1"
-                                                    Margin="8,24,0,0"
-                                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.CurrentContent.RemoveParameterCommand}"
-                                                    CommandParameter="{x:Bind}"
-                                                    ToolTipService.ToolTip="Remove parameter">
-                                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
-                                            </Button>
-                                        </Grid>
-                                        <ComboBox Header="Type"
-                                                  SelectedIndex="{x:Bind TypeIndex, Mode=TwoWay}"
-                                                  HorizontalAlignment="Stretch">
-                                            <x:String>Text</x:String>
-                                            <x:String>Choice</x:String>
-                                        </ComboBox>
-                                        <TextBox Header="Default"
-                                                 Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBox Header="Options (comma-separated, Choice only)"
-                                                 Text="{x:Bind OptionsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsEnabled="{x:Bind IsChoice, Mode=OneWay}" />
-                                    </StackPanel>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="160" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon Grid.Column="0"
+                                                  FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                  Glyph="{x:Bind PreviewGlyph, Mode=OneWay}"
+                                                  FontSize="18"
+                                                  VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{x:Bind TagName}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBox Grid.Column="2"
+                                                 PlaceholderText="Icon (blank = default)"
+                                                 Text="{x:Bind Glyph, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -407,68 +628,59 @@
                                              CliTemplate="{StaticResource CliContentTemplate}"
                                              SettingsTemplate="{StaticResource SettingsContentTemplate}"
                                              TrashTemplate="{StaticResource TrashContentTemplate}"
-                                             GlobalParametersTemplate="{StaticResource GlobalParametersContentTemplate}" />
+                                             SharedParametersTemplate="{StaticResource SharedParametersContentTemplate}"
+                                             TagIconsTemplate="{StaticResource TagIconsContentTemplate}" />
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <NavigationView x:Name="ShellNavigation"
                     IsBackButtonVisible="Collapsed"
+                    IsPaneToggleButtonVisible="False"
                     IsSettingsVisible="False"
                     PaneDisplayMode="Left"
                     OpenPaneLength="280"
-                    MenuItemsSource="{x:Bind ViewModel.Tags, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedTag, Mode=TwoWay}"
-                    SelectionChanged="OnNavigationSelectionChanged">
+                    ItemInvoked="OnNavigationItemInvoked">
 
-        <NavigationView.PaneHeader>
-            <StackPanel Padding="12,8" Spacing="8">
-                <AutoSuggestBox PlaceholderText="Search"
-                                QueryIcon="Find"
-                                Text="{x:Bind ViewModel.SearchText, Mode=TwoWay}" />
+        <NavigationView.MenuItems>
+            <NavigationViewItem x:Name="HomeNavItem" Content="Home">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="DocumentationNavItem"
+                                Content="Documentation"
+                                SelectsOnInvoked="False">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItemHeader Content="Tags" />
+        </NavigationView.MenuItems>
 
-                <ComboBox ItemsSource="{x:Bind ViewModel.CliChoices, Mode=OneWay}"
-                          SelectedItem="{x:Bind ViewModel.SelectedCliChoice, Mode=TwoWay}"
-                          DisplayMemberPath="Display"
-                          HorizontalAlignment="Stretch" />
-            </StackPanel>
-        </NavigationView.PaneHeader>
-
-        <NavigationView.PaneFooter>
-            <StackPanel>
-                <Button x:Name="SharedParametersButton"
-                        Click="OnSharedParametersClicked"
-                        HorizontalAlignment="Stretch"
-                        Margin="12,8,12,0"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE8EC;" FontSize="16" />
-                        <TextBlock Text="Shared parameters" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button x:Name="TrashButton"
-                        Click="OnTrashClicked"
-                        HorizontalAlignment="Stretch"
-                        Margin="12,8,12,0"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE74D;" FontSize="16" />
-                        <TextBlock Text="Trash" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button x:Name="SettingsButton"
-                        Click="OnSettingsClicked"
-                        HorizontalAlignment="Stretch"
-                        Margin="12,8"
-                        Background="Transparent"
-                        BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE713;" FontSize="16" />
-                        <TextBlock Text="Settings" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </NavigationView.PaneFooter>
+        <NavigationView.FooterMenuItems>
+            <!-- Footer destinations as nav items, so they get the selected look
+                 (indicator bar + darker background) like Home and the tags. -->
+            <NavigationViewItem x:Name="SharedParametersNavItem" Content="Shared parameters">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE943;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="TagsNavItem" Content="Tags">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8EC;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="TrashNavItem" Content="Trash">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE74D;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="SettingsNavItem" Content="Settings">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.FooterMenuItems>
 
         <ContentControl Content="{x:Bind ViewModel.CurrentContent, Mode=OneWay}"
                         ContentTemplateSelector="{StaticResource ShellContentSelector}"

@@ -14,6 +14,7 @@ namespace Snipdeck.Core.ViewModels
 
             Cli = cli;
             Name = cli.Name;
+            Description = cli.Description;
             Parameters = new ObservableCollection<ParameterEditorRowViewModel>(
                 cli.Parameters.Select(p => new ParameterEditorRowViewModel(p)));
         }
@@ -22,6 +23,9 @@ namespace Snipdeck.Core.ViewModels
 
         [ObservableProperty]
         public partial string Name { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string Description { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial byte[]? PickedIconBytes { get; set; }
@@ -50,6 +54,7 @@ namespace Snipdeck.Core.ViewModels
             {
                 Id = Cli.Id,
                 Name = Name.Trim(),
+                Description = Description.Trim(),
                 IconRef = Cli.IconRef,
                 Parameters = [.. Parameters.Select(r => r.BuildParameter())],
             };

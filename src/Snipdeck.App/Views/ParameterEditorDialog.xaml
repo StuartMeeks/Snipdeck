@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Snipdeck.App.Views.ParameterEditorDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <StackPanel MinWidth="420" Spacing="12">
+        <TextBox Header="Name"
+                 Text="{x:Bind Row.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Type"
+                  SelectedIndex="{x:Bind Row.TypeIndex, Mode=TwoWay}"
+                  HorizontalAlignment="Stretch">
+            <x:String>Text</x:String>
+            <x:String>Choice</x:String>
+        </ComboBox>
+        <TextBox Header="Default"
+                 Text="{x:Bind Row.Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox Header="Options (comma-separated, Choice only)"
+                 Text="{x:Bind Row.OptionsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 IsEnabled="{x:Bind Row.IsChoice, Mode=OneWay}" />
+    </StackPanel>
+</ContentDialog>

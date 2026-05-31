@@ -13,7 +13,8 @@ namespace Snipdeck.Core.Abstractions
             string title,
             string message,
             string confirmButtonText = "Yes",
-            string cancelButtonText = "Cancel");
+            string cancelButtonText = "Cancel",
+            bool destructive = false);
 
         Task NotifyAsync(
             string title,
@@ -23,6 +24,13 @@ namespace Snipdeck.Core.Abstractions
         Task<SnipEditResult?> EditSnipAsync(Snip snip, IReadOnlyList<Cli> availableClis);
 
         Task<CliEditResult?> EditCliAsync(Cli cli);
+
+        /// <summary>
+        /// Opens the single-parameter edit modal. Pass <paramref name="existing"/> to
+        /// edit it, or <c>null</c> to add a new one. Returns the edited parameter, or
+        /// <c>null</c> if the user cancelled.
+        /// </summary>
+        Task<Parameter?> EditParameterAsync(string title, Parameter? existing);
 
         Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters);
     }
