@@ -186,6 +186,64 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void ShareParameters_promotes_duplicated_params_to_the_created_cli_and_strips_the_snips()
+        {
+            var doc = new SnipStoreDocument();
+            var a = new Snip
+            {
+                Title = "A",
+                CommandTemplate = "mpt-app a {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" }],
+            };
+            var b = new Snip
+            {
+                Title = "B",
+                CommandTemplate = "mpt-app b {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["y", "x"], Default = "y" }],
+            };
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(
+                doc,
+                [new SnippetCandidate("mpt-app", true, a), new SnippetCandidate("mpt-app", true, b)],
+                options);
+
+            Assert.Equal(1, plan.SharedParameterCount);
+
+            StoreMerger.Apply(doc, plan);
+
+            var cli = Assert.Single(doc.Clis);
+            var shared = Assert.Single(cli.Parameters);
+            Assert.Equal("authId", shared.Name);
+            // Both snips now inherit the shared parameter instead of carrying their own.
+            Assert.All(doc.Snips, s => Assert.Empty(s.Parameters));
+        }
+
+        [Fact]
+        public void Sharing_is_off_by_default_so_params_stay_local()
+        {
+            var doc = new SnipStoreDocument();
+            var a = TextParamSnip("A", "mpt-app a {id}");
+            var b = TextParamSnip("B", "mpt-app b {id}");
+
+            var plan = StoreMerger.Plan(doc, [a, b], _defaults);
+            StoreMerger.Apply(doc, plan);
+
+            Assert.Empty(Assert.Single(doc.Clis).Parameters);
+            Assert.All(doc.Snips, s => Assert.Single(s.Parameters));
+        }
+
+        private static SnippetCandidate TextParamSnip(string title, string template)
+        {
+            return new SnippetCandidate("mpt-app", true, new Snip
+            {
+                Title = title,
+                CommandTemplate = template,
+                Parameters = [new Parameter { Name = "id", Type = ParameterType.Text, Default = "1" }],
+            });
+        }
+
+        [Fact]
         public void Unconfident_with_no_into_falls_back_to_a_generic_bucket()
         {
             var doc = new SnipStoreDocument();

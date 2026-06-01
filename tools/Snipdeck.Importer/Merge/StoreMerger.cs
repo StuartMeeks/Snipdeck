@@ -67,7 +67,41 @@ namespace Snipdeck.Importer.Merge
                 }
             }
 
-            return new MergePlan(items, clisToCreate);
+            var sharePlans = options.ShareParameters
+                ? BuildSharePlans(target, items)
+                : new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
+
+            return new MergePlan(items, clisToCreate, sharePlans);
+        }
+
+        private static Dictionary<string, CliSharePlan> BuildSharePlans(
+            SnipStoreDocument target,
+            IReadOnlyList<MergePlanItem> items)
+        {
+            var existingClisByName = new Dictionary<string, Cli>(StringComparer.OrdinalIgnoreCase);
+            foreach (var cli in target.Clis)
+            {
+                _ = existingClisByName.TryAdd(cli.Name, cli);
+            }
+
+            var plans = new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
+            foreach (var group in items
+                .Where(i => !i.IsDuplicateSkip)
+                .GroupBy(i => i.TargetCliName, StringComparer.OrdinalIgnoreCase))
+            {
+                var existingParameters = existingClisByName.TryGetValue(group.Key, out var existingCli)
+                    ? existingCli.Parameters
+                    : (IReadOnlyList<Parameter>)[];
+                var snips = group.Select(i => i.Candidate.Snip).ToList();
+
+                var plan = ParameterSharer.Analyze(existingParameters, snips);
+                if (!plan.IsEmpty)
+                {
+                    plans[group.Key] = plan;
+                }
+            }
+
+            return plans;
         }
 
         public static void Apply(SnipStoreDocument target, MergePlan plan)
@@ -102,6 +136,16 @@ namespace Snipdeck.Importer.Merge
                 snip.CliId = cli.Id;
                 target.Snips.Add(snip);
             }
+
+            // Promote duplicated parameters to CLI-shared parameters (after snips are attached,
+            // so the shared definitions and any template-token rewrites land on the real objects).
+            foreach (var (cliName, sharePlan) in plan.SharePlansByCli)
+            {
+                if (clisByName.TryGetValue(cliName, out var cli))
+                {
+                    ParameterSharer.Apply(cli, sharePlan);
+                }
+            }
         }
 
         private static (string, string, string) DedupeKey(string cliName, string title, string commandTemplate)
@@ -130,16 +174,24 @@ namespace Snipdeck.Importer.Merge
     }
 
     /// <summary>Knobs that shape a merge, mapped from the CLI options.</summary>
-    public sealed record MergeOptions(string? ForceCli, string? Into, bool AllowDuplicates);
+    public sealed record MergeOptions(string? ForceCli, string? Into, bool AllowDuplicates, bool ShareParameters = false);
 
     /// <summary>One candidate's planned outcome.</summary>
     public sealed record MergePlanItem(SnippetCandidate Candidate, string TargetCliName, bool IsDuplicateSkip);
 
-    /// <summary>The full plan: per-candidate decisions and the CLIs that would be created.</summary>
-    public sealed record MergePlan(IReadOnlyList<MergePlanItem> Items, IReadOnlyList<string> ClisToCreate)
+    /// <summary>
+    /// The full plan: per-candidate decisions, the CLIs that would be created, and the
+    /// parameter-sharing plan per target CLI (keyed by CLI name; empty when sharing is off).
+    /// </summary>
+    public sealed record MergePlan(
+        IReadOnlyList<MergePlanItem> Items,
+        IReadOnlyList<string> ClisToCreate,
+        IReadOnlyDictionary<string, CliSharePlan> SharePlansByCli)
     {
         public int ImportCount => Items.Count(i => !i.IsDuplicateSkip);
 
         public int SkipCount => Items.Count(i => i.IsDuplicateSkip);
+
+        public int SharedParameterCount => SharePlansByCli.Values.Sum(p => p.SharedToAdd.Count);
     }
 }
