@@ -564,7 +564,7 @@
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Tags"
                                        Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Give a tag an icon. Choose one from the picker, or type a Segoe Fluent Icons glyph directly (paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default tag icon."
+                            <TextBlock Text="Give a tag an icon. Choose one from the picker, or type its name (e.g. Settings) or a Segoe Fluent Icons code directly. Shown beside the tag in the left navigation; blank uses the default tag icon."
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        TextWrapping="Wrap" />
@@ -593,9 +593,11 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:TagIconRowViewModel">
-                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                        CornerRadius="6"
-                                        Padding="12">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -617,8 +619,8 @@
                                                 VerticalAlignment="Center"
                                                 Command="{x:Bind ChooseGlyphCommand}" />
                                         <TextBox Grid.Column="3"
-                                                 PlaceholderText="Icon (blank = default)"
-                                                 Text="{x:Bind Glyph, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                 PlaceholderText="Icon name or code (blank = default)"
+                                                 Text="{x:Bind GlyphText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>

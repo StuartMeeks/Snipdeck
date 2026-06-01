@@ -31,6 +31,7 @@ namespace Snipdeck.Core.ViewModels
         private readonly IShellInteractions _interactions;
         private readonly IIconAssetStorage _iconStorage;
         private readonly IExternalLinkService _externalLinks;
+        private readonly IGlyphCatalogueProvider? _glyphCatalogue;
         private SnipStoreDocument _document = new();
         private bool _suppressShellRefresh;
         // When set (via a chosen search result), the snip list shows exactly this
@@ -58,7 +59,8 @@ namespace Snipdeck.Core.ViewModels
             IClock clock,
             IShellInteractions interactions,
             IIconAssetStorage iconStorage,
-            IExternalLinkService externalLinks)
+            IExternalLinkService externalLinks,
+            IGlyphCatalogueProvider? glyphCatalogue = null)
         {
             ArgumentNullException.ThrowIfNull(store);
             ArgumentNullException.ThrowIfNull(clipboard);
@@ -73,6 +75,10 @@ namespace Snipdeck.Core.ViewModels
             _interactions = interactions;
             _iconStorage = iconStorage;
             _externalLinks = externalLinks;
+            // Optional: when present (production DI), the Tags view shows icons by
+            // their friendly catalogue name. Absent in unit tests → name lookup is
+            // empty and the view falls back to hex code points.
+            _glyphCatalogue = glyphCatalogue;
         }
 
         public ObservableCollection<CliChoice> CliChoices { get; } = [];
@@ -241,7 +247,10 @@ namespace Snipdeck.Core.ViewModels
 
         public void OpenTagIcons()
         {
-            CurrentContent = new TagIconsViewModel(SnipFilter.DistinctTagsFor(_document.Snips), _document.TagIcons, _interactions);
+            var names = _glyphCatalogue is null
+                ? GlyphNameLookup.Empty
+                : new GlyphNameLookup(_glyphCatalogue.GetEntries());
+            CurrentContent = new TagIconsViewModel(SnipFilter.DistinctTagsFor(_document.Snips), _document.TagIcons, _interactions, names);
         }
 
         [RelayCommand]
