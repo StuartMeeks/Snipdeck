@@ -152,34 +152,23 @@ worth doing carefully, and worth a design conversation before the first PR.
 
 ---
 
-## Icon picker (glyph browser) for tag icons
+## Icon picker — follow-ups beyond the tags first cut
 
-**Problem.** Tag icons are set by typing a raw glyph — either pasting a Segoe
-Fluent Icons character or entering its hex code point (`GlyphInput.Resolve`
-already accepts `E8EC`, `U+E8EC`, `0xE8EC`, `&#xE8EC;`). That works, but it's
-unfriendly: the user has to know or look up a code point and can't see what's
-available. There's no way to browse the icon set.
+The visual glyph picker shipped for **tag** icons (PR #40): a searchable
+`GridView` of `FontIcon`s, a "Choose…" button per tag row, the free-text field
+kept as an escape hatch, and a curated catalogue in the App's `appsettings.json`
+(re-read on each open) grounded against the official Segoe Fluent Icons list.
+What's left for a later pass:
 
-**Idea.** A visual icon picker — a searchable grid of glyphs the user clicks to
-choose — instead of (or alongside) typing a code. Driven from the Tags
-management view, and a reusable fit for any future "choose a glyph" need.
-
-**Sketch.**
-- A reusable `IconPicker` control / flyout: a virtualised `GridView` of
-  `FontIcon`s over a list of Segoe Fluent Icons glyphs, with a search box that
-  filters by name and/or code point.
-- Needs a glyph **catalogue** — code point + friendly name — for the grid and
-  search. Either hand-curate a useful subset or embed the published Segoe Fluent
-  Icons mapping; the names are what make search worthwhile.
-- Wire into the Tags view: add a "Choose…" button next to each row that opens
-  the picker, while keeping the free-text field as an escape hatch for pasting /
-  power users.
-- Selection still flows through `GlyphInput.Resolve` and the stored-character
-  model, so persistence is unchanged.
-
-**Open questions** to settle when scheduled:
-- Curated subset vs. full catalogue (the full set is ~1.5k glyphs — needs
-  virtualisation and good search to stay usable).
-- Where do the glyph **names** come from, and is fuzzy search worth it?
-- Do CLI icons (today: uploaded image, identicon fallback) also gain a
-  "pick a glyph instead" option, or stay image-only? Keep the first cut to tags.
+- **A glyph option for CLI icons.** CLIs are image-upload + identicon-fallback
+  today; let them optionally pick a glyph too, reusing the same picker and
+  catalogue. This was explicitly out of the first cut.
+- **Catalogue size / search depth.** The shipped set is 50 curated glyphs with
+  substring search over name, keywords and code point — plenty at this size. If
+  it grows toward the full ~1.5k font, revisit fuzzy search and lean harder on
+  virtualisation. The catalogue is just data in `appsettings.json`, so growing
+  it needs no code change.
+- **Durable catalogue location.** `appsettings.json` sits in the install
+  directory, so a Velopack update overwrites user edits. If customising the
+  catalogue becomes a real use case, move it (or an override) to `LocalAppData`
+  alongside the rest of app config.
