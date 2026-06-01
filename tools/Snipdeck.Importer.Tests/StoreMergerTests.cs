@@ -220,6 +220,34 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void Two_imported_snips_that_unify_to_the_same_template_are_deduped()
+        {
+            // {auth} and {authId} (same options, same title) become identical after choice-name
+            // unification; the second must be skipped rather than imported as a duplicate.
+            var doc = new SnipStoreDocument();
+            static Snip Named(string token)
+            {
+                return new Snip
+                {
+                    Title = "Run",
+                    CommandTemplate = $"x run {{{token}}}",
+                    Parameters = [new Parameter { Name = token, Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                };
+            }
+            // Two name "authId" so it wins; one "auth" that unifies to {authId} -> duplicate of them.
+            var c1 = new SnippetCandidate("x", true, Named("authId"));
+            var c2 = new SnippetCandidate("x", true, Named("auth"));
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [c1, c2], options);
+            StoreMerger.Apply(doc, plan);
+
+            // Only one "Run" snip lands (they were the same command once unified).
+            Assert.Single(doc.Snips);
+            Assert.Equal("x run {authId}", doc.Snips[0].CommandTemplate);
+        }
+
+        [Fact]
         public void Swapped_same_option_choices_are_not_treated_as_duplicates()
         {
             // Two distinct choices that happen to share an option set must keep positional identity:

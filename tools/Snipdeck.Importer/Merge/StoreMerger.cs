@@ -48,41 +48,52 @@ namespace Snipdeck.Importer.Merge
                 resolved.Add((candidate, ResolveCliName(candidate, options)));
             }
 
+            // Phase 1 — duplicate detection on the literal (as-imported) template. Exact duplicates
+            // (including re-imports of existing snips) are excluded here, so they can't skew the
+            // choice-name unification below.
             var items = new List<MergePlanItem>(candidates.Count);
-            var clisToCreate = new List<string>();
-            var seenNewClis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var plannedKeys = new HashSet<(string, string, string)>();
-
             foreach (var (candidate, cliName) in resolved)
             {
                 var key = DedupeKey(cliName, candidate.Snip.Title, candidate.Snip.CommandTemplate);
                 var isDuplicate = !options.AllowDuplicates
                     && (existing.Contains(key) || plannedKeys.Contains(key));
-
                 items.Add(new MergePlanItem(candidate, cliName, isDuplicate));
-
-                if (isDuplicate)
+                if (!isDuplicate)
                 {
-                    continue;
-                }
-
-                _ = plannedKeys.Add(key);
-
-                if (!existingCliNames.Contains(cliName) && seenNewClis.Add(cliName))
-                {
-                    clisToCreate.Add(cliName);
+                    _ = plannedKeys.Add(key);
                 }
             }
 
-            // Over the IMPORTED snips of each CLI only (skipped duplicates excluded, so they can't
-            // skew the result): unify choice names, then promote shared parameters.
             if (options.ShareParameters)
             {
+                // Phase 2 — unify choice names across the imported snips of each CLI (mutates them).
                 foreach (var group in items
                     .Where(i => !i.IsDuplicateSkip)
                     .GroupBy(i => i.TargetCliName, StringComparer.OrdinalIgnoreCase))
                 {
                     ParameterSharer.NormalizeChoiceNames([.. group.Select(i => i.Candidate.Snip)]);
+                }
+
+                // Phase 3 — unification can make two imported snips (or an imported and an existing
+                // one) identical; re-check duplicates on the normalised templates. This is positional
+                // (literal), so two distinct same-option choices in one command stay distinct.
+                if (!options.AllowDuplicates)
+                {
+                    items = RededupeOnNormalisedTemplates(items, existing);
+                }
+            }
+
+            // Phase 4 — CLIs to create and shared-parameter promotion, both over the FINAL imported set.
+            var clisToCreate = new List<string>();
+            var seenNewClis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in items)
+            {
+                if (!item.IsDuplicateSkip
+                    && !existingCliNames.Contains(item.TargetCliName)
+                    && seenNewClis.Add(item.TargetCliName))
+                {
+                    clisToCreate.Add(item.TargetCliName);
                 }
             }
 
@@ -165,6 +176,36 @@ namespace Snipdeck.Importer.Merge
                     ParameterSharer.Apply(cli, sharePlan);
                 }
             }
+        }
+
+        private static List<MergePlanItem> RededupeOnNormalisedTemplates(
+            List<MergePlanItem> items,
+            HashSet<(string, string, string)> existingKeys)
+        {
+            var seen = new HashSet<(string, string, string)>(existingKeys);
+            var result = new List<MergePlanItem>(items.Count);
+            foreach (var item in items)
+            {
+                if (item.IsDuplicateSkip)
+                {
+                    result.Add(item);
+                    continue;
+                }
+
+                // The template was mutated in place by NormalizeChoiceNames.
+                var key = DedupeKey(item.TargetCliName, item.Candidate.Snip.Title, item.Candidate.Snip.CommandTemplate);
+                if (seen.Contains(key))
+                {
+                    result.Add(item with { IsDuplicateSkip = true });
+                }
+                else
+                {
+                    _ = seen.Add(key);
+                    result.Add(item);
+                }
+            }
+
+            return result;
         }
 
         private static (string, string, string) DedupeKey(string cliName, string title, string commandTemplate)

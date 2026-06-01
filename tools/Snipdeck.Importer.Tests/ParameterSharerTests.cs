@@ -111,8 +111,10 @@ namespace Snipdeck.Importer.Tests
         [Fact]
         public void Existing_compatible_shared_choice_is_reused_not_duplicated()
         {
+            // Existing shared default ("x") matches the imported group's default, with the same
+            // option set in a different order — so it's reused, not duplicated.
             var cli = new Cli { Name = "mpt-app", Parameters = [Choice("authId", "x", "x", "y")] };
-            var a = new Snip { Title = "a", CommandTemplate = "a {authId}", Parameters = [Choice("authId", "y", "y", "x")] };
+            var a = new Snip { Title = "a", CommandTemplate = "a {authId}", Parameters = [Choice("authId", "x", "y", "x")] };
             var b = new Snip { Title = "b", CommandTemplate = "b {authId}", Parameters = [Choice("authId", "x", "x", "y")] };
 
             AnalyzeAndApply(cli, a, b);
@@ -121,6 +123,23 @@ namespace Snipdeck.Importer.Tests
             Assert.Single(cli.Parameters);
             Assert.Empty(a.Parameters);
             Assert.Empty(b.Parameters);
+        }
+
+        [Fact]
+        public void Existing_text_param_with_a_different_default_is_not_reused()
+        {
+            // CLI already shares {env} defaulting to "prod"; imported snips default it to "dev".
+            // They must keep their own local {env} rather than silently inheriting "prod".
+            var cli = new Cli { Name = "deploy", Parameters = [new Parameter { Name = "env", Type = ParameterType.Text, Default = "prod" }] };
+            var a = TextSnip("deploy a {env}", ("env", "dev"));
+            var b = TextSnip("deploy b {env}", ("env", "dev"));
+
+            AnalyzeAndApply(cli, a, b);
+
+            // The CLI's shared param is untouched, and the imported snips keep their "dev" default.
+            Assert.Equal("prod", Assert.Single(cli.Parameters).Default);
+            Assert.Equal("dev", Assert.Single(a.Parameters).Default);
+            Assert.Equal("dev", Assert.Single(b.Parameters).Default);
         }
 
         [Fact]

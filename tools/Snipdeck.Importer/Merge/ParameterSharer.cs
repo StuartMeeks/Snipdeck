@@ -141,11 +141,15 @@ namespace Snipdeck.Importer.Merge
                 }
 
                 var options = MostCommonOptions(members);
+                var chosenDefault = MostCommonDefault(members);
 
                 if (existingByName.TryGetValue(winningName, out var existing))
                 {
-                    // Reuse only a compatible existing shared parameter; otherwise leave these local.
-                    if (existing.Type != ParameterType.Choice || !SameOptionSet(existing.Options, options))
+                    // Reuse only a fully-compatible existing shared parameter (same option set AND
+                    // default); otherwise leave these local so imported snips keep their own default.
+                    if (existing.Type != ParameterType.Choice
+                        || !SameOptionSet(existing.Options, options)
+                        || !string.Equals(existing.Default, chosenDefault, StringComparison.Ordinal))
                     {
                         continue;
                     }
@@ -157,7 +161,7 @@ namespace Snipdeck.Importer.Merge
                         Name = winningName,
                         Type = ParameterType.Choice,
                         Options = [.. options],
-                        Default = MostCommonDefault(members),
+                        Default = chosenDefault,
                     });
                 }
 
@@ -206,7 +210,10 @@ namespace Snipdeck.Importer.Merge
 
                 if (existingByName.TryGetValue(name, out var existing))
                 {
-                    if (existing.Type != ParameterType.Text)
+                    // Reuse only when the existing shared default matches; otherwise leave these
+                    // local so imported snips keep their own default rather than silently adopting it.
+                    if (existing.Type != ParameterType.Text
+                        || !string.Equals(existing.Default, winningDefault, StringComparison.Ordinal))
                     {
                         continue;
                     }
