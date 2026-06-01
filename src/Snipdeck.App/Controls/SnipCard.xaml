@@ -80,8 +80,12 @@
                     <Border Background="{ThemeResource AccentFillColorSecondaryBrush}"
                             CornerRadius="10"
                             Padding="8,2">
+                        <!-- Explicit on-accent foreground: without it the text falls
+                             back to the theme's default (dark in Light theme), which
+                             is unreadable on the accent fill. -->
                         <TextBlock Text="{x:Bind}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

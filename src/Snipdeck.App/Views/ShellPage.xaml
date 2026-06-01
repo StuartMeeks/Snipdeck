@@ -513,7 +513,8 @@
                                                         Padding="8,2"
                                                         VerticalAlignment="Center">
                                                     <TextBlock Text="{x:Bind TypeDisplay}"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
                                                 </Border>
                                             </Grid>
                                             <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"

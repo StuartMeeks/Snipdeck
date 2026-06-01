@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   edits survive app updates. Delete it to restore the default set.
 
 ### Fixed
+- **Tag chips unreadable in Light theme.** Tag chips on snip cards (and the
+  parameter-type badge in Shared parameters) showed dark text on the accent fill in
+  Light theme. They now use the on-accent text colour, readable in both themes.
 - **Window caption buttons invisible in Light theme.** The minimise, maximise and
   close glyphs were always white, leaving them barely visible against the light
   title bar. They now take a theme-appropriate colour, update when you switch
