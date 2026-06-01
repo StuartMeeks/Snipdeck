@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-06-01
+
 ### Added
 - **Icon picker for tag icons.** The Tags view now has a **Choose…** button beside
   each tag that opens a searchable grid of icons to pick from, so you no longer
@@ -16,58 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`icon-catalogue.json`) in the Snipdeck app-data folder — edit it to add or
   remove icons (the picker reflects the change the next time it opens), and your
   edits survive app updates. Delete it to restore the default set.
-
-### Fixed
-- **Tag chips unreadable in Light theme.** Tag chips on snip cards (and the
-  parameter-type badge in Shared parameters) showed dark text on the accent fill in
-  Light theme. They now use the on-accent text colour, readable in both themes.
-- **Window caption buttons invisible in Light theme.** The minimise, maximise and
-  close glyphs were always white, leaving them barely visible against the light
-  title bar. They now take a theme-appropriate colour, update when you switch
-  theme, and follow the OS when the theme is set to System.
-- **Tags view polish.** The icon text box now shows a chosen icon by its friendly
-  name (e.g. Settings) — or its hex code when the glyph isn't in the catalogue —
-  instead of an unreadable box, and accepts a name as well as a code. The tag
-  cards now match the Shared parameters, Trash and Settings cards (consistent card
-  background and border), rather than a borderless grey fill.
-
-### Changed
-- **Home, navigation and shared-parameters polish.** The Home page leads with a
-  full-bleed hero banner (drop `Assets/HomeHero.png` to supply the image), the
-  CLI launcher is a horizontal carousel that overlaps the banner, and a centred
-  pill selector switches between Most used / Recent / Favourites. The navigation
-  pane toggle (hamburger) moved to the title bar (Home is the first nav item),
-  and the footer destinations (Shared parameters / Tags / Trash / Settings) now
-  show the selected indicator like the other nav items. Clicking Home also
-  clears the search. Shared parameters — global and per-CLI (reached from the CLI
-  view header) — now have a read-only card view with an edit modal, instead of
-  inline editing; the Tags and Shared-parameters panes are left-aligned. Settings
-  is grouped into "Appearance &amp; behaviour" and "About"; the About expander
-  shows the version and copyright, with links to clone the repo and file issues.
-- **Shell layout: CLI switcher and search moved to the title bar.** The CLI
-  switcher and a snip search box now live in the custom title bar. Search is
-  snip-only with name autocomplete, scoped to the selected CLI; each suggestion
-  shows its CLI in a badge so identically-named snips are distinguishable, and
-  choosing one filters the list to it. The left navigation now leads with
-  **Home** and **Documentation** entries, followed by a **Tags** heading with an
-  **All** entry and the scoped tags; the footer actions (Shared parameters,
-  Tags, Trash, Settings) are left-aligned.
-- **Polished cards, dialogs and destructive actions.** Snip cards now size the
-  Copy button to its content and group Edit/Delete immediately beside it.
-  Destructive actions (Delete CLI, and the delete confirmations) use a subtle
-  red treatment. Dialogs have rounded corners, all dialog buttons share rounded
-  corners with more breathing room between them, and the snip editor is wider so
-  its content fills the available space. The snip editor's "Command template"
-  heading no longer inherits the monospace font.
-- **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
-  and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
-  instead of the reflection-based serializer, removing the IL2026 trim warnings.
-  The on-disk format is unchanged (proven byte-identical by tests, with enum
-  names pinned via `[JsonStringEnumMemberName]`), so existing stores keep
-  loading. `PublishTrimmed` stays off: a trimmed WinUI publish still trips
-  IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
-
-### Added
 - **`snipdeck-importer` console tool.** A new cross-platform .NET tool
   (`tools/Snipdeck.Importer`, installable as `snipdeck-importer`) imports command
   snippets from a SnipCommand export into a Snipdeck store. It auto-suggests each
@@ -147,7 +97,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (non-trashed) snips can't be deleted until those snips are removed. The CLI's
   icon asset and any leftover trashed snips are cleaned up with it.
 
+### Changed
+- **Home, navigation and shared-parameters polish.** The Home page leads with a
+  full-bleed hero banner (drop `Assets/HomeHero.png` to supply the image), the
+  CLI launcher is a horizontal carousel that overlaps the banner, and a centred
+  pill selector switches between Most used / Recent / Favourites. The navigation
+  pane toggle (hamburger) moved to the title bar (Home is the first nav item),
+  and the footer destinations (Shared parameters / Tags / Trash / Settings) now
+  show the selected indicator like the other nav items. Clicking Home also
+  clears the search. Shared parameters — global and per-CLI (reached from the CLI
+  view header) — now have a read-only card view with an edit modal, instead of
+  inline editing; the Tags and Shared-parameters panes are left-aligned. Settings
+  is grouped into "Appearance &amp; behaviour" and "About"; the About expander
+  shows the version and copyright, with links to clone the repo and file issues.
+- **Shell layout: CLI switcher and search moved to the title bar.** The CLI
+  switcher and a snip search box now live in the custom title bar. Search is
+  snip-only with name autocomplete, scoped to the selected CLI; each suggestion
+  shows its CLI in a badge so identically-named snips are distinguishable, and
+  choosing one filters the list to it. The left navigation now leads with
+  **Home** and **Documentation** entries, followed by a **Tags** heading with an
+  **All** entry and the scoped tags; the footer actions (Shared parameters,
+  Tags, Trash, Settings) are left-aligned.
+- **Polished cards, dialogs and destructive actions.** Snip cards now size the
+  Copy button to its content and group Edit/Delete immediately beside it.
+  Destructive actions (Delete CLI, and the delete confirmations) use a subtle
+  red treatment. Dialogs have rounded corners, all dialog buttons share rounded
+  corners with more breathing room between them, and the snip editor is wider so
+  its content fills the available space. The snip editor's "Command template"
+  heading no longer inherits the monospace font.
+- **JSON stores moved to System.Text.Json source generation.** `JsonSnipStore`
+  and `JsonSettingsStore` now serialise via a generated `JsonSerializerContext`
+  instead of the reflection-based serializer, removing the IL2026 trim warnings.
+  The on-disk format is unchanged (proven byte-identical by tests, with enum
+  names pinned via `[JsonStringEnumMemberName]`), so existing stores keep
+  loading. `PublishTrimmed` stays off: a trimmed WinUI publish still trips
+  IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
+
 ### Fixed
+- **Tag chips unreadable in Light theme.** Tag chips on snip cards (and the
+  parameter-type badge in Shared parameters) showed dark text on the accent fill in
+  Light theme. They now use the on-accent text colour, readable in both themes.
+- **Window caption buttons invisible in Light theme.** The minimise, maximise and
+  close glyphs were always white, leaving them barely visible against the light
+  title bar. They now take a theme-appropriate colour, update when you switch
+  theme, and follow the OS when the theme is set to System.
+- **Tags view polish.** The icon text box now shows a chosen icon by its friendly
+  name (e.g. Settings) — or its hex code when the glyph isn't in the catalogue —
+  instead of an unreadable box, and accepts a name as well as a code. The tag
+  cards now match the Shared parameters, Trash and Settings cards (consistent card
+  background and border), rather than a borderless grey fill.
 - **Typing into a Text parameter in the copy flyout.** A Text parameter's box
   cleared itself on every keystroke (and Copy never enabled), because the
   hidden Choice dropdown in the same row stayed two-way bound to the value and
