@@ -1,4 +1,3 @@
-using Snipdeck.Core.Engine;
 using Snipdeck.Core.Models;
 using Snipdeck.Importer.Sources;
 
@@ -25,23 +24,17 @@ namespace Snipdeck.Importer.Merge
 
             // De-duplication is scoped to the CLI a snip lands in: CLI is Snipdeck's organising
             // axis, so the same (Title, CommandTemplate) under two different CLIs is legitimate.
-            // When sharing is on, the dedupe key is rename-invariant — each Choice token is keyed by
-            // its option SET rather than its name — so the choice-name unification below can neither
-            // create nor hide a duplicate, and the rename basis is unaffected by what gets skipped.
-            var clisById = target.Clis.ToDictionary(c => c.Id);
+            // The key is the literal template (positional, exact) so dedup never drops a snip that
+            // merely differs in a choice token's name or position.
+            var cliNameById = target.Clis.ToDictionary(c => c.Id, c => c.Name);
             var existing = new HashSet<(string, string, string)>();
             foreach (var snip in target.Snips)
             {
-                if (snip.IsTrash)
+                if (!snip.IsTrash)
                 {
-                    continue;
+                    var owningCli = cliNameById.TryGetValue(snip.CliId, out var name) ? name : string.Empty;
+                    _ = existing.Add(DedupeKey(owningCli, snip.Title, snip.CommandTemplate));
                 }
-
-                var owningCli = clisById.GetValueOrDefault(snip.CliId);
-                var template = options.ShareParameters
-                    ? CanonicalTemplate(snip.CommandTemplate, ParameterResolver.Resolve(snip, owningCli, target.GlobalParameters))
-                    : snip.CommandTemplate;
-                _ = existing.Add(DedupeKey(owningCli?.Name ?? string.Empty, snip.Title, template));
             }
 
             var existingCliNames = new HashSet<string>(
@@ -62,10 +55,7 @@ namespace Snipdeck.Importer.Merge
 
             foreach (var (candidate, cliName) in resolved)
             {
-                var template = options.ShareParameters
-                    ? CanonicalTemplate(candidate.Snip.CommandTemplate, candidate.Snip.Parameters)
-                    : candidate.Snip.CommandTemplate;
-                var key = DedupeKey(cliName, candidate.Snip.Title, template);
+                var key = DedupeKey(cliName, candidate.Snip.Title, candidate.Snip.CommandTemplate);
                 var isDuplicate = !options.AllowDuplicates
                     && (existing.Contains(key) || plannedKeys.Contains(key));
 
@@ -84,9 +74,8 @@ namespace Snipdeck.Importer.Merge
                 }
             }
 
-            // Now that the imported set is fixed (dedupe is rename-invariant), unify choice names
-            // across the IMPORTED snips of each CLI, then promote shared parameters over them. Both
-            // steps see only imported snips, so skipped duplicates can't influence either.
+            // Over the IMPORTED snips of each CLI only (skipped duplicates excluded, so they can't
+            // skew the result): unify choice names, then promote shared parameters.
             if (options.ShareParameters)
             {
                 foreach (var group in items
@@ -176,28 +165,6 @@ namespace Snipdeck.Importer.Merge
                     ParameterSharer.Apply(cli, sharePlan);
                 }
             }
-        }
-
-        /// <summary>
-        /// Rewrites each Choice token in a template to a marker keyed by its option SET (sorted,
-        /// de-duplicated) instead of its name, so two snips that differ only in a choice token's
-        /// name compare equal. Text tokens are left untouched.
-        /// </summary>
-        private static string CanonicalTemplate(string template, IReadOnlyList<Parameter> effectiveParameters)
-        {
-            var result = template;
-            foreach (var parameter in effectiveParameters)
-            {
-                if (parameter.Type != ParameterType.Choice)
-                {
-                    continue;
-                }
-
-                var options = string.Join('|', parameter.Options.Distinct(StringComparer.Ordinal).OrderBy(o => o, StringComparer.Ordinal));
-                result = result.Replace("{" + parameter.Name + "}", "{choice:" + options + "}", StringComparison.Ordinal);
-            }
-
-            return result;
         }
 
         private static (string, string, string) DedupeKey(string cliName, string title, string commandTemplate)

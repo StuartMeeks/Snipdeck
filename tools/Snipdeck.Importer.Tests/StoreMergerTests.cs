@@ -220,56 +220,33 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
-        public void A_snip_that_becomes_a_duplicate_after_a_share_rename_is_skipped()
+        public void Swapped_same_option_choices_are_not_treated_as_duplicates()
         {
-            // Existing store snip already uses the winning token name, with its choice parameter.
-            var cli = new Cli { Name = "x" };
-            var doc = new SnipStoreDocument
-            {
-                Clis = { cli },
-                Snips =
-                {
-                    new Snip
-                    {
-                        CliId = cli.Id,
-                        Title = "Dup",
-                        CommandTemplate = "x run {authId}",
-                        Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
-                    },
-                },
-            };
-
-            // Imported: "Dup" uses {auth}; two others use {authId}, so "authId" wins the choice and
-            // {auth} is rewritten to {authId} — turning "Dup" into a duplicate of the existing snip.
-            static Snip MakeChoice(string token)
+            // Two distinct choices that happen to share an option set must keep positional identity:
+            // "cp {source} {dest}" and "cp {dest} {source}" are different commands, not duplicates.
+            var doc = new SnipStoreDocument();
+            static Snip Swapped(string a, string b)
             {
                 return new Snip
                 {
-                    Title = token == "auth" ? "Dup" : token,
-                    CommandTemplate = $"x run {{{token}}}",
-                    Parameters = [new Parameter { Name = token, Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                    Title = "Copy",
+                    CommandTemplate = $"cp {{{a}}} {{{b}}}",
+                    Parameters =
+                    [
+                        new Parameter { Name = a, Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" },
+                        new Parameter { Name = b, Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" },
+                    ],
                 };
             }
-
-            var dup = new SnippetCandidate("x", true, MakeChoice("auth"));
-            var c2 = new SnippetCandidate("x", true, MakeChoice("authId"));
-            var c3 = new SnippetCandidate("x", true, new Snip
-            {
-                Title = "Three",
-                CommandTemplate = "x three {authId}",
-                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
-            });
             var options = _defaults with { ShareParameters = true };
 
-            var plan = StoreMerger.Plan(doc, [dup, c2, c3], options);
+            var plan = StoreMerger.Plan(
+                doc,
+                [new SnippetCandidate("cp", true, Swapped("source", "dest")), new SnippetCandidate("cp", true, Swapped("dest", "source"))],
+                options);
 
-            // The renamed "Dup" candidate is recognised as a duplicate and skipped.
-            var dupItem = plan.Items.Single(i => ReferenceEquals(i.Candidate, dup));
-            Assert.True(dupItem.IsDuplicateSkip);
-
-            StoreMerger.Apply(doc, plan);
-            // Only one "Dup"-titled snip remains (the pre-existing one).
-            Assert.Single(doc.Snips, s => s.Title == "Dup");
+            // Both are imported — neither is wrongly collapsed into the other.
+            Assert.Equal(2, plan.ImportCount);
         }
 
         [Fact]
