@@ -149,26 +149,3 @@ matching the existing backup-retention shape.
 This is a *significant* expansion of Snipdeck's surface area — it crosses
 from "snippet manager" into "lightweight runbook executor". Worth doing,
 worth doing carefully, and worth a design conversation before the first PR.
-
----
-
-## Icon picker — follow-ups beyond the tags first cut
-
-The visual glyph picker shipped for **tag** icons (PR #40): a searchable
-`GridView` of `FontIcon`s, a "Choose…" button per tag row, the free-text field
-kept as an escape hatch, and a curated catalogue in the App's `appsettings.json`
-(re-read on each open) grounded against the official Segoe Fluent Icons list.
-What's left for a later pass:
-
-- **A glyph option for CLI icons.** CLIs are image-upload + identicon-fallback
-  today; let them optionally pick a glyph too, reusing the same picker and
-  catalogue. This was explicitly out of the first cut.
-- **Catalogue size / search depth.** The shipped set is 50 curated glyphs with
-  substring search over name, keywords and code point — plenty at this size. If
-  it grows toward the full ~1.5k font, revisit fuzzy search and lean harder on
-  virtualisation. The catalogue is just data in `appsettings.json`, so growing
-  it needs no code change.
-- **Durable catalogue location.** `appsettings.json` sits in the install
-  directory, so a Velopack update overwrites user edits. If customising the
-  catalogue becomes a real use case, move it (or an override) to `LocalAppData`
-  alongside the rest of app config.
