@@ -222,12 +222,21 @@ namespace Snipdeck.Importer.Tests
         [Fact]
         public void A_snip_that_becomes_a_duplicate_after_a_share_rename_is_skipped()
         {
-            // Existing store snip already uses the winning token name.
+            // Existing store snip already uses the winning token name, with its choice parameter.
             var cli = new Cli { Name = "x" };
             var doc = new SnipStoreDocument
             {
                 Clis = { cli },
-                Snips = { new Snip { CliId = cli.Id, Title = "Dup", CommandTemplate = "x run {authId}" } },
+                Snips =
+                {
+                    new Snip
+                    {
+                        CliId = cli.Id,
+                        Title = "Dup",
+                        CommandTemplate = "x run {authId}",
+                        Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                    },
+                },
             };
 
             // Imported: "Dup" uses {auth}; two others use {authId}, so "authId" wins the choice and
@@ -261,6 +270,52 @@ namespace Snipdeck.Importer.Tests
             StoreMerger.Apply(doc, plan);
             // Only one "Dup"-titled snip remains (the pre-existing one).
             Assert.Single(doc.Snips, s => s.Title == "Dup");
+        }
+
+        [Fact]
+        public void A_skipped_duplicate_does_not_rename_or_drop_a_genuinely_importable_snip()
+        {
+            // Existing store snip uses {authId} (with its choice param).
+            var cli = new Cli { Name = "x" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips =
+                {
+                    new Snip
+                    {
+                        CliId = cli.Id,
+                        Title = "Existing",
+                        CommandTemplate = "x run {authId}",
+                        Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                    },
+                },
+            };
+
+            // A genuinely-new snip uses {auth}; plus a re-import of the existing {authId} snip (a dup).
+            var real = new SnippetCandidate("x", true, new Snip
+            {
+                Title = "Real",
+                CommandTemplate = "x do {auth}",
+                Parameters = [new Parameter { Name = "auth", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+            });
+            var dup = new SnippetCandidate("x", true, new Snip
+            {
+                Title = "Existing",
+                CommandTemplate = "x run {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+            });
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [real, dup], options);
+            StoreMerger.Apply(doc, plan);
+
+            // The re-imported existing snip is skipped; "Real" is imported and NOT renamed to {authId}
+            // (the skipped duplicate must not drive a rename), and stays local (no sharing group of 2).
+            Assert.True(plan.Items.Single(i => ReferenceEquals(i.Candidate, dup)).IsDuplicateSkip);
+            Assert.Equal("x do {auth}", real.Snip.CommandTemplate);
+            Assert.Equal("auth", Assert.Single(real.Snip.Parameters).Name);
+            Assert.Empty(cli.Parameters);
         }
 
         [Fact]
