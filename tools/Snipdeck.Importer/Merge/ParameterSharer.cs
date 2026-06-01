@@ -23,6 +23,61 @@ namespace Snipdeck.Importer.Merge
     {
         private const char _separator = '\u0001';
 
+        /// <summary>
+        /// Unifies choice-parameter names across the given snips: for each option set used by two
+        /// or more snips, the most common name wins and each snip's template token and local
+        /// parameter name are rewritten to it. This is normalisation only — it does not promote or
+        /// strip anything — so that duplicate detection and later promotion agree on token names.
+        /// Mutates the snips. Run it before de-duplication.
+        /// </summary>
+        public static void NormalizeChoiceNames(IReadOnlyList<Snip> snips)
+        {
+            ArgumentNullException.ThrowIfNull(snips);
+
+            var occurrences = new List<Occurrence>();
+            var order = 0;
+            foreach (var snip in snips)
+            {
+                foreach (var parameter in snip.Parameters)
+                {
+                    occurrences.Add(new Occurrence(snip, parameter, order++));
+                }
+            }
+
+            foreach (var group in occurrences
+                .Where(o => o.Parameter.Type == ParameterType.Choice)
+                .GroupBy(o => OptionSetKey(o.Parameter.Options)))
+            {
+                var members = group.ToList();
+                if (DistinctSnipCount(members) < 2)
+                {
+                    continue;
+                }
+
+                var winningName = MostCommonName(members);
+
+                // At most one occurrence per snip, preferring one already named the winner; never
+                // rename onto a token the snip already uses (would merge two distinct arguments).
+                foreach (var bySnip in members.GroupBy(m => m.Snip))
+                {
+                    var target = bySnip
+                        .OrderByDescending(m => string.Equals(m.Parameter.Name, winningName, StringComparison.Ordinal))
+                        .ThenBy(m => m.Order)
+                        .First();
+
+                    if (string.Equals(target.Parameter.Name, winningName, StringComparison.Ordinal)
+                        || TemplateContainsToken(target.Snip.CommandTemplate, winningName))
+                    {
+                        continue;
+                    }
+
+                    target.Snip.CommandTemplate = target.Snip.CommandTemplate.Replace(
+                        "{" + target.Parameter.Name + "}", "{" + winningName + "}", StringComparison.Ordinal);
+                    target.Parameter.Name = winningName;
+                }
+            }
+        }
+
         public static CliSharePlan Analyze(IReadOnlyList<Parameter> existingCliParameters, IReadOnlyList<Snip> snips)
         {
             ArgumentNullException.ThrowIfNull(existingCliParameters);

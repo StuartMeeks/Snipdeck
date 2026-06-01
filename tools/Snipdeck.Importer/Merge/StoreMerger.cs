@@ -39,58 +39,55 @@ namespace Snipdeck.Importer.Merge
                 target.Clis.Select(c => c.Name),
                 StringComparer.OrdinalIgnoreCase);
 
-            // Phase 1 — duplicate detection against the as-imported template.
-            var items = new List<MergePlanItem>(candidates.Count);
-            var plannedKeys = new HashSet<(string, string, string)>();
+            // Resolve each candidate's target CLI up front.
+            var resolved = new List<(SnippetCandidate Candidate, string CliName)>(candidates.Count);
             foreach (var candidate in candidates)
             {
-                var cliName = ResolveCliName(candidate, options);
-                var key = DedupeKey(cliName, candidate.Snip.Title, candidate.Snip.CommandTemplate);
-                var isDuplicate = !options.AllowDuplicates
-                    && (existing.Contains(key) || plannedKeys.Contains(key));
-                items.Add(new MergePlanItem(candidate, cliName, isDuplicate));
-                if (!isDuplicate)
+                resolved.Add((candidate, ResolveCliName(candidate, options)));
+            }
+
+            // Normalise choice token/parameter names per CLI BEFORE de-duplication, so renaming and
+            // dedup agree: a snip whose choice token is unified to the winning name is compared (and
+            // promoted) under that final name. Normalisation only renames; it never promotes, so the
+            // promotion decision below is driven purely by what is actually imported.
+            if (options.ShareParameters)
+            {
+                foreach (var group in resolved.GroupBy(r => r.CliName, StringComparer.OrdinalIgnoreCase))
                 {
-                    _ = plannedKeys.Add(key);
+                    ParameterSharer.NormalizeChoiceNames([.. group.Select(r => r.Candidate.Snip)]);
                 }
             }
 
-            // Phase 2 — build the share plan ONLY from snips that will actually be imported, so a
-            // duplicate-only import never mutates an existing CLI's shared parameters.
-            var sharePlans = options.ShareParameters
-                ? BuildSharePlans(target, items)
-                : new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
-
-            // Phase 3 — sharing can rewrite a choice token to the winning name; re-check duplicates
-            // against the post-share template so a rename can't slip a duplicate past Phase 1.
-            if (options.ShareParameters && !options.AllowDuplicates)
-            {
-                items = RededupeAfterRenames(items, sharePlans, existing);
-            }
-
-            // Phase 4 — derive CLIs to create from the final imported set, and drop share plans for
-            // CLIs that (after all skips) receive no snips, so they are neither created nor mutated.
+            var items = new List<MergePlanItem>(candidates.Count);
             var clisToCreate = new List<string>();
             var seenNewClis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var importedCliNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in items)
+            var plannedKeys = new HashSet<(string, string, string)>();
+
+            foreach (var (candidate, cliName) in resolved)
             {
-                if (item.IsDuplicateSkip)
+                var key = DedupeKey(cliName, candidate.Snip.Title, candidate.Snip.CommandTemplate);
+                var isDuplicate = !options.AllowDuplicates
+                    && (existing.Contains(key) || plannedKeys.Contains(key));
+
+                items.Add(new MergePlanItem(candidate, cliName, isDuplicate));
+
+                if (isDuplicate)
                 {
                     continue;
                 }
 
-                _ = importedCliNames.Add(item.TargetCliName);
-                if (!existingCliNames.Contains(item.TargetCliName) && seenNewClis.Add(item.TargetCliName))
+                _ = plannedKeys.Add(key);
+
+                if (!existingCliNames.Contains(cliName) && seenNewClis.Add(cliName))
                 {
-                    clisToCreate.Add(item.TargetCliName);
+                    clisToCreate.Add(cliName);
                 }
             }
 
-            foreach (var cliName in sharePlans.Keys.Where(k => !importedCliNames.Contains(k)).ToList())
-            {
-                _ = sharePlans.Remove(cliName);
-            }
+            // Promote shared parameters only over the snips that will actually be imported.
+            var sharePlans = options.ShareParameters
+                ? BuildSharePlans(target, items)
+                : new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
 
             return new MergePlan(items, clisToCreate, sharePlans);
         }
@@ -123,54 +120,6 @@ namespace Snipdeck.Importer.Merge
             }
 
             return plans;
-        }
-
-        private static List<MergePlanItem> RededupeAfterRenames(
-            List<MergePlanItem> items,
-            IReadOnlyDictionary<string, CliSharePlan> sharePlans,
-            HashSet<(string, string, string)> existingKeys)
-        {
-            var renamesBySnip = sharePlans.Values
-                .SelectMany(p => p.SnipEdits)
-                .Where(e => e.TokenRenames.Count > 0)
-                .ToDictionary(e => e.Snip, e => e.TokenRenames);
-            if (renamesBySnip.Count == 0)
-            {
-                return items;
-            }
-
-            var seen = new HashSet<(string, string, string)>(existingKeys);
-            var result = new List<MergePlanItem>(items.Count);
-            foreach (var item in items)
-            {
-                if (item.IsDuplicateSkip)
-                {
-                    result.Add(item);
-                    continue;
-                }
-
-                var template = item.Candidate.Snip.CommandTemplate;
-                if (renamesBySnip.TryGetValue(item.Candidate.Snip, out var renames))
-                {
-                    foreach (var (oldName, newName) in renames)
-                    {
-                        template = template.Replace("{" + oldName + "}", "{" + newName + "}", StringComparison.Ordinal);
-                    }
-                }
-
-                var key = DedupeKey(item.TargetCliName, item.Candidate.Snip.Title, template);
-                if (seen.Contains(key))
-                {
-                    result.Add(item with { IsDuplicateSkip = true });
-                }
-                else
-                {
-                    _ = seen.Add(key);
-                    result.Add(item);
-                }
-            }
-
-            return result;
         }
 
         public static void Apply(SnipStoreDocument target, MergePlan plan)
