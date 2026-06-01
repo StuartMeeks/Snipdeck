@@ -119,6 +119,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (non-trashed) snips can't be deleted until those snips are removed. The CLI's
   icon asset and any leftover trashed snips are cleaned up with it.
 
+### Fixed
+- **Typing into a Text parameter in the copy flyout.** A Text parameter's box
+  cleared itself on every keystroke (and Copy never enabled), because the
+  hidden Choice dropdown in the same row stayed two-way bound to the value and
+  coerced it to null. Each parameter row now realises only the control its type
+  needs, so typed values stick, the preview resolves, and Copy enables.
+
 ## [0.1.0-alpha.1] - 2026-05-30
 
 First packaged release. Cuts an alpha to exercise the release pipeline

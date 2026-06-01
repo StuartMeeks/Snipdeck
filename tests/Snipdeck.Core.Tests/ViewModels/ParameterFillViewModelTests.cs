@@ -82,6 +82,28 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public void A_windows_path_value_with_quotes_and_spaces_resolves_and_enables_copy()
+        {
+            // Guards the VM/engine side of the copy-flyout text-input fix: a value containing
+            // quotes, backslashes, spaces and a hyphen must substitute literally, resolve the
+            // command and enable copy. (The bug it accompanies was a XAML dual-binding that
+            // reset the value; the engine itself handles such values fine.)
+            var snip = new Snip
+            {
+                CommandTemplate = "snipdeck-importer snipcommand {path} --write",
+                Parameters = [new Parameter { Name = "path", Type = ParameterType.Text }],
+            };
+            var vm = new ParameterFillViewModel(snip, snip.Parameters);
+            Assert.False(vm.IsCopyEnabled);
+
+            const string value = "\"C:\\Users\\stuar\\OneDrive - SoftwareOne\\Files\\Storage\\SnipCommand\\snipcommand.db\"";
+            vm.Inputs[0].Value = value;
+
+            Assert.True(vm.IsCopyEnabled);
+            Assert.Equal($"snipdeck-importer snipcommand {value} --write", vm.Preview);
+        }
+
+        [Fact]
         public void Multiple_inputs_resolve_independently()
         {
             var snip = new Snip
