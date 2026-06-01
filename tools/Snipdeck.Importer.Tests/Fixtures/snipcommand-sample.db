@@ -1,0 +1,51 @@
+{
+  "commands": [
+    {
+      "title": "Get latest mpt cli",
+      "command": "pip install --index-url https://example/simple/ mpt-cli==1.0.0",
+      "tags": "billing,adobe",
+      "description": "",
+      "isFavourite": false,
+      "isTrash": false,
+      "id": "Yyv0hhIcz"
+    },
+    {
+      "title": "Delete marketplace orders",
+      "tags": "mpt,orders",
+      "command": "mpt-app orders delete \"D:\\Working\\repairs\\ordersToDelete.txt\"",
+      "description": "",
+      "isFavourite": true,
+      "isTrash": false,
+      "id": "GlBRiwFzR",
+      "usageCount": 4,
+      "lastUsedAt": "2025-09-12T10:15:30Z"
+    },
+    {
+      "title": "Export subscriptions",
+      "command": "mpt-app adobe subscriptions export [sc_choice name=\"authId\" value=\"auth-adobe-ca-01,auth-adobe-de-01,auth-adobe-uk-01\" /]",
+      "tags": "adobe,subscriptions,export",
+      "description": "Exports subscriptions for an authorisation.",
+      "isFavourite": false,
+      "isTrash": false,
+      "id": "abc123"
+    },
+    {
+      "title": "Request 3YC",
+      "command": "mpt-app adobe agreements request-3yc [sc_variable name=\"Agreement ID\" value=\"\" /] [sc_choice name=\"authId\" value=\"auth-adobe-ca-01,auth-adobe-de-01\" /]",
+      "tags": "adobe,3yc",
+      "description": "",
+      "isFavourite": false,
+      "isTrash": false,
+      "id": "def456"
+    },
+    {
+      "title": "An old trashed snip",
+      "command": "mpt-app deprecated thing",
+      "tags": "",
+      "description": "",
+      "isFavourite": false,
+      "isTrash": true,
+      "id": "trash01"
+    }
+  ]
+}

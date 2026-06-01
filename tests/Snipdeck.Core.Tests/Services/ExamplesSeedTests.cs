@@ -20,23 +20,28 @@ namespace Snipdeck.Core.Tests.Services
         }
 
         [Fact]
-        public void Build_produces_a_single_cli_named_Examples()
+        public void Build_produces_the_examples_and_importer_clis()
         {
             var doc = ExamplesSeed.Build();
 
-            var cli = Assert.Single(doc.Clis);
-            Assert.Equal(ExamplesSeed.CliName, cli.Name);
-            Assert.NotEqual(Guid.Empty, cli.Id);
+            Assert.Equal(2, doc.Clis.Count);
+            Assert.Contains(doc.Clis, c => c.Name == ExamplesSeed.CliName);
+            Assert.Contains(doc.Clis, c => c.Name == ExamplesSeed.ImporterCliName);
+            Assert.All(doc.Clis, c => Assert.NotEqual(Guid.Empty, c.Id));
+            Assert.Equal(doc.Clis.Count, doc.Clis.Select(c => c.Id).Distinct().Count());
         }
 
         [Fact]
-        public void Build_produces_multiple_snips_all_belonging_to_the_examples_cli()
+        public void Build_produces_snips_that_each_belong_to_a_seeded_cli()
         {
             var doc = ExamplesSeed.Build();
-            var cliId = doc.Clis.Single().Id;
+            var cliIds = doc.Clis.Select(c => c.Id).ToHashSet();
 
             Assert.NotEmpty(doc.Snips);
-            Assert.All(doc.Snips, snip => Assert.Equal(cliId, snip.CliId));
+            Assert.All(doc.Snips, snip => Assert.Contains(snip.CliId, cliIds));
+
+            // Both seeded CLIs carry at least one snip.
+            Assert.All(doc.Clis, cli => Assert.Contains(doc.Snips, s => s.CliId == cli.Id));
         }
 
         [Fact]

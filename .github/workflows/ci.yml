@@ -51,6 +51,41 @@ jobs:
           name: core-test-results
           path: TestResults/
 
+  importer-tests:
+    name: Importer build + tests (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/*.csproj
+
+      - name: Restore importer projects
+        run: |
+          dotnet restore tools/Snipdeck.Importer/Snipdeck.Importer.csproj
+          dotnet restore tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj
+
+      - name: Build importer
+        run: dotnet build tools/Snipdeck.Importer/Snipdeck.Importer.csproj --configuration Release --no-restore
+
+      - name: Build + run importer tests
+        run: dotnet test tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj --configuration Release --no-restore --logger "trx;LogFileName=importer-tests.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: importer-test-results
+          path: TestResults/
+
   app-build:
     name: App build (windows)
     runs-on: windows-latest

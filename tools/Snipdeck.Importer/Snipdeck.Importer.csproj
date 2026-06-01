@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Snipdeck.Importer</RootNamespace>
+
+    <!-- Distributed independently of the desktop app as a global .NET tool. -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>snipdeck-importer</ToolCommandName>
+    <PackageId>Snipdeck.Importer</PackageId>
+    <Description>Imports command snippets from SnipCommand (and other sources) into a Snipdeck store.</Description>
+
+    <!--
+      An executable, not a documented library:
+        CS1591 — no need for XML doc comments on every public type.
+        CA1305 — console output is not locale-sensitive; interpolated paths/counts are fine.
+    -->
+    <NoWarn>$(NoWarn);CS1591;CA1305</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Spectre.Console.Cli" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Snipdeck.Core\Snipdeck.Core.csproj" />
+  </ItemGroup>
+
+</Project>

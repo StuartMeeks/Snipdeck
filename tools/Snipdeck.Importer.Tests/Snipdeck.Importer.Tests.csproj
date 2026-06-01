@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!--
+      Test-only suppressions (mirrors Snipdeck.Core.Tests):
+        CA1707  — underscores in test method names (snake_case is the xUnit idiom).
+        CA1861  — inline arrays in Assert.Equal.
+        IDE0300 — collection expression for `new[] { ... }` in asserts.
+        IDE0058 — discarded return values.
+    -->
+    <NoWarn>$(NoWarn);CA1707;CA1861;IDE0300;IDE0058</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Snipdeck.Importer\Snipdeck.Importer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

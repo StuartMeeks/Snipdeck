@@ -46,15 +46,25 @@ on Windows 10 it falls back to a solid colour.
 
 ```
 src/
-  Snipdeck.Core/        net10.0       — UI-free domain, engine, store, services
-  Snipdeck.App/         net10.0-windows — WinUI 3 head, platform implementations
+  Snipdeck.Core/             net10.0         — UI-free domain, engine, store, services
+  Snipdeck.App/              net10.0-windows — WinUI 3 head, platform implementations
 tests/
-  Snipdeck.Core.Tests/  net10.0       — xUnit coverage for Core
+  Snipdeck.Core.Tests/       net10.0         — xUnit coverage for Core
+tools/
+  Snipdeck.Importer/         net10.0         — snipdeck-importer console tool (SnipCommand import)
+  Snipdeck.Importer.Tests/   net10.0         — xUnit coverage for the importer
 ```
 
 The dependency direction is one-way: `App → Core`. The view models live in Core
 and never touch WinUI types directly — every platform-bound capability is an
 interface defined in Core and implemented in App.
+
+## Importing from SnipCommand
+
+Migrating from SnipCommand? The cross-platform `snipdeck-importer` console tool
+reads a SnipCommand export and merges its snippets into your Snipdeck store,
+grouping them under a CLI per command. It defaults to a dry-run preview; see
+[`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md).
 
 ## Building
 
@@ -75,7 +85,8 @@ dotnet test tests/Snipdeck.Core.Tests
 
 The `Snipdeck.Core` project targets `net10.0` and is fully portable, so
 `dotnet build` / `dotnet test` for Core also work on Linux and macOS. The
-`Snipdeck.App` project is Windows-only.
+`Snipdeck.App` project is Windows-only. The `Snipdeck.Importer` tool also targets
+`net10.0` and builds, tests and runs on any platform.
 
 ## Licence
 

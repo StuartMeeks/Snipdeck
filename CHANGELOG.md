@@ -44,6 +44,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IL2104 on the WinAppSDK/WinRT/Jdenticon assemblies, which aren't trim-safe.
 
 ### Added
+- **`snipdeck-importer` console tool.** A new cross-platform .NET tool
+  (`tools/Snipdeck.Importer`, installable as `snipdeck-importer`) imports command
+  snippets from a SnipCommand export into a Snipdeck store. It auto-suggests each
+  CLI from the command's first token, translates SnipCommand's inline
+  `[sc_choice]` / `[sc_variable]` markup into Snipdeck `{token}` placeholders plus
+  structured parameters, and defaults to a safe dry-run — `--write` backs the
+  store up first, mints fresh identifiers, creates CLIs on demand and skips
+  duplicates (`--allow-duplicates` to override). `--store`, `--cli` and `--into`
+  control the target. See [`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md).
+- **Move a snip to a different CLI.** The snip editor now has a **CLI** selector,
+  so a snip can be re-homed to another CLI (useful after a bulk import lands snips
+  in a fallback CLI).
+- **Discoverable importer in the first-run seed.** A new first-run **`snipdeck-importer`**
+  CLI sits alongside **Examples**, with snips that demonstrate the importer's own
+  commands.
 - **Redesigned Home page.** A gradient hero banner heads the page, the CLI
   launcher uses landscape tiles (232×172) showing each CLI's description, and a
   segmented selector below switches between **Most used**, **Recent** and

@@ -1,37 +1,23 @@
 using Snipdeck.Core.Abstractions;
+using Snipdeck.Core.Services;
 
 namespace Snipdeck.App.Services
 {
     /// <summary>
     /// Resolves Snipdeck's data paths under <c>%LOCALAPPDATA%\Snipdeck</c>.
+    /// The layout lives in <see cref="DefaultPaths"/> (Core) so the cross-platform
+    /// importer tool resolves identical locations; this provider simply delegates.
     /// </summary>
     internal sealed class WindowsPathProvider : IPathProvider
     {
-        private const string _appFolderName = "Snipdeck";
-        private const string _settingsFileName = "settings.json";
-        private const string _storeDirectoryName = "store";
-        private const string _backupsDirectoryName = "backups";
-        private const string _logsDirectoryName = "logs";
+        public string AppDataDirectory => DefaultPaths.AppDataDirectory;
 
-        public WindowsPathProvider()
-        {
-            AppDataDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                _appFolderName);
-            SettingsFilePath = Path.Combine(AppDataDirectory, _settingsFileName);
-            DefaultStorageDirectory = Path.Combine(AppDataDirectory, _storeDirectoryName);
-            DefaultBackupDirectory = Path.Combine(AppDataDirectory, _backupsDirectoryName);
-            LogsDirectory = Path.Combine(AppDataDirectory, _logsDirectoryName);
-        }
+        public string SettingsFilePath => DefaultPaths.SettingsFilePath;
 
-        public string AppDataDirectory { get; }
+        public string DefaultStorageDirectory => DefaultPaths.DefaultStorageDirectory;
 
-        public string SettingsFilePath { get; }
+        public string DefaultBackupDirectory => DefaultPaths.DefaultBackupDirectory;
 
-        public string DefaultStorageDirectory { get; }
-
-        public string DefaultBackupDirectory { get; }
-
-        public string LogsDirectory { get; }
+        public string LogsDirectory => DefaultPaths.LogsDirectory;
     }
 }
