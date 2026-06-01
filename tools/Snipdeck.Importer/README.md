@@ -36,6 +36,7 @@ is JSON — point the importer straight at it.
 | `--cli <name>` | — | Force every imported snip into this CLI, overriding auto-detection. |
 | `--into <name>` | — | Fallback CLI for snips whose CLI could not be confidently auto-detected. |
 | `--allow-duplicates` | off | Import snips even if one with the same title and command already exists. |
+| `--no-share-parameters` | off | Keep every parameter on its snip instead of promoting duplicates to CLI-shared parameters. |
 
 ### Dry-run first
 
@@ -64,6 +65,13 @@ snipdeck-importer snipcommand snipcommand.db --write
   parameter list (Choice with options, or Text), with a sensible default carried
   across. Variable names containing spaces or punctuation are slugified into legal
   token names.
+- **Shares duplicated parameters.** When a parameter recurs across two or more snips in the
+  same CLI, it is promoted to a **CLI-scoped shared parameter** and removed from the
+  individual snips (which then inherit it by token name). Choice parameters match on their
+  option *set* (order-independent) — names need not match, the most common name wins, and
+  snips that used a different name have their template token rewritten to it. Text parameters
+  match by name, and the most common default value wins (including an empty default).
+  Single-use parameters stay on their snip. Pass `--no-share-parameters` to disable.
 - **Carries metadata.** Title, description, tags and favourite flag come across;
   usage counts and last-used timestamps are preserved when present. Trashed entries
   are skipped.

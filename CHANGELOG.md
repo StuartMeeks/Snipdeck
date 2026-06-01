@@ -52,7 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   structured parameters, and defaults to a safe dry-run — `--write` backs the
   store up first, mints fresh identifiers, creates CLIs on demand and skips
   duplicates (`--allow-duplicates` to override). `--store`, `--cli` and `--into`
-  control the target. See [`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md).
+  control the target. It also de-duplicates parameters used by two or more snips in
+  a CLI, promoting them to CLI-scoped shared parameters (Choice params match on their
+  option set regardless of name/order, most common name wins; Text params match by
+  name, most common default wins) — `--no-share-parameters` disables it. See
+  [`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md).
 - **Move a snip to a different CLI.** The snip editor now has a **CLI** selector,
   so a snip can be re-homed to another CLI (useful after a bulk import lands snips
   in a fallback CLI).

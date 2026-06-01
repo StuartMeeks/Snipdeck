@@ -38,7 +38,11 @@ namespace Snipdeck.Importer.Commands
             var store = new JsonSnipStore(targets.StorePath);
             var document = await store.LoadAsync(cancellationToken).ConfigureAwait(false);
 
-            var options = new MergeOptions(settings.Cli, settings.Into, settings.AllowDuplicates);
+            var options = new MergeOptions(
+                settings.Cli,
+                settings.Into,
+                settings.AllowDuplicates,
+                ShareParameters: !settings.NoShareParameters);
             var plan = StoreMerger.Plan(document, candidates, options);
 
             DryRunRenderer.Render(source.DisplayName, targets.StorePath, plan, settings.Write);

@@ -60,6 +60,27 @@ namespace Snipdeck.Importer.Output
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLineInterpolated(
                 $"CLIs to create: {plan.ClisToCreate.Count}    Snips to import: {plan.ImportCount}    Skipped (duplicates): {plan.SkipCount}");
+
+            RenderSharedParameters(plan);
+        }
+
+        private static void RenderSharedParameters(MergePlan plan)
+        {
+            if (plan.SharePlansByCli.Count == 0)
+            {
+                return;
+            }
+
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLineInterpolated(
+                $"Shared parameters (scoped to their CLI): {plan.SharedParameterCount}");
+            foreach (var (cliName, share) in plan.SharePlansByCli
+                .Where(kvp => kvp.Value.SharedToAdd.Count > 0)
+                .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                var names = string.Join(", ", share.SharedToAdd.Select(p => p.Name));
+                AnsiConsole.MarkupLineInterpolated($"  {cliName}: {names}");
+            }
         }
 
         private static string Escape(string value)

@@ -186,6 +186,239 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void ShareParameters_promotes_duplicated_params_to_the_created_cli_and_strips_the_snips()
+        {
+            var doc = new SnipStoreDocument();
+            var a = new Snip
+            {
+                Title = "A",
+                CommandTemplate = "mpt-app a {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" }],
+            };
+            var b = new Snip
+            {
+                Title = "B",
+                CommandTemplate = "mpt-app b {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["y", "x"], Default = "y" }],
+            };
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(
+                doc,
+                [new SnippetCandidate("mpt-app", true, a), new SnippetCandidate("mpt-app", true, b)],
+                options);
+
+            Assert.Equal(1, plan.SharedParameterCount);
+
+            StoreMerger.Apply(doc, plan);
+
+            var cli = Assert.Single(doc.Clis);
+            var shared = Assert.Single(cli.Parameters);
+            Assert.Equal("authId", shared.Name);
+            // Both snips now inherit the shared parameter instead of carrying their own.
+            Assert.All(doc.Snips, s => Assert.Empty(s.Parameters));
+        }
+
+        [Fact]
+        public void Two_imported_snips_that_unify_to_the_same_template_are_deduped()
+        {
+            // {auth} and {authId} (same options, same title) become identical after choice-name
+            // unification; the second must be skipped rather than imported as a duplicate.
+            var doc = new SnipStoreDocument();
+            static Snip Named(string token)
+            {
+                return new Snip
+                {
+                    Title = "Run",
+                    CommandTemplate = $"x run {{{token}}}",
+                    Parameters = [new Parameter { Name = token, Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                };
+            }
+            // Two name "authId" so it wins; one "auth" that unifies to {authId} -> duplicate of them.
+            var c1 = new SnippetCandidate("x", true, Named("authId"));
+            var c2 = new SnippetCandidate("x", true, Named("auth"));
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [c1, c2], options);
+            StoreMerger.Apply(doc, plan);
+
+            // Only one "Run" snip lands (they were the same command once unified).
+            Assert.Single(doc.Snips);
+            Assert.Equal("x run {authId}", doc.Snips[0].CommandTemplate);
+        }
+
+        [Fact]
+        public void Swapped_same_option_choices_are_not_treated_as_duplicates()
+        {
+            // Two distinct choices that happen to share an option set must keep positional identity:
+            // "cp {source} {dest}" and "cp {dest} {source}" are different commands, not duplicates.
+            var doc = new SnipStoreDocument();
+            static Snip Swapped(string a, string b)
+            {
+                return new Snip
+                {
+                    Title = "Copy",
+                    CommandTemplate = $"cp {{{a}}} {{{b}}}",
+                    Parameters =
+                    [
+                        new Parameter { Name = a, Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" },
+                        new Parameter { Name = b, Type = ParameterType.Choice, Options = ["x", "y"], Default = "x" },
+                    ],
+                };
+            }
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(
+                doc,
+                [new SnippetCandidate("cp", true, Swapped("source", "dest")), new SnippetCandidate("cp", true, Swapped("dest", "source"))],
+                options);
+
+            // Both are imported — neither is wrongly collapsed into the other.
+            Assert.Equal(2, plan.ImportCount);
+        }
+
+        [Fact]
+        public void A_skipped_duplicate_does_not_rename_or_drop_a_genuinely_importable_snip()
+        {
+            // Existing store snip uses {authId} (with its choice param).
+            var cli = new Cli { Name = "x" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips =
+                {
+                    new Snip
+                    {
+                        CliId = cli.Id,
+                        Title = "Existing",
+                        CommandTemplate = "x run {authId}",
+                        Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                    },
+                },
+            };
+
+            // A genuinely-new snip uses {auth}; plus a re-import of the existing {authId} snip (a dup).
+            var real = new SnippetCandidate("x", true, new Snip
+            {
+                Title = "Real",
+                CommandTemplate = "x do {auth}",
+                Parameters = [new Parameter { Name = "auth", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+            });
+            var dup = new SnippetCandidate("x", true, new Snip
+            {
+                Title = "Existing",
+                CommandTemplate = "x run {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+            });
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [real, dup], options);
+            StoreMerger.Apply(doc, plan);
+
+            // The re-imported existing snip is skipped; "Real" is imported and NOT renamed to {authId}
+            // (the skipped duplicate must not drive a rename), and stays local (no sharing group of 2).
+            Assert.True(plan.Items.Single(i => ReferenceEquals(i.Candidate, dup)).IsDuplicateSkip);
+            Assert.Equal("x do {auth}", real.Snip.CommandTemplate);
+            Assert.Equal("auth", Assert.Single(real.Snip.Parameters).Name);
+            Assert.Empty(cli.Parameters);
+        }
+
+        [Fact]
+        public void A_duplicate_only_import_does_not_mutate_the_existing_clis_shared_parameters()
+        {
+            var cli = new Cli { Name = "x" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips =
+                {
+                    new Snip { CliId = cli.Id, Title = "A", CommandTemplate = "x a {p}" },
+                    new Snip { CliId = cli.Id, Title = "B", CommandTemplate = "x b {p}" },
+                },
+            };
+
+            // Re-import the same two snips (exact duplicates), each carrying a {p} parameter.
+            static SnippetCandidate Dup(string title, string template)
+            {
+                return new SnippetCandidate("x", true, new Snip
+                {
+                    Title = title,
+                    CommandTemplate = template,
+                    Parameters = [new Parameter { Name = "p", Type = ParameterType.Text, Default = "v" }],
+                });
+            }
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [Dup("A", "x a {p}"), Dup("B", "x b {p}")], options);
+
+            Assert.Equal(0, plan.ImportCount);
+            Assert.Equal(0, plan.SharedParameterCount);
+
+            StoreMerger.Apply(doc, plan);
+
+            // Nothing imported, and the existing CLI gained no shared parameters.
+            Assert.Equal(2, doc.Snips.Count);
+            Assert.Empty(cli.Parameters);
+        }
+
+        [Fact]
+        public void Promotion_does_not_rebind_a_pre_existing_snip_in_the_target_cli()
+        {
+            // The CLI already has a snip that uses a bare {env} token (no local/CLI/global definition).
+            var cli = new Cli { Name = "deploy" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips = { new Snip { CliId = cli.Id, Title = "Existing", CommandTemplate = "deploy --env {env}" } },
+            };
+
+            // Importing two snips that would otherwise promote a shared {env} must NOT add it,
+            // because that would start binding the pre-existing "Existing" snip's {env}.
+            static SnippetCandidate Env(string title)
+            {
+                return new SnippetCandidate("deploy", true, new Snip
+                {
+                    Title = title,
+                    CommandTemplate = $"deploy {title} {{env}}",
+                    Parameters = [new Parameter { Name = "env", Type = ParameterType.Text, Default = "dev" }],
+                });
+            }
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [Env("a"), Env("b")], options);
+            StoreMerger.Apply(doc, plan);
+
+            // No shared {env} added to the CLI; imported snips keep it local.
+            Assert.Empty(cli.Parameters);
+            Assert.Equal(3, doc.Snips.Count);
+            Assert.All(doc.Snips.Where(s => s.Title is "a" or "b"), s => Assert.Single(s.Parameters));
+        }
+
+        [Fact]
+        public void Sharing_is_off_by_default_so_params_stay_local()
+        {
+            var doc = new SnipStoreDocument();
+            var a = TextParamSnip("A", "mpt-app a {id}");
+            var b = TextParamSnip("B", "mpt-app b {id}");
+
+            var plan = StoreMerger.Plan(doc, [a, b], _defaults);
+            StoreMerger.Apply(doc, plan);
+
+            Assert.Empty(Assert.Single(doc.Clis).Parameters);
+            Assert.All(doc.Snips, s => Assert.Single(s.Parameters));
+        }
+
+        private static SnippetCandidate TextParamSnip(string title, string template)
+        {
+            return new SnippetCandidate("mpt-app", true, new Snip
+            {
+                Title = title,
+                CommandTemplate = template,
+                Parameters = [new Parameter { Name = "id", Type = ParameterType.Text, Default = "1" }],
+            });
+        }
+
+        [Fact]
         public void Unconfident_with_no_into_falls_back_to_a_generic_bucket()
         {
             var doc = new SnipStoreDocument();

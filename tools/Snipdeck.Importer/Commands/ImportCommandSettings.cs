@@ -33,5 +33,9 @@ namespace Snipdeck.Importer.Commands
         [CommandOption("--allow-duplicates")]
         [Description("Import snips even if one with the same title and command already exists.")]
         public bool AllowDuplicates { get; init; }
+
+        [CommandOption("--no-share-parameters")]
+        [Description("Keep every parameter on its snip instead of promoting duplicates to CLI-shared parameters.")]
+        public bool NoShareParameters { get; init; }
     }
 }
