@@ -20,6 +20,12 @@ namespace Snipdeck.Core.Tests.Support
 
         public Parameter? NextEditParameterResult { get; set; }
 
+        public string? NextPickGlyphResult { get; set; }
+
+        public string? LastPickGlyphCurrent { get; private set; }
+
+        public int PickGlyphCount { get; private set; }
+
         public string? LastEditParameterTitle { get; private set; }
 
         public Parameter? LastEditParameterExisting { get; private set; }
@@ -81,6 +87,13 @@ namespace Snipdeck.Core.Tests.Support
             LastFilledSnip = snip;
             LastFilledParameters = parameters;
             return Task.FromResult(NextParameterFillResult);
+        }
+
+        public Task<string?> PickGlyphAsync(string? currentGlyph)
+        {
+            LastPickGlyphCurrent = currentGlyph;
+            PickGlyphCount++;
+            return Task.FromResult(NextPickGlyphResult);
         }
     }
 }

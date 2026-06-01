@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Snipdeck.App.Views.GlyphPickerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:Snipdeck.App.Converters"
+    xmlns:models="using:Snipdeck.Core.Models"
+    mc:Ignorable="d"
+    Title="Choose an icon"
+    PrimaryButtonText="Choose"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonClick="OnChooseClicked">
+
+    <ContentDialog.Resources>
+        <converters:BoolToVisibilityConverter x:Key="GlyphBoolToVisibility" />
+    </ContentDialog.Resources>
+
+    <Grid Width="520" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="360" />
+        </Grid.RowDefinitions>
+
+        <TextBox Grid.Row="0"
+                 PlaceholderText="Search by name, keyword or code (e.g. folder, run, E80F)"
+                 Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Grid Grid.Row="1">
+            <GridView x:Name="GlyphGrid"
+                      ItemsSource="{x:Bind ViewModel.Results}"
+                      SelectedItem="{x:Bind ViewModel.SelectedEntry, Mode=TwoWay}"
+                      SelectionMode="Single"
+                      IsItemClickEnabled="False"
+                      DoubleTapped="OnGlyphDoubleTapped"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="models:GlyphCatalogueEntry">
+                        <Grid Width="64" Height="64"
+                              ToolTipService.ToolTip="{x:Bind Name}">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Glyph="{x:Bind Glyph}"
+                                      FontSize="24" />
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <!-- No-results state, overlaid when the search filters everything out. -->
+            <TextBlock Text="No matching icons. Try a different term, or type the glyph directly in the field."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="24"
+                       Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource GlyphBoolToVisibility}}" />
+
+            <!-- Misconfiguration state: the catalogue file is missing or empty. -->
+            <TextBlock Text="The icon catalogue is empty. Add entries to appsettings.json beside the app, or type a glyph directly in the field."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="24"
+                       Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource GlyphBoolToVisibility}}" />
+        </Grid>
+    </Grid>
+</ContentDialog>

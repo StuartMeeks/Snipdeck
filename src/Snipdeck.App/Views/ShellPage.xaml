@@ -564,7 +564,7 @@
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Tags"
                                        Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Give a tag an icon (a Segoe Fluent Icons glyph, e.g. paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default tag icon."
+                            <TextBlock Text="Give a tag an icon. Choose one from the picker, or type a Segoe Fluent Icons glyph directly (paste a character or enter its code). Shown beside the tag in the left navigation; blank uses the default tag icon."
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        TextWrapping="Wrap" />
@@ -600,6 +600,7 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="160" />
                                         </Grid.ColumnDefinitions>
                                         <FontIcon Grid.Column="0"
@@ -611,7 +612,11 @@
                                                    Text="{x:Bind TagName}"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
-                                        <TextBox Grid.Column="2"
+                                        <Button Grid.Column="2"
+                                                Content="Choose…"
+                                                VerticalAlignment="Center"
+                                                Command="{x:Bind ChooseGlyphCommand}" />
+                                        <TextBox Grid.Column="3"
                                                  PlaceholderText="Icon (blank = default)"
                                                  Text="{x:Bind Glyph, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     </Grid>

@@ -241,7 +241,7 @@ namespace Snipdeck.Core.ViewModels
 
         public void OpenTagIcons()
         {
-            CurrentContent = new TagIconsViewModel(SnipFilter.DistinctTagsFor(_document.Snips), _document.TagIcons);
+            CurrentContent = new TagIconsViewModel(SnipFilter.DistinctTagsFor(_document.Snips), _document.TagIcons, _interactions);
         }
 
         [RelayCommand]

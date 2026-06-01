@@ -33,6 +33,13 @@ namespace Snipdeck.Core.Abstractions
         Task<Parameter?> EditParameterAsync(string title, Parameter? existing);
 
         Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters);
+
+        /// <summary>
+        /// Opens the glyph picker so the user can browse and choose an icon.
+        /// Pass <paramref name="currentGlyph"/> to pre-select the glyph in effect.
+        /// Returns the chosen glyph character, or <c>null</c> if the user cancelled.
+        /// </summary>
+        Task<string?> PickGlyphAsync(string? currentGlyph);
     }
 
     public sealed record SnipEditResult(Snip Snip);

@@ -49,6 +49,7 @@ namespace Snipdeck.App
                 .AddSingleton<IHotkeyService, WindowsHotkeyService>()
                 .AddSingleton<ITrayService, HNotifyIconTrayService>()
                 .AddSingleton<IShellInteractions, WindowsShellInteractions>()
+                .AddSingleton<IGlyphCatalogueProvider, GlyphCatalogueProvider>()
                 .AddSingleton<IThemeApplier, WindowsThemeApplier>()
                 .AddSingleton<IUpdateService, WindowsUpdateService>()
                 .AddSingleton<ISettingsStore>(settingsStore)
