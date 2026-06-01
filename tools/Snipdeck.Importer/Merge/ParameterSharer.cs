@@ -143,13 +143,20 @@ namespace Snipdeck.Importer.Merge
                 var options = MostCommonOptions(members);
                 var chosenDefault = MostCommonDefault(members);
 
-                if (existingByName.TryGetValue(winningName, out var existing))
+                // Choice matching is name-independent: if the CLI already shares a choice with the
+                // same option set (under ANY name), this parameter already exists there — don't add a
+                // duplicate. Reuse it only when fully compatible (same name AND default); otherwise,
+                // or if the winning name is already taken by another param, leave the imported snips'
+                // parameters local rather than duplicating or silently changing them.
+                var existingEquivalent = existingCliParameters.FirstOrDefault(p =>
+                    p.Type == ParameterType.Choice && SameOptionSet(p.Options, options));
+
+                if (existingEquivalent is not null || existingByName.ContainsKey(winningName))
                 {
-                    // Reuse only a fully-compatible existing shared parameter (same option set AND
-                    // default); otherwise leave these local so imported snips keep their own default.
-                    if (existing.Type != ParameterType.Choice
-                        || !SameOptionSet(existing.Options, options)
-                        || !string.Equals(existing.Default, chosenDefault, StringComparison.Ordinal))
+                    var compatible = existingEquivalent is not null
+                        && string.Equals(existingEquivalent.Name, winningName, StringComparison.Ordinal)
+                        && string.Equals(existingEquivalent.Default, chosenDefault, StringComparison.Ordinal);
+                    if (!compatible)
                     {
                         continue;
                     }

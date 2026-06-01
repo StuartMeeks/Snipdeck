@@ -126,6 +126,23 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void An_existing_same_option_choice_under_a_different_name_is_not_duplicated()
+        {
+            // CLI already shares a [x,y] choice named "authId"; imported snips use "auth" (same set).
+            var cli = new Cli { Name = "mpt-app", Parameters = [Choice("authId", "x", "x", "y")] };
+            var a = new Snip { Title = "a", CommandTemplate = "a {auth}", Parameters = [Choice("auth", "x", "x", "y")] };
+            var b = new Snip { Title = "b", CommandTemplate = "b {auth}", Parameters = [Choice("auth", "x", "x", "y")] };
+
+            AnalyzeAndApply(cli, a, b);
+
+            // No second [x,y] choice is added to the CLI; imported snips keep their local "auth".
+            Assert.Single(cli.Parameters);
+            Assert.Equal("authId", cli.Parameters[0].Name);
+            Assert.Equal("auth", Assert.Single(a.Parameters).Name);
+            Assert.Equal("auth", Assert.Single(b.Parameters).Name);
+        }
+
+        [Fact]
         public void Existing_text_param_with_a_different_default_is_not_reused()
         {
             // CLI already shares {env} defaulting to "prod"; imported snips default it to "dev".
