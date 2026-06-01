@@ -264,6 +264,44 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void A_duplicate_only_import_does_not_mutate_the_existing_clis_shared_parameters()
+        {
+            var cli = new Cli { Name = "x" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips =
+                {
+                    new Snip { CliId = cli.Id, Title = "A", CommandTemplate = "x a {p}" },
+                    new Snip { CliId = cli.Id, Title = "B", CommandTemplate = "x b {p}" },
+                },
+            };
+
+            // Re-import the same two snips (exact duplicates), each carrying a {p} parameter.
+            static SnippetCandidate Dup(string title, string template)
+            {
+                return new SnippetCandidate("x", true, new Snip
+                {
+                    Title = title,
+                    CommandTemplate = template,
+                    Parameters = [new Parameter { Name = "p", Type = ParameterType.Text, Default = "v" }],
+                });
+            }
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [Dup("A", "x a {p}"), Dup("B", "x b {p}")], options);
+
+            Assert.Equal(0, plan.ImportCount);
+            Assert.Equal(0, plan.SharedParameterCount);
+
+            StoreMerger.Apply(doc, plan);
+
+            // Nothing imported, and the existing CLI gained no shared parameters.
+            Assert.Equal(2, doc.Snips.Count);
+            Assert.Empty(cli.Parameters);
+        }
+
+        [Fact]
         public void Sharing_is_off_by_default_so_params_stay_local()
         {
             var doc = new SnipStoreDocument();
