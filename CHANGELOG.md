@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   remove icons (the picker reflects the change the next time it opens), and your
   edits survive app updates. Delete it to restore the default set.
 
+### Fixed
+- **Window caption buttons invisible in Light theme.** The minimise, maximise and
+  close glyphs were always white, leaving them barely visible against the light
+  title bar. They now take a theme-appropriate colour, update when you switch
+  theme, and follow the OS when the theme is set to System.
+
 ### Changed
 - **Home, navigation and shared-parameters polish.** The Home page leads with a
   full-bleed hero banner (drop `Assets/HomeHero.png` to supply the image), the
