@@ -220,6 +220,50 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void A_snip_that_becomes_a_duplicate_after_a_share_rename_is_skipped()
+        {
+            // Existing store snip already uses the winning token name.
+            var cli = new Cli { Name = "x" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips = { new Snip { CliId = cli.Id, Title = "Dup", CommandTemplate = "x run {authId}" } },
+            };
+
+            // Imported: "Dup" uses {auth}; two others use {authId}, so "authId" wins the choice and
+            // {auth} is rewritten to {authId} — turning "Dup" into a duplicate of the existing snip.
+            static Snip MakeChoice(string token)
+            {
+                return new Snip
+                {
+                    Title = token == "auth" ? "Dup" : token,
+                    CommandTemplate = $"x run {{{token}}}",
+                    Parameters = [new Parameter { Name = token, Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+                };
+            }
+
+            var dup = new SnippetCandidate("x", true, MakeChoice("auth"));
+            var c2 = new SnippetCandidate("x", true, MakeChoice("authId"));
+            var c3 = new SnippetCandidate("x", true, new Snip
+            {
+                Title = "Three",
+                CommandTemplate = "x three {authId}",
+                Parameters = [new Parameter { Name = "authId", Type = ParameterType.Choice, Options = ["a", "b"], Default = "a" }],
+            });
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [dup, c2, c3], options);
+
+            // The renamed "Dup" candidate is recognised as a duplicate and skipped.
+            var dupItem = plan.Items.Single(i => ReferenceEquals(i.Candidate, dup));
+            Assert.True(dupItem.IsDuplicateSkip);
+
+            StoreMerger.Apply(doc, plan);
+            // Only one "Dup"-titled snip remains (the pre-existing one).
+            Assert.Single(doc.Snips, s => s.Title == "Dup");
+        }
+
+        [Fact]
         public void Sharing_is_off_by_default_so_params_stay_local()
         {
             var doc = new SnipStoreDocument();

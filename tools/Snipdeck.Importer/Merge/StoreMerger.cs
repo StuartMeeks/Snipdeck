@@ -39,15 +39,47 @@ namespace Snipdeck.Importer.Merge
                 target.Clis.Select(c => c.Name),
                 StringComparer.OrdinalIgnoreCase);
 
+            // Resolve each candidate's target CLI up front.
+            var resolved = new List<(SnippetCandidate Candidate, string CliName)>(candidates.Count);
+            foreach (var candidate in candidates)
+            {
+                resolved.Add((candidate, ResolveCliName(candidate, options)));
+            }
+
+            // Compute parameter sharing first: it can rewrite a choice token to the winning name,
+            // so the duplicate check must run against the POST-share template — otherwise a rename
+            // could silently turn an imported snip into a duplicate of an existing one.
+            var sharePlans = options.ShareParameters
+                ? BuildSharePlans(target, resolved)
+                : new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
+
+            var renamesBySnip = sharePlans.Values
+                .SelectMany(p => p.SnipEdits)
+                .Where(e => e.TokenRenames.Count > 0)
+                .ToDictionary(e => e.Snip, e => e.TokenRenames);
+
+            string DedupeTemplate(Snip snip)
+            {
+                var template = snip.CommandTemplate;
+                if (renamesBySnip.TryGetValue(snip, out var renames))
+                {
+                    foreach (var (oldName, newName) in renames)
+                    {
+                        template = template.Replace("{" + oldName + "}", "{" + newName + "}", StringComparison.Ordinal);
+                    }
+                }
+
+                return template;
+            }
+
             var items = new List<MergePlanItem>(candidates.Count);
             var clisToCreate = new List<string>();
             var seenNewClis = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var plannedKeys = new HashSet<(string, string, string)>();
 
-            foreach (var candidate in candidates)
+            foreach (var (candidate, cliName) in resolved)
             {
-                var cliName = ResolveCliName(candidate, options);
-                var key = DedupeKey(cliName, candidate.Snip.Title, candidate.Snip.CommandTemplate);
+                var key = DedupeKey(cliName, candidate.Snip.Title, DedupeTemplate(candidate.Snip));
 
                 var isDuplicate = !options.AllowDuplicates
                     && (existing.Contains(key) || plannedKeys.Contains(key));
@@ -67,16 +99,12 @@ namespace Snipdeck.Importer.Merge
                 }
             }
 
-            var sharePlans = options.ShareParameters
-                ? BuildSharePlans(target, items)
-                : new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
-
             return new MergePlan(items, clisToCreate, sharePlans);
         }
 
         private static Dictionary<string, CliSharePlan> BuildSharePlans(
             SnipStoreDocument target,
-            IReadOnlyList<MergePlanItem> items)
+            IReadOnlyList<(SnippetCandidate Candidate, string CliName)> resolved)
         {
             var existingClisByName = new Dictionary<string, Cli>(StringComparer.OrdinalIgnoreCase);
             foreach (var cli in target.Clis)
@@ -85,14 +113,12 @@ namespace Snipdeck.Importer.Merge
             }
 
             var plans = new Dictionary<string, CliSharePlan>(StringComparer.OrdinalIgnoreCase);
-            foreach (var group in items
-                .Where(i => !i.IsDuplicateSkip)
-                .GroupBy(i => i.TargetCliName, StringComparer.OrdinalIgnoreCase))
+            foreach (var group in resolved.GroupBy(r => r.CliName, StringComparer.OrdinalIgnoreCase))
             {
                 var existingParameters = existingClisByName.TryGetValue(group.Key, out var existingCli)
                     ? existingCli.Parameters
                     : (IReadOnlyList<Parameter>)[];
-                var snips = group.Select(i => i.Candidate.Snip).ToList();
+                var snips = group.Select(r => r.Candidate.Snip).ToList();
 
                 var plan = ParameterSharer.Analyze(existingParameters, snips);
                 if (!plan.IsEmpty)
