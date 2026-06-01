@@ -6,6 +6,8 @@ namespace Snipdeck.Core.Abstractions
 
         string SettingsFilePath { get; }
 
+        string IconCatalogueFilePath { get; }
+
         string DefaultStorageDirectory { get; }
 
         string DefaultBackupDirectory { get; }

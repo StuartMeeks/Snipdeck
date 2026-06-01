@@ -8,6 +8,8 @@ namespace Snipdeck.Core.Tests.Support
 
         public string SettingsFilePath { get; init; } = "/data/settings.json";
 
+        public string IconCatalogueFilePath { get; init; } = "/data/icon-catalogue.json";
+
         public string DefaultStorageDirectory { get; init; } = "/data/store";
 
         public string DefaultBackupDirectory { get; init; } = "/data/backups";

@@ -133,7 +133,7 @@ namespace Snipdeck.App.Services
 
         public async Task<string?> PickGlyphAsync(string? currentGlyph)
         {
-            // Re-read the catalogue each open, so edits to appsettings.json take
+            // Re-read the catalogue each open, so edits to icon-catalogue.json take
             // effect without a restart.
             var picker = new GlyphPickerViewModel(_glyphCatalogue.GetEntries(), currentGlyph);
             var dialog = new GlyphPickerDialog(picker)

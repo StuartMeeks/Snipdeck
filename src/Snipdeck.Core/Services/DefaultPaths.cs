@@ -13,6 +13,7 @@ namespace Snipdeck.Core.Services
     {
         public const string AppFolderName = "Snipdeck";
         public const string SettingsFileName = "settings.json";
+        public const string IconCatalogueFileName = "icon-catalogue.json";
         public const string StoreDirectoryName = "store";
         public const string StoreFileName = "store.json";
         public const string BackupsDirectoryName = "backups";
@@ -25,6 +26,13 @@ namespace Snipdeck.Core.Services
 
         /// <summary>The app-config file, stored separately from the snip store.</summary>
         public static string SettingsFilePath { get; } = Path.Combine(AppDataDirectory, SettingsFileName);
+
+        /// <summary>
+        /// The user-editable icon picker catalogue. Lives here (not beside the
+        /// executable) so it survives Velopack updates and is editable per machine;
+        /// seeded from a bundled default on first run.
+        /// </summary>
+        public static string IconCatalogueFilePath { get; } = Path.Combine(AppDataDirectory, IconCatalogueFileName);
 
         /// <summary>The default directory that holds the snip store document.</summary>
         public static string DefaultStorageDirectory { get; } = Path.Combine(AppDataDirectory, StoreDirectoryName);

@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each tag that opens a searchable grid of icons to pick from, so you no longer
   have to know a Segoe Fluent Icons code point. Search filters by name, keyword or
   code point, and the free-text field remains for pasting a glyph directly. The
-  catalogue is a curated set in `appsettings.json` beside the app — edit that file
-  to add or remove icons, and the picker reflects the change the next time it opens.
+  catalogue ships with 100 curated icons and is a plain JSON file
+  (`icon-catalogue.json`) in the Snipdeck app-data folder — edit it to add or
+  remove icons (the picker reflects the change the next time it opens), and your
+  edits survive app updates. Delete it to restore the default set.
 
 ### Changed
 - **Home, navigation and shared-parameters polish.** The Home page leads with a
