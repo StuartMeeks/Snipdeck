@@ -1,5 +1,3 @@
-using Microsoft.UI.Xaml;
-
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
 
@@ -17,17 +15,10 @@ namespace Snipdeck.App.Services
 
         public void Apply(ThemePreference theme)
         {
+            // Route through the window so the content and the system caption
+            // buttons are themed together (see MainWindow.ApplyTheme).
             var mainWindow = (MainWindow?)_services.GetService(typeof(MainWindow));
-            if (mainWindow?.Content is FrameworkElement root)
-            {
-                root.RequestedTheme = theme switch
-                {
-                    ThemePreference.Light => ElementTheme.Light,
-                    ThemePreference.Dark => ElementTheme.Dark,
-                    ThemePreference.System => ElementTheme.Default,
-                    _ => ElementTheme.Default,
-                };
-            }
+            mainWindow?.ApplyTheme(theme);
         }
     }
 }

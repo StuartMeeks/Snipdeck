@@ -35,6 +35,14 @@ namespace Snipdeck.App
             ShellHost.Content = shellPage;
 
             ApplyTheme(config.Theme);
+
+            // While on System theme, the caption buttons must follow an OS
+            // light/dark flip too — RequestedTheme stays Default, so only
+            // ActualTheme changes.
+            if (Content is FrameworkElement themedRoot)
+            {
+                themedRoot.ActualThemeChanged += (sender, _) => UpdateCaptionButtonColours(sender.ActualTheme);
+            }
         }
 
         // The title-bar switcher and snip search bind to the shell view model.
@@ -129,18 +137,61 @@ namespace Snipdeck.App
             }
         }
 
-        private void ApplyTheme(ThemePreference theme)
+        /// <summary>
+        /// Applies the chosen theme to the app content and the system caption
+        /// buttons. Public so the runtime theme applier routes through here,
+        /// keeping the window content and the min/max/close glyphs in step.
+        /// </summary>
+        public void ApplyTheme(ThemePreference theme)
         {
-            if (Content is FrameworkElement root)
+            if (Content is not FrameworkElement root)
             {
-                root.RequestedTheme = theme switch
-                {
-                    ThemePreference.Light => ElementTheme.Light,
-                    ThemePreference.Dark => ElementTheme.Dark,
-                    ThemePreference.System => ElementTheme.Default,
-                    _ => ElementTheme.Default,
-                };
+                return;
             }
+
+            root.RequestedTheme = theme switch
+            {
+                ThemePreference.Light => ElementTheme.Light,
+                ThemePreference.Dark => ElementTheme.Dark,
+                ThemePreference.System => ElementTheme.Default,
+                _ => ElementTheme.Default,
+            };
+
+            // ActualTheme resolves Default to the OS light/dark choice, so the
+            // caption glyphs get a concrete theme to contrast against.
+            UpdateCaptionButtonColours(root.ActualTheme);
+        }
+
+        // The caption buttons are system-drawn chrome, not styled by the app's
+        // theme resources — so without this they keep their default (white)
+        // glyphs and vanish on a light background. Backgrounds stay transparent
+        // so the Mica backdrop shows through; only the glyph colours change.
+        private void UpdateCaptionButtonColours(ElementTheme actualTheme)
+        {
+            var dark = actualTheme == ElementTheme.Dark;
+
+            var foreground = dark
+                ? Microsoft.UI.Colors.White
+                : Windows.UI.Color.FromArgb(0xFF, 0x1A, 0x1A, 0x1A);
+            var inactive = dark
+                ? Windows.UI.Color.FromArgb(0xFF, 0x80, 0x80, 0x80)
+                : Windows.UI.Color.FromArgb(0xFF, 0x8A, 0x8A, 0x8A);
+            var hoverBackground = dark
+                ? Windows.UI.Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)
+                : Windows.UI.Color.FromArgb(0x14, 0x00, 0x00, 0x00);
+            var pressedBackground = dark
+                ? Windows.UI.Color.FromArgb(0x12, 0xFF, 0xFF, 0xFF)
+                : Windows.UI.Color.FromArgb(0x0A, 0x00, 0x00, 0x00);
+
+            var titleBar = AppWindow.TitleBar;
+            titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+            titleBar.ButtonForegroundColor = foreground;
+            titleBar.ButtonHoverForegroundColor = foreground;
+            titleBar.ButtonHoverBackgroundColor = hoverBackground;
+            titleBar.ButtonPressedForegroundColor = foreground;
+            titleBar.ButtonPressedBackgroundColor = pressedBackground;
+            titleBar.ButtonInactiveForegroundColor = inactive;
         }
     }
 }
