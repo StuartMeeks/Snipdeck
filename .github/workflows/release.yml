@@ -17,6 +17,9 @@ env:
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
   PACK_ID: "Snipdeck"
+  # Run JavaScript actions (e.g. actions/upload-artifact@v4) on Node.js 24 ahead of
+  # GitHub forcing it on 2026-06-16, silencing the Node.js 20 deprecation warning.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   PACK_AUTHORS: "Stuart Meeks"
   PACK_TITLE: "Snipdeck"
 
