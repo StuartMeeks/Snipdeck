@@ -362,6 +362,39 @@ namespace Snipdeck.Importer.Tests
         }
 
         [Fact]
+        public void Promotion_does_not_rebind_a_pre_existing_snip_in_the_target_cli()
+        {
+            // The CLI already has a snip that uses a bare {env} token (no local/CLI/global definition).
+            var cli = new Cli { Name = "deploy" };
+            var doc = new SnipStoreDocument
+            {
+                Clis = { cli },
+                Snips = { new Snip { CliId = cli.Id, Title = "Existing", CommandTemplate = "deploy --env {env}" } },
+            };
+
+            // Importing two snips that would otherwise promote a shared {env} must NOT add it,
+            // because that would start binding the pre-existing "Existing" snip's {env}.
+            static SnippetCandidate Env(string title)
+            {
+                return new SnippetCandidate("deploy", true, new Snip
+                {
+                    Title = title,
+                    CommandTemplate = $"deploy {title} {{env}}",
+                    Parameters = [new Parameter { Name = "env", Type = ParameterType.Text, Default = "dev" }],
+                });
+            }
+            var options = _defaults with { ShareParameters = true };
+
+            var plan = StoreMerger.Plan(doc, [Env("a"), Env("b")], options);
+            StoreMerger.Apply(doc, plan);
+
+            // No shared {env} added to the CLI; imported snips keep it local.
+            Assert.Empty(cli.Parameters);
+            Assert.Equal(3, doc.Snips.Count);
+            Assert.All(doc.Snips.Where(s => s.Title is "a" or "b"), s => Assert.Single(s.Parameters));
+        }
+
+        [Fact]
         public void Sharing_is_off_by_default_so_params_stay_local()
         {
             var doc = new SnipStoreDocument();

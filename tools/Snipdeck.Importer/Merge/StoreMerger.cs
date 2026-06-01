@@ -1,3 +1,4 @@
+using Snipdeck.Core.Engine;
 using Snipdeck.Core.Models;
 using Snipdeck.Importer.Sources;
 
@@ -119,12 +120,16 @@ namespace Snipdeck.Importer.Merge
                 .Where(i => !i.IsDuplicateSkip)
                 .GroupBy(i => i.TargetCliName, StringComparer.OrdinalIgnoreCase))
             {
-                var existingParameters = existingClisByName.TryGetValue(group.Key, out var existingCli)
-                    ? existingCli.Parameters
-                    : (IReadOnlyList<Parameter>)[];
+                var existingCli = existingClisByName.GetValueOrDefault(group.Key);
+                var existingParameters = existingCli?.Parameters ?? (IReadOnlyList<Parameter>)[];
                 var snips = group.Select(i => i.Candidate.Snip).ToList();
 
-                var plan = ParameterSharer.Analyze(existingParameters, snips);
+                // Names that pre-existing snips in this CLI resolve from outside their own locals
+                // (a bare token, or an inherited global). Promoting a new CLI parameter with such a
+                // name would silently rebind those unrelated snips, so it is left off-limits.
+                var protectedNames = ProtectedNames(target, existingCli);
+
+                var plan = ParameterSharer.Analyze(existingParameters, snips, protectedNames);
                 if (!plan.IsEmpty)
                 {
                     plans[group.Key] = plan;
@@ -132,6 +137,34 @@ namespace Snipdeck.Importer.Merge
             }
 
             return plans;
+        }
+
+        private static HashSet<string> ProtectedNames(SnipStoreDocument target, Cli? cli)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            if (cli is null)
+            {
+                return names;
+            }
+
+            foreach (var snip in target.Snips)
+            {
+                if (snip.IsTrash || snip.CliId != cli.Id)
+                {
+                    continue;
+                }
+
+                var localNames = snip.Parameters.Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+                foreach (var token in SubstitutionEngine.ExtractTokens(snip.CommandTemplate))
+                {
+                    if (!localNames.Contains(token))
+                    {
+                        _ = names.Add(token);
+                    }
+                }
+            }
+
+            return names;
         }
 
         public static void Apply(SnipStoreDocument target, MergePlan plan)

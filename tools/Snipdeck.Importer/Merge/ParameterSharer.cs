@@ -78,10 +78,17 @@ namespace Snipdeck.Importer.Merge
             }
         }
 
-        public static CliSharePlan Analyze(IReadOnlyList<Parameter> existingCliParameters, IReadOnlyList<Snip> snips)
+        public static CliSharePlan Analyze(
+            IReadOnlyList<Parameter> existingCliParameters,
+            IReadOnlyList<Snip> snips,
+            IReadOnlySet<string>? protectedNames = null)
         {
             ArgumentNullException.ThrowIfNull(existingCliParameters);
             ArgumentNullException.ThrowIfNull(snips);
+
+            // Names a new CLI-scoped parameter must not take, because a pre-existing snip in the CLI
+            // would newly bind to (or have an inherited global overridden by) it.
+            var offLimits = protectedNames ?? new HashSet<string>(StringComparer.Ordinal);
 
             // Record every (snip, parameter) occurrence with a stable order for deterministic ties.
             var occurrences = new List<Occurrence>();
@@ -161,6 +168,11 @@ namespace Snipdeck.Importer.Merge
                         continue;
                     }
                 }
+                else if (offLimits.Contains(winningName))
+                {
+                    // Promoting this name would rebind a pre-existing snip in the CLI; leave local.
+                    continue;
+                }
                 else
                 {
                     sharedToAdd.Add(new Parameter
@@ -224,6 +236,11 @@ namespace Snipdeck.Importer.Merge
                     {
                         continue;
                     }
+                }
+                else if (offLimits.Contains(name))
+                {
+                    // Promoting this name would rebind a pre-existing snip in the CLI; leave local.
+                    continue;
                 }
                 else
                 {
