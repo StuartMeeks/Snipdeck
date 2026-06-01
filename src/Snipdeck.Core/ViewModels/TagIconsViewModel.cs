@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,8 +9,14 @@ using Snipdeck.Core.Abstractions;
 namespace Snipdeck.Core.ViewModels
 {
     /// <summary>One editable row in the "Tags" management view: a tag and its icon glyph.</summary>
-    public sealed partial class TagIconRowViewModel(string tagName, string glyph, IShellInteractions? interactions = null) : ObservableObject
+    public sealed partial class TagIconRowViewModel(
+        string tagName,
+        string glyph,
+        IShellInteractions? interactions = null,
+        GlyphNameLookup? names = null) : ObservableObject
     {
+        private readonly GlyphNameLookup _names = names ?? GlyphNameLookup.Empty;
+
         public string TagName { get; } = tagName;
 
         /// <summary>The raw glyph the user has entered; empty means "use the default".</summary>
@@ -29,7 +36,69 @@ namespace Snipdeck.Core.ViewModels
             }
         }
 
-        partial void OnGlyphChanged(string value) => OnPropertyChanged(nameof(PreviewGlyph));
+        /// <summary>
+        /// The value shown in (and edited through) the icon text box. A glyph that's
+        /// in the catalogue is shown by its friendly name (e.g. "Settings"); an
+        /// unknown glyph character falls back to its hex code point (e.g. "E8EC")
+        /// rather than an unreadable tofu box. Typed codes and other text pass
+        /// through unchanged. The box commits on focus loss, so the friendly form
+        /// only replaces what was typed once editing finishes — never mid-keystroke.
+        /// On the way in, a recognised name is resolved back to its glyph.
+        /// </summary>
+        public string GlyphText
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Glyph))
+                {
+                    return string.Empty;
+                }
+
+                // Prefer the friendly name of whatever the value resolves to (covers
+                // both a stored glyph character and a typed code that maps to one).
+                var resolved = GlyphInput.Resolve(Glyph);
+                if (resolved.Length != 0 && _names.NameFor(resolved) is { } name)
+                {
+                    return name;
+                }
+
+                // A glyph character with no catalogue entry: show its code point.
+                if (IsGlyphCharacter(Glyph, out var codePoint))
+                {
+                    return codePoint.ToString("X4", CultureInfo.InvariantCulture);
+                }
+
+                // Typed code / free text: leave as entered.
+                return Glyph;
+            }
+            set => Glyph = _names.GlyphFor(value ?? string.Empty) ?? value ?? string.Empty;
+        }
+
+        partial void OnGlyphChanged(string value)
+        {
+            OnPropertyChanged(nameof(PreviewGlyph));
+            OnPropertyChanged(nameof(GlyphText));
+        }
+
+        // True when the value is a single literal glyph character (as opposed to a
+        // typed hex code or other text), so the text box can show its code point.
+        private static bool IsGlyphCharacter(string value, out int codePoint)
+        {
+            codePoint = 0;
+            if (value.Length == 1 && value[0] > 0x7F)
+            {
+                codePoint = value[0];
+                return true;
+            }
+
+            if (value.Length == 2 && char.IsHighSurrogate(value[0]) && char.IsLowSurrogate(value[1]))
+            {
+                codePoint = char.ConvertToUtf32(value[0], value[1]);
+                return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Opens the glyph picker and, if the user chooses, stores the picked
@@ -62,7 +131,8 @@ namespace Snipdeck.Core.ViewModels
         public TagIconsViewModel(
             IEnumerable<string> tagNames,
             IReadOnlyDictionary<string, string> tagIcons,
-            IShellInteractions? interactions = null)
+            IShellInteractions? interactions = null,
+            GlyphNameLookup? names = null)
         {
             ArgumentNullException.ThrowIfNull(tagNames);
             ArgumentNullException.ThrowIfNull(tagIcons);
@@ -74,7 +144,7 @@ namespace Snipdeck.Core.ViewModels
                 tagNames
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
-                    .Select(t => new TagIconRowViewModel(t, tagIcons.TryGetValue(t, out var g) ? g : string.Empty, interactions)));
+                    .Select(t => new TagIconRowViewModel(t, tagIcons.TryGetValue(t, out var g) ? g : string.Empty, interactions, names)));
         }
 
         public ObservableCollection<TagIconRowViewModel> Rows { get; }
