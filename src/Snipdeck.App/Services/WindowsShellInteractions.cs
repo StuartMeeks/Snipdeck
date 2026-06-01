@@ -72,7 +72,7 @@ namespace Snipdeck.App.Services
         public async Task<SnipEditResult?> EditSnipAsync(Snip snip, IReadOnlyList<Cli> availableClis)
         {
             ArgumentNullException.ThrowIfNull(snip);
-            var editor = new SnipEditorViewModel(snip);
+            var editor = new SnipEditorViewModel(snip, availableClis);
             var dialog = new SnipEditorDialog(editor)
             {
                 XamlRoot = GetXamlRoot(),

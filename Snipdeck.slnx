@@ -4,4 +4,6 @@
   </Project>
   <Project Path="src/Snipdeck.Core/Snipdeck.Core.csproj" />
   <Project Path="tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj" />
+  <Project Path="tools/Snipdeck.Importer/Snipdeck.Importer.csproj" />
+  <Project Path="tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj" />
 </Solution>

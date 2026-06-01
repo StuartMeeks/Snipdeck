@@ -175,6 +175,42 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task EditSnip_moves_the_snip_to_a_different_cli_when_the_cli_id_changes()
+        {
+            Cli source = null!;
+            Snip snip = null!;
+            var target = new Cli { Name = "other-app" };
+            var (vm, store, _, ix, _) = await BuildAsync(d =>
+            {
+                (source, snip) = SeedOneCliOneSnip(d);
+                d.Clis.Add(target);
+            });
+
+            // The editor returns the snip re-homed to a different CLI.
+            ix.NextSnipEditResult = new SnipEditResult(new Snip
+            {
+                Id = snip.Id,
+                CliId = target.Id,
+                Title = snip.Title,
+                CommandTemplate = snip.CommandTemplate,
+            });
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == source.Id);
+            var card = ((CliViewModel)vm.CurrentContent!).Snips[0];
+
+            await vm.EditSnipCommand.ExecuteAsync(card);
+
+            Assert.Equal(target.Id, store.Document.Snips[0].CliId);
+
+            // The moved snip no longer appears under its old CLI.
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == source.Id);
+            Assert.Empty(((CliViewModel)vm.CurrentContent!).Snips);
+
+            // ...and now appears under the target CLI.
+            vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == target.Id);
+            Assert.Single(((CliViewModel)vm.CurrentContent!).Snips);
+        }
+
+        [Fact]
         public async Task DeleteSnip_marks_as_trash_only_when_confirmed()
         {
             Cli cli = null!;

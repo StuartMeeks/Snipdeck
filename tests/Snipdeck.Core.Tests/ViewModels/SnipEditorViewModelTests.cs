@@ -107,5 +107,43 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.Single(built.Parameters);
             Assert.Equal("x", built.Parameters[0].Name);
         }
+
+        [Fact]
+        public void SelectedCli_initialises_from_the_snips_current_cli()
+        {
+            var examples = new Cli { Name = "Examples" };
+            var other = new Cli { Name = "other" };
+            var snip = new Snip { CliId = other.Id, Title = "t", CommandTemplate = "echo" };
+
+            var vm = new SnipEditorViewModel(snip, [examples, other]);
+
+            Assert.Same(other, vm.SelectedCli);
+        }
+
+        [Fact]
+        public void BuildUpdatedSnip_moves_the_snip_to_the_selected_cli()
+        {
+            var source = new Cli { Name = "source" };
+            var target = new Cli { Name = "target" };
+            var snip = new Snip { CliId = source.Id, Title = "t", CommandTemplate = "echo" };
+            var vm = new SnipEditorViewModel(snip, [source, target])
+            {
+                SelectedCli = target,
+            };
+
+            var built = vm.BuildUpdatedSnip();
+
+            Assert.Equal(target.Id, built.CliId);
+        }
+
+        [Fact]
+        public void BuildUpdatedSnip_keeps_the_original_cli_when_no_clis_are_supplied()
+        {
+            var snip = new Snip { CliId = Guid.NewGuid(), Title = "t", CommandTemplate = "echo" };
+
+            var built = new SnipEditorViewModel(snip).BuildUpdatedSnip();
+
+            Assert.Equal(snip.CliId, built.CliId);
+        }
     }
 }

@@ -26,6 +26,18 @@
             <TextBox Header="Title"
                      Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
+            <!-- The CLI the snip belongs to. Changing it moves the snip to another CLI. -->
+            <ComboBox Header="CLI"
+                      HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Bind ViewModel.AvailableClis}"
+                      SelectedItem="{x:Bind ViewModel.SelectedCli, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Cli">
+                        <TextBlock Text="{x:Bind Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
             <TextBox Text="{x:Bind ViewModel.CommandTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      FontFamily="Cascadia Mono, Consolas, Courier New"
                      AcceptsReturn="True"
