@@ -152,25 +152,6 @@ worth doing carefully, and worth a design conversation before the first PR.
 
 ---
 
-## Importer: more source formats
-
-**Shipped (PR #34).** The `snipdeck-importer` console tool imports from
-**SnipCommand** end-to-end — see `tools/Snipdeck.Importer/`. It auto-suggests a
-CLI per command, translates `[sc_choice]` / `[sc_variable]` markup into
-`{token}` placeholders plus structured parameters, and merges into the store
-(dry-run by default; `--write` backs up, dedupes, and creates CLIs on demand).
-
-**Remaining.** Additional source adapters, each a new subcommand implementing
-`ISnippetSource`:
-
-- **VS Code snippets** (`*.code-snippets`) and **espanso** (`*.yml`) are the
-  obvious next two — each has its own placeholder syntax to translate.
-- Alfred, TextExpander and ad-hoc shell-history dumps are further candidates.
-
-Add these on actual demand, not speculatively.
-
----
-
 ## Icon picker (glyph browser) for tag icons
 
 **Problem.** Tag icons are set by typing a raw glyph — either pasting a Segoe
@@ -202,16 +183,3 @@ management view, and a reusable fit for any future "choose a glyph" need.
 - Where do the glyph **names** come from, and is fuzzy search worth it?
 - Do CLI icons (today: uploaded image, identicon fallback) also gain a
   "pick a glyph instead" option, or stay image-only? Keep the first cut to tags.
-
-
----
-
-## Resizable, size-remembering snip editor
-
-The New/Edit snip editor was widened to fit its content during the UI polish
-pass, but it's still a `ContentDialog` (fixed size). Make it genuinely
-user-resizable and persist the chosen size (to `AppConfig`) so it reopens at
-the same dimensions. `ContentDialog` can't do this natively — the likely route
-is to host the editor in a resizable secondary `Window` (native drag-resize)
-rather than a dialog overlay, which means rethinking how the editor is shown
-and how its result returns through `IShellInteractions`.
