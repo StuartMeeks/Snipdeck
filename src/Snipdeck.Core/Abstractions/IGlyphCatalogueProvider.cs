@@ -4,9 +4,9 @@ namespace Snipdeck.Core.Abstractions
 {
     /// <summary>
     /// Supplies the glyph picker's browsable catalogue. The implementation lives
-    /// in the App project and reads the user-editable appsettings.json, so editing
-    /// that file (adding or removing glyphs) is reflected the next time the picker
-    /// opens — no rebuild required.
+    /// in the App project and reads the user-editable icon-catalogue.json, so
+    /// editing that file (adding or removing glyphs) is reflected the next time
+    /// the picker opens — no rebuild required.
     /// </summary>
     public interface IGlyphCatalogueProvider
     {

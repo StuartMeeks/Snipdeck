@@ -5,7 +5,7 @@ namespace Snipdeck.Core.Models
     /// <summary>
     /// One entry in the glyph picker's browsable catalogue: a Segoe Fluent Icons
     /// glyph, a friendly name, and optional search keywords. The catalogue is a
-    /// curated, user-editable subset (see the App's appsettings.json) — not the
+    /// curated, user-editable subset (see the App's icon-catalogue.json) — not the
     /// full ~1.5k font, which would need heavier virtualisation to stay usable.
     /// </summary>
     /// <param name="Glyph">The resolved glyph character to render (e.g. "").</param>

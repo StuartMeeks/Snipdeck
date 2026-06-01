@@ -14,6 +14,8 @@ namespace Snipdeck.App.Services
 
         public string SettingsFilePath => DefaultPaths.SettingsFilePath;
 
+        public string IconCatalogueFilePath => DefaultPaths.IconCatalogueFilePath;
+
         public string DefaultStorageDirectory => DefaultPaths.DefaultStorageDirectory;
 
         public string DefaultBackupDirectory => DefaultPaths.DefaultBackupDirectory;

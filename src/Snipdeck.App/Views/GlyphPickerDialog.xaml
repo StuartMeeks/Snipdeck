@@ -59,7 +59,7 @@
                        Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource GlyphBoolToVisibility}}" />
 
             <!-- Misconfiguration state: the catalogue file is missing or empty. -->
-            <TextBlock Text="The icon catalogue is empty. Add entries to appsettings.json beside the app, or type a glyph directly in the field."
+            <TextBlock Text="The icon catalogue is empty. Add entries to icon-catalogue.json in the Snipdeck app-data folder, or type a glyph directly in the field."
                        Style="{ThemeResource BodyTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                        TextWrapping="Wrap"
