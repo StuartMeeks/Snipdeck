@@ -18,18 +18,22 @@ namespace Snipdeck.App.Services
         private readonly IServiceProvider _services;
         private readonly IIconNormaliser _iconNormaliser;
         private readonly IFilePickerService _filePicker;
+        private readonly IGlyphCatalogueProvider _glyphCatalogue;
 
         public WindowsShellInteractions(
             IServiceProvider services,
             IIconNormaliser iconNormaliser,
-            IFilePickerService filePicker)
+            IFilePickerService filePicker,
+            IGlyphCatalogueProvider glyphCatalogue)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(iconNormaliser);
             ArgumentNullException.ThrowIfNull(filePicker);
+            ArgumentNullException.ThrowIfNull(glyphCatalogue);
             _services = services;
             _iconNormaliser = iconNormaliser;
             _filePicker = filePicker;
+            _glyphCatalogue = glyphCatalogue;
         }
 
         public async Task<bool> ConfirmAsync(string title, string message, string confirmButtonText = "Yes", string cancelButtonText = "Cancel", bool destructive = false)
@@ -125,6 +129,22 @@ namespace Snipdeck.App.Services
             return result == ContentDialogResult.Primary && fill.IsCopyEnabled
                 ? new ParameterFillResult(fill.ResolvedCommand)
                 : null;
+        }
+
+        public async Task<string?> PickGlyphAsync(string? currentGlyph)
+        {
+            // Re-read the catalogue each open, so edits to appsettings.json take
+            // effect without a restart.
+            var picker = new GlyphPickerViewModel(_glyphCatalogue.GetEntries(), currentGlyph);
+            var dialog = new GlyphPickerDialog(picker)
+            {
+                XamlRoot = GetXamlRoot(),
+                RequestedTheme = CurrentTheme(),
+            };
+            _ = await dialog.ShowAsync();
+            // The dialog records the chosen glyph itself (Choose button or
+            // double-tap); a cancel leaves it null.
+            return dialog.ChosenGlyph;
         }
 
         private XamlRoot GetXamlRoot()

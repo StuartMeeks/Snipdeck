@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Icon picker for tag icons.** The Tags view now has a **Choose…** button beside
+  each tag that opens a searchable grid of icons to pick from, so you no longer
+  have to know a Segoe Fluent Icons code point. Search filters by name, keyword or
+  code point, and the free-text field remains for pasting a glyph directly. The
+  catalogue is a curated set in `appsettings.json` beside the app — edit that file
+  to add or remove icons, and the picker reflects the change the next time it opens.
+
 ### Changed
 - **Home, navigation and shared-parameters polish.** The Home page leads with a
   full-bleed hero banner (drop `Assets/HomeHero.png` to supply the image), the

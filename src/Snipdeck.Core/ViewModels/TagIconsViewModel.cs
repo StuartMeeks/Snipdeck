@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+using Snipdeck.Core.Abstractions;
 
 namespace Snipdeck.Core.ViewModels
 {
     /// <summary>One editable row in the "Tags" management view: a tag and its icon glyph.</summary>
-    public sealed partial class TagIconRowViewModel(string tagName, string glyph) : ObservableObject
+    public sealed partial class TagIconRowViewModel(string tagName, string glyph, IShellInteractions? interactions = null) : ObservableObject
     {
         public string TagName { get; } = tagName;
 
@@ -27,6 +30,26 @@ namespace Snipdeck.Core.ViewModels
         }
 
         partial void OnGlyphChanged(string value) => OnPropertyChanged(nameof(PreviewGlyph));
+
+        /// <summary>
+        /// Opens the glyph picker and, if the user chooses, stores the picked
+        /// glyph. Picking persists the resolved character directly, so it reads
+        /// back identically through <see cref="GlyphInput.Resolve"/>.
+        /// </summary>
+        [RelayCommand]
+        private async Task ChooseGlyphAsync()
+        {
+            if (interactions is null)
+            {
+                return;
+            }
+
+            var picked = await interactions.PickGlyphAsync(Glyph).ConfigureAwait(true);
+            if (picked is not null)
+            {
+                Glyph = picked;
+            }
+        }
     }
 
     /// <summary>
@@ -36,7 +59,10 @@ namespace Snipdeck.Core.ViewModels
     /// </summary>
     public sealed partial class TagIconsViewModel : ObservableObject
     {
-        public TagIconsViewModel(IEnumerable<string> tagNames, IReadOnlyDictionary<string, string> tagIcons)
+        public TagIconsViewModel(
+            IEnumerable<string> tagNames,
+            IReadOnlyDictionary<string, string> tagIcons,
+            IShellInteractions? interactions = null)
         {
             ArgumentNullException.ThrowIfNull(tagNames);
             ArgumentNullException.ThrowIfNull(tagIcons);
@@ -48,7 +74,7 @@ namespace Snipdeck.Core.ViewModels
                 tagNames
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
-                    .Select(t => new TagIconRowViewModel(t, tagIcons.TryGetValue(t, out var g) ? g : string.Empty)));
+                    .Select(t => new TagIconRowViewModel(t, tagIcons.TryGetValue(t, out var g) ? g : string.Empty, interactions)));
         }
 
         public ObservableCollection<TagIconRowViewModel> Rows { get; }

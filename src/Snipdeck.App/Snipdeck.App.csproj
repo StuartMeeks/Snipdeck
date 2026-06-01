@@ -28,6 +28,12 @@
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
+	<!-- The glyph picker's curated catalogue. Shipped beside the executable and
+	     user-editable: the picker re-reads it on open, so edits need no rebuild. -->
+	<ItemGroup>
+		<Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<!-- Theme hero images are optional: packaged only once the user drops them in. -->
 	<ItemGroup Condition="Exists('Assets\HomeHeroLight.png')">
 		<Content Include="Assets\HomeHeroLight.png" CopyToOutputDirectory="PreserveNewest" />

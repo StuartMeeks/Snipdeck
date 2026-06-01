@@ -1,3 +1,4 @@
+using Snipdeck.Core.Tests.Support;
 using Snipdeck.Core.ViewModels;
 
 namespace Snipdeck.Core.Tests.ViewModels
@@ -40,6 +41,39 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             Assert.Equal(["a"], map.Keys);
             Assert.Equal("X", map["a"]);
+        }
+
+        [Fact]
+        public async Task ChooseGlyph_stores_the_picked_glyph()
+        {
+            var interactions = new FakeShellInteractions { NextPickGlyphResult = "Y" };
+            var row = new TagIconRowViewModel("ops", "X", interactions);
+
+            await row.ChooseGlyphCommand.ExecuteAsync(null);
+
+            Assert.Equal("Y", row.Glyph);
+            Assert.Equal("X", interactions.LastPickGlyphCurrent); // passes the current glyph for preselection
+        }
+
+        [Fact]
+        public async Task ChooseGlyph_leaves_the_glyph_unchanged_when_cancelled()
+        {
+            var interactions = new FakeShellInteractions { NextPickGlyphResult = null };
+            var row = new TagIconRowViewModel("ops", "X", interactions);
+
+            await row.ChooseGlyphCommand.ExecuteAsync(null);
+
+            Assert.Equal("X", row.Glyph);
+        }
+
+        [Fact]
+        public async Task ChooseGlyph_is_a_no_op_without_interactions()
+        {
+            var row = new TagIconRowViewModel("ops", "X");
+
+            await row.ChooseGlyphCommand.ExecuteAsync(null);
+
+            Assert.Equal("X", row.Glyph);
         }
     }
 }
