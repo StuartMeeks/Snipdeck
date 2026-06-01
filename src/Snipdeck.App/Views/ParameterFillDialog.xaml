@@ -34,12 +34,20 @@
                     <StackPanel Spacing="4">
                         <TextBlock Text="{x:Bind Name}"
                                    Style="{ThemeResource CaptionTextBlockStyle}" />
-                        <TextBox Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 Visibility="{x:Bind IsText, Converter={StaticResource BoolToVisibility}}" />
-                        <ComboBox ItemsSource="{x:Bind Options}"
+                        <!-- A parameter is either Text or Choice, fixed for the life of the row.
+                             Realise only the relevant control via x:Load: a collapsed-but-loaded
+                             ComboBox stays TwoWay-bound to the same Value and coerces it to null
+                             (its Options never contain a typed value), which clears the TextBox and
+                             leaves the command unresolved. x:Load keeps the unused control unrealised
+                             so its binding never fires. -->
+                        <TextBox x:Name="TextValueBox"
+                                 x:Load="{x:Bind IsText}"
+                                 Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <ComboBox x:Name="ChoiceValueBox"
+                                  x:Load="{x:Bind IsChoice}"
+                                  ItemsSource="{x:Bind Options}"
                                   SelectedItem="{x:Bind Value, Mode=TwoWay}"
-                                  HorizontalAlignment="Stretch"
-                                  Visibility="{x:Bind IsChoice, Converter={StaticResource BoolToVisibility}}" />
+                                  HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
