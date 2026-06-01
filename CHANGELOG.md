@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   close glyphs were always white, leaving them barely visible against the light
   title bar. They now take a theme-appropriate colour, update when you switch
   theme, and follow the OS when the theme is set to System.
+- **Tags view polish.** The icon text box now shows a chosen icon by its friendly
+  name (e.g. Settings) — or its hex code when the glyph isn't in the catalogue —
+  instead of an unreadable box, and accepts a name as well as a code. The tag
+  cards now match the Shared parameters, Trash and Settings cards (consistent card
+  background and border), rather than a borderless grey fill.
 
 ### Changed
 - **Home, navigation and shared-parameters polish.** The Home page leads with a
