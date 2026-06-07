@@ -75,7 +75,7 @@
                         <StackPanel VerticalAlignment="Top" Margin="36,32,36,0" Spacing="4">
                             <TextBlock Text="Next Iteration"
                                        FontSize="18"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                             <TextBlock Text="Snipdeck"
                                        Style="{ThemeResource TitleLargeTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
