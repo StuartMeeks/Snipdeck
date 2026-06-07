@@ -39,6 +39,10 @@
                         ToolTipService.ToolTip="Toggle navigation">
                     <FontIcon Glyph="&#xE700;" FontSize="16" />
                 </Button>
+                <Image Source="ms-appx:///Assets/TitleBarGlyph.png"
+                       Height="16"
+                       VerticalAlignment="Center"
+                       Margin="4,0,0,0" />
                 <TextBlock x:Name="AppTitleTextBlock"
                            Text="Snipdeck"
                            Style="{StaticResource CaptionTextBlockStyle}"

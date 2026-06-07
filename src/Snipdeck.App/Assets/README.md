@@ -4,8 +4,13 @@
 
 `Snipdeck.ico` is the multi-size app icon (16/20/24/32/48/64/128/256, the 256
 entry PNG-compressed), rendered from `designs/snipdeck-icon.svg`. It is embedded
-in the exe (`<ApplicationIcon>`), set on the window (`AppWindow.SetIcon`), used
-by the tray icon and passed to `vpk pack --icon` for the installer.
+in the exe (`<ApplicationIcon>`), set on the window (`AppWindow.SetIcon` +
+`SetTaskbarIcon`), used by the tray icon and passed to `vpk pack --icon` for
+the installer.
+
+`TitleBarGlyph.png` is the same glyph at natural aspect, 64 px tall, shown at
+16 logical px in the custom title bar (`rsvg-convert -h 64
+designs/snipdeck-icon.svg -o TitleBarGlyph.png`).
 
 To regenerate after the SVG changes (the glyph is 430×507, so each render is
 height-fitted and centred on a square page):

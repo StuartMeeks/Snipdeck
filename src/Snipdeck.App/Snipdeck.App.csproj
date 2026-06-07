@@ -45,6 +45,7 @@
 
 	<ItemGroup>
 		<Content Include="Assets\Snipdeck.ico" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\TitleBarGlyph.png" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<!-- Theme hero images are optional: packaged only once the user drops them in. -->
