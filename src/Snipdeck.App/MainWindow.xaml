@@ -40,21 +40,21 @@
                         ToolTipService.ToolTip="Toggle navigation">
                     <FontIcon Glyph="&#xE700;" FontSize="16" />
                 </Button>
-                <!-- Both carry a small upward optical nudge: the glyph's drop
+                <!-- Both carry a 1px upward optical nudge: the glyph's drop
                      shadow and the font's above-cap diacritic space put their
                      visible mass below the layout centre, so dead-centre boxes
-                     read a couple of pixels low. -->
+                     read slightly low. -->
                 <Image Source="ms-appx:///Assets/TitleBarGlyph.png"
                        Height="16"
                        VerticalAlignment="Center"
                        Margin="4,0,0,0"
-                       Translation="0,-2,0" />
+                       Translation="0,-1,0" />
                 <TextBlock x:Name="AppTitleTextBlock"
                            Text="Snipdeck"
                            Style="{StaticResource CaptionTextBlockStyle}"
                            VerticalAlignment="Center"
                            Margin="4,0,0,0"
-                           Translation="0,-2,0" />
+                           Translation="0,-1,0" />
             </StackPanel>
 
             <!-- Search and switcher, centred as a group in the bar. The bar is the
