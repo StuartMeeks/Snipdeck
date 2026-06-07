@@ -22,6 +22,10 @@
 		<!-- CsWinRT generators emit unsafe code when generic interface types
 		     (IServiceProvider, ServiceProvider) cross the WinRT ABI. -->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- Multi-size app icon, rendered from designs/snipdeck-icon.svg.
+		     Embedded in the exe (taskbar, Start menu, Explorer) and also
+		     copied to output below so the title bar and tray can load it. -->
+		<ApplicationIcon>Assets\Snipdeck.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -37,6 +41,10 @@
 		<EmbeddedResource Include="Assets\icon-catalogue.json">
 			<LogicalName>Snipdeck.App.icon-catalogue.json</LogicalName>
 		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Assets\Snipdeck.ico" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<!-- Theme hero images are optional: packaged only once the user drops them in. -->

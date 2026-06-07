@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="designs/snipdeck-tile.svg" alt="Snipdeck" width="160">
+</p>
+
 # Snipdeck
 
 A native Windows desktop app for managing parameterised CLI command snippets

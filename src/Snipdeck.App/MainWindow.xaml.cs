@@ -25,6 +25,10 @@ namespace Snipdeck.App
 
             InitializeComponent();
 
+            // Window icon (Alt-Tab, taskbar). The exe resource icon covers
+            // shortcuts; AppWindow needs the file set explicitly.
+            AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Snipdeck.ico"));
+
             ExtendsContentIntoTitleBar = true;
             // The whole bar is the drag region. WinUI does NOT auto-exclude interactive
             // children, so the centred search/switcher group is registered as a

@@ -103,6 +103,7 @@ jobs:
             --mainExe Snipdeck.App.exe `
             --packTitle "${{ env.PACK_TITLE }}" `
             --packAuthors "${{ env.PACK_AUTHORS }}" `
+            --icon src/Snipdeck.App/Assets/Snipdeck.ico `
             --channel $channel `
             --outputDir Releases
 
