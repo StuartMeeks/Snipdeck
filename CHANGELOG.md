@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-07
+
 ### Added
 - **Snipdeck branding.** The app now ships with its own icon — a faceted green
   chevron — replacing the default .NET exe icon, the generated identicon in the

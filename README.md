@@ -12,13 +12,13 @@ Conceptually inspired by SnipCommand, with one defining difference: **the CLI is
 the top-level organising axis** — every Snip belongs to exactly one CLI (e.g.
 `pl-app`, `mpt-app`, `inv-app`).
 
-> Snipdeck is alpha software. The list below describes what's actually
+> Snipdeck is pre-1.0 software. The list below describes what's actually
 > implemented today, not what's planned. See [`TODO.md`](TODO.md) for the
 > backlog and [`CHANGELOG.md`](CHANGELOG.md) for what's shipped.
 
 ## Status
 
-Alpha. **v0.1.0-alpha.1** is the first packaged release — see
+Pre-1.0. **v0.2.0** is the latest release — see
 [Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains
 the full v1 feature set: browse CLIs and Snips, author Snips with structured
 parameters, fill and copy resolved commands, global hotkey, system tray with
@@ -26,7 +26,7 @@ close-to-tray, theme switching, and Velopack-backed self-update.
 
 ## Install
 
-Download `Snipdeck-alpha-Setup.exe` from the latest
+Download `Snipdeck-stable-Setup.exe` from the latest
 [release](https://github.com/StuartMeeks/Snipdeck/releases) and run it.
 The installer is unpackaged (no Microsoft Store, no MSIX) and Velopack
 handles self-update from then on.
