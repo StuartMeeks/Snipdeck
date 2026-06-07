@@ -34,6 +34,11 @@ namespace Snipdeck.App
             AppWindow.SetTaskbarIcon(appIconPath);
 
             ExtendsContentIntoTitleBar = true;
+            // The custom bar is 48px with its content centred on y=24; the
+            // system caption buttons default to Standard (32px, hugging the
+            // top), which makes the whole row read as misaligned. Tall makes
+            // them 48px so their glyphs share the same midline.
+            AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
             // The whole bar is the drag region. WinUI does NOT auto-exclude interactive
             // children, so the centred search/switcher group is registered as a
             // passthrough region instead (recomputed when the bar or group resizes).

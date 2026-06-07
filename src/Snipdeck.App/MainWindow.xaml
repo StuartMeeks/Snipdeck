@@ -36,6 +36,7 @@
                         BorderThickness="0"
                         Width="40"
                         Height="40"
+                        VerticalAlignment="Center"
                         ToolTipService.ToolTip="Toggle navigation">
                     <FontIcon Glyph="&#xE700;" FontSize="16" />
                 </Button>

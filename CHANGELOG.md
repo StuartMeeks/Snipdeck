@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The "Next Iteration" eyebrow on the Home hero now uses the primary text
   colour (white in Dark theme) instead of the muted secondary grey.
 
+### Fixed
+- Title-bar contents (hamburger, app icon and name, search box, CLI switcher)
+  and the system caption buttons now share one vertical midline — the caption
+  buttons previously hugged the top of the bar.
+
 ## [0.1.0] - 2026-06-01
 
 ### Added
