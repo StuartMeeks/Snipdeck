@@ -1,5 +1,31 @@
 # Assets
 
+## App icon
+
+`Snipdeck.ico` is the multi-size app icon (16/20/24/32/48/64/128/256, the 256
+entry PNG-compressed), rendered from `designs/snipdeck-icon.svg`. It is embedded
+in the exe (`<ApplicationIcon>`), set on the window (`AppWindow.SetIcon` +
+`SetTaskbarIcon`), used by the tray icon and passed to `vpk pack --icon` for
+the installer.
+
+`TitleBarGlyph.png` is the same glyph at natural aspect, 64 px tall, shown at
+16 logical px in the custom title bar (`rsvg-convert -h 64
+designs/snipdeck-icon.svg -o TitleBarGlyph.png`).
+
+To regenerate after the SVG changes (the glyph is 430×507, so each render is
+height-fitted and centred on a square page):
+
+```sh
+for s in 16 20 24 32 48 64 128 256; do
+  left=$(awk "BEGIN{printf \"%.2f\", ($s-430/507*$s)/2}")
+  rsvg-convert -h $s --page-width $s --page-height $s --left $left --top 0 \
+    designs/snipdeck-icon.svg -o glyph-$s.png
+done
+icotool -c -o src/Snipdeck.App/Assets/Snipdeck.ico \
+  glyph-16.png glyph-20.png glyph-24.png glyph-32.png glyph-48.png \
+  glyph-64.png glyph-128.png -r glyph-256.png
+```
+
 ## Home hero images (theme-specific)
 
 The Home page hero banner uses a theme-specific image:

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Snipdeck branding.** The app now ships with its own icon — a faceted green
+  chevron — replacing the default .NET exe icon, the generated identicon in the
+  system tray, and the blank window icon. The icon appears on the executable,
+  taskbar, Start menu, Alt-Tab, window title bar (beside the app name), system
+  tray and the Velopack installer. The README carries the new tile logo, and the
+  source SVGs live in `designs/`.
+
+### Changed
+- The "Next Iteration" eyebrow on the Home hero now uses the primary text
+  colour (white in Dark theme) instead of the muted secondary grey.
+
 ## [0.1.0] - 2026-06-01
 
 ### Added
