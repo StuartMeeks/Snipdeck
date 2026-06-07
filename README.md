@@ -8,9 +8,10 @@ A native Windows desktop app for managing parameterised CLI command snippets
 ("Snips"), organised by the CLI they belong to. Browse a CLI, pick a Snip, fill
 its arguments, and copy the resolved command to the clipboard.
 
-Conceptually inspired by SnipCommand, with one defining difference: **the CLI is
-the top-level organising axis** — every Snip belongs to exactly one CLI (e.g.
-`pl-app`, `mpt-app`, `inv-app`).
+Conceptually inspired by
+[SnipCommand](https://github.com/gurayyarar/SnipCommand), with one defining
+difference: **the CLI is the top-level organising axis** — every Snip belongs
+to exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv-app`).
 
 > Snipdeck is pre-1.0 software. The list below describes what's actually
 > implemented today, not what's planned. See [`TODO.md`](TODO.md) for the
@@ -91,6 +92,16 @@ The `Snipdeck.Core` project targets `net10.0` and is fully portable, so
 `dotnet build` / `dotnet test` for Core also work on Linux and macOS. The
 `Snipdeck.App` project is Windows-only. The `Snipdeck.Importer` tool also targets
 `net10.0` and builds, tests and runs on any platform.
+
+## Acknowledgements
+
+Snipdeck owes its founding idea to
+[SnipCommand](https://github.com/gurayyarar/SnipCommand) by
+[Güray Yarar](https://github.com/gurayyarar) — a cross-platform command
+snippet manager that demonstrated how useful parameterised, fill-in-and-copy
+command templates are day to day. Snipdeck reimagines that idea as a native
+Windows app organised around the CLI each command belongs to. A
+[SnipCommand import tool](tools/Snipdeck.Importer) ships in this repo.
 
 ## Licence
 
