@@ -110,7 +110,9 @@ Conventions:
   top entry).
 - **Pane body**: the tag list, single-select, scoped to the selected CLI (shows all
   tags when on Home). Changing the CLI reloads this list.
-- **Pane footer**: Settings. About is the **last** `SettingsExpander` inside Settings.
+- **Pane footer**: Settings (and a History entry — see command execution). Inside
+  Settings, the **About** expander is followed by an **Acknowledgements** expander
+  (the open-source projects Snipdeck is built on), which is last.
 - The content area is state-driven by the switcher:
   - **Home** (`All / Home` selected): the CLI card launcher + most-used Snips.
   - **CLI selected**: the Snip list for that CLI, filtered by the selected tag.
