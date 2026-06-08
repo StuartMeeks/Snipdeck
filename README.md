@@ -20,17 +20,17 @@ to exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv-app`).
 
 ## Status
 
-Pre-1.0. **v0.2.0** is the latest release — see
-[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains
-the full v1 feature set: browse CLIs and Snips, author Snips with structured
-parameters, fill and copy resolved commands, global hotkey, system tray with
-close-to-tray, theme switching, and Velopack-backed self-update.
+**v1.0.0** is the latest release — see
+[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains the full
+v1 feature set: browse CLIs and Snips, author Snips with structured parameters, fill
+and copy resolved commands, global hotkey, system tray with close-to-tray, theme
+switching, and Velopack-backed self-update.
 
-An unreleased update adds **command execution**: run a Snip in its configured shell
-(via a real pseudo-terminal, so colours, spinners, progress bars and interactive
-prompts all work), watch it live, and keep a clean plain-text run history you can
-search and replay. Per-CLI shell, executable path and working directory configure
-how runs launch. See [`CHANGELOG.md`](CHANGELOG.md).
+It also runs Snips: execute one in its configured shell via a real pseudo-terminal —
+so colours, spinners, progress bars and interactive prompts all work — watch it live,
+and keep a clean plain-text run history you can search and replay. Per-CLI shell,
+executable path and working directory configure how runs launch. See
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## Install
 

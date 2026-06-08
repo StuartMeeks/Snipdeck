@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-08
+
 ### Added
 - **Run a Snip, not just copy it.** Snip cards gain a **Run** action beside Copy.
   Running walks the same parameter-fill flow, then shows a dry-run preview of the
