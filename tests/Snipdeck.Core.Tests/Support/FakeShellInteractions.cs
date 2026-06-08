@@ -82,10 +82,27 @@ namespace Snipdeck.Core.Tests.Support
             return Task.FromResult(NextEditParameterResult);
         }
 
+        public string? LastRunShellDisplay { get; private set; }
+
+        public string? LastRunWorkingDirectoryDisplay { get; private set; }
+
         public Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             LastFilledSnip = snip;
             LastFilledParameters = parameters;
+            return Task.FromResult(NextParameterFillResult);
+        }
+
+        public Task<ParameterFillResult?> FillParametersForRunAsync(
+            Snip snip,
+            IReadOnlyList<Parameter> parameters,
+            string shellDisplay,
+            string workingDirectoryDisplay)
+        {
+            LastFilledSnip = snip;
+            LastFilledParameters = parameters;
+            LastRunShellDisplay = shellDisplay;
+            LastRunWorkingDirectoryDisplay = workingDirectoryDisplay;
             return Task.FromResult(NextParameterFillResult);
         }
 

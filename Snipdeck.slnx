@@ -3,7 +3,9 @@
     <Platform Project="x64" />
   </Project>
   <Project Path="src/Snipdeck.Core/Snipdeck.Core.csproj" />
+  <Project Path="src/Snipdeck.Execution/Snipdeck.Execution.csproj" />
   <Project Path="tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj" />
+  <Project Path="tests/Snipdeck.Execution.Tests/Snipdeck.Execution.Tests.csproj" />
   <Project Path="tools/Snipdeck.Importer/Snipdeck.Importer.csproj" />
   <Project Path="tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj" />
 </Solution>
