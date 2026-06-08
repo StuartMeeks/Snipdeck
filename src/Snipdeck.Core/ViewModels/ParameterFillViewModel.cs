@@ -13,10 +13,28 @@ namespace Snipdeck.Core.ViewModels
         private readonly bool _hasParameters;
 
         public ParameterFillViewModel(Snip snip, IReadOnlyList<Parameter> parameters)
+            : this(snip, parameters, isRunMode: false, shellDisplay: string.Empty, workingDirectory: string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Run-mode constructor: the same live preview, but the dialog presents it as the
+        /// dry-run safety gate — the resolved command alongside the <paramref name="shellDisplay"/>
+        /// and <paramref name="workingDirectory"/> it will execute under.
+        /// </summary>
+        public ParameterFillViewModel(
+            Snip snip,
+            IReadOnlyList<Parameter> parameters,
+            bool isRunMode,
+            string shellDisplay,
+            string workingDirectory)
         {
             ArgumentNullException.ThrowIfNull(snip);
             ArgumentNullException.ThrowIfNull(parameters);
 
+            IsRunMode = isRunMode;
+            ShellDisplay = shellDisplay;
+            WorkingDirectory = workingDirectory;
             Snip = snip;
             // Captured before building Inputs: a parameter with a default fires its
             // change callback (→ UpdateResolution) during construction, before the
@@ -34,6 +52,15 @@ namespace Snipdeck.Core.ViewModels
         }
 
         public Snip Snip { get; }
+
+        /// <summary>True when this fill is for a Run (primary button "Run", shows shell + working dir).</summary>
+        public bool IsRunMode { get; }
+
+        /// <summary>Human-readable shell that will execute the command (Run mode only).</summary>
+        public string ShellDisplay { get; }
+
+        /// <summary>Working directory the command will run in (Run mode only).</summary>
+        public string WorkingDirectory { get; }
 
         public string? Description => Snip.Description;
 

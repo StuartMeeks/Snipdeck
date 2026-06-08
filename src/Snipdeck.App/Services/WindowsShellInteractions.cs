@@ -18,21 +18,25 @@ namespace Snipdeck.App.Services
         private readonly IServiceProvider _services;
         private readonly IIconNormaliser _iconNormaliser;
         private readonly IFilePickerService _filePicker;
+        private readonly IFolderPickerService _folderPicker;
         private readonly IGlyphCatalogueProvider _glyphCatalogue;
 
         public WindowsShellInteractions(
             IServiceProvider services,
             IIconNormaliser iconNormaliser,
             IFilePickerService filePicker,
+            IFolderPickerService folderPicker,
             IGlyphCatalogueProvider glyphCatalogue)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(iconNormaliser);
             ArgumentNullException.ThrowIfNull(filePicker);
+            ArgumentNullException.ThrowIfNull(folderPicker);
             ArgumentNullException.ThrowIfNull(glyphCatalogue);
             _services = services;
             _iconNormaliser = iconNormaliser;
             _filePicker = filePicker;
+            _folderPicker = folderPicker;
             _glyphCatalogue = glyphCatalogue;
         }
 
@@ -92,7 +96,7 @@ namespace Snipdeck.App.Services
         {
             ArgumentNullException.ThrowIfNull(cli);
             var editor = new CliEditorViewModel(cli);
-            var dialog = new CliEditorDialog(editor, _iconNormaliser, _filePicker)
+            var dialog = new CliEditorDialog(editor, _iconNormaliser, _filePicker, _folderPicker)
             {
                 XamlRoot = GetXamlRoot(),
                 RequestedTheme = CurrentTheme(),
@@ -120,6 +124,23 @@ namespace Snipdeck.App.Services
             ArgumentNullException.ThrowIfNull(snip);
             ArgumentNullException.ThrowIfNull(parameters);
             var fill = new ParameterFillViewModel(snip, parameters);
+            return await ShowFillAsync(fill).ConfigureAwait(true);
+        }
+
+        public async Task<ParameterFillResult?> FillParametersForRunAsync(
+            Snip snip,
+            IReadOnlyList<Parameter> parameters,
+            string shellDisplay,
+            string workingDirectoryDisplay)
+        {
+            ArgumentNullException.ThrowIfNull(snip);
+            ArgumentNullException.ThrowIfNull(parameters);
+            var fill = new ParameterFillViewModel(snip, parameters, isRunMode: true, shellDisplay, workingDirectoryDisplay);
+            return await ShowFillAsync(fill).ConfigureAwait(true);
+        }
+
+        private async Task<ParameterFillResult?> ShowFillAsync(ParameterFillViewModel fill)
+        {
             var dialog = new ParameterFillDialog(fill)
             {
                 XamlRoot = GetXamlRoot(),

@@ -32,6 +32,7 @@ namespace Snipdeck.Core.ViewModels
         private readonly IIconAssetStorage _iconStorage;
         private readonly IExternalLinkService _externalLinks;
         private readonly IGlyphCatalogueProvider? _glyphCatalogue;
+        private readonly IRunCoordinator? _runCoordinator;
         private SnipStoreDocument _document = new();
         private bool _suppressShellRefresh;
         // When set (via a chosen search result), the snip list shows exactly this
@@ -60,7 +61,8 @@ namespace Snipdeck.Core.ViewModels
             IShellInteractions interactions,
             IIconAssetStorage iconStorage,
             IExternalLinkService externalLinks,
-            IGlyphCatalogueProvider? glyphCatalogue = null)
+            IGlyphCatalogueProvider? glyphCatalogue = null,
+            IRunCoordinator? runCoordinator = null)
         {
             ArgumentNullException.ThrowIfNull(store);
             ArgumentNullException.ThrowIfNull(clipboard);
@@ -75,6 +77,9 @@ namespace Snipdeck.Core.ViewModels
             _interactions = interactions;
             _iconStorage = iconStorage;
             _externalLinks = externalLinks;
+            // Optional: present in production DI (the WinUI head). Absent in unit tests
+            // that don't exercise execution, so Run is simply unavailable there.
+            _runCoordinator = runCoordinator;
             // Optional: when present (production DI), the Tags view shows icons by
             // their friendly catalogue name. Absent in unit tests → name lookup is
             // empty and the view falls back to hex code points.
@@ -433,6 +438,69 @@ namespace Snipdeck.Core.ViewModels
             await SaveAndRefreshAsync().ConfigureAwait(true);
         }
 
+        /// <summary>
+        /// Run a Snip: walk the same fill flow as Copy, show the dry-run preview, then
+        /// (on confirmation) swap the content to the live terminal. Unlike Copy, this
+        /// navigates away from the snip list, so usage is persisted quietly without a
+        /// full shell refresh (which would discard the run view we just set).
+        /// </summary>
+        [RelayCommand]
+        private async Task RunSnipAsync(SnipCardViewModel? cardVm)
+        {
+            if (cardVm is null)
+            {
+                return;
+            }
+
+            await BeginRunAsync(cardVm.Snip).ConfigureAwait(true);
+        }
+
+        /// <summary>Re-run a Snip by id (the history view's "Run again"). No-op if it's gone.</summary>
+        public async Task RunSnipByIdAsync(Guid snipId)
+        {
+            var snip = _document.Snips.FirstOrDefault(s => s.Id == snipId && !s.IsTrash);
+            if (snip is null)
+            {
+                await _interactions.NotifyAsync(
+                    "Can't run again",
+                    "That snip no longer exists.").ConfigureAwait(true);
+                return;
+            }
+
+            await BeginRunAsync(snip).ConfigureAwait(true);
+        }
+
+        private async Task BeginRunAsync(Snip snip)
+        {
+            if (_runCoordinator is null)
+            {
+                return;
+            }
+
+            var cli = _document.Clis.FirstOrDefault(c => c.Id == snip.CliId);
+            var parameters = ParameterResolver.Resolve(snip, cli, _document.GlobalParameters);
+
+            var runView = await _runCoordinator.CreateRunAsync(snip, cli, parameters).ConfigureAwait(true);
+            if (runView is null)
+            {
+                return; // missing executable, or the user cancelled at the preview
+            }
+
+            CurrentContent = runView;
+            snip.UsageCount++;
+            snip.LastUsedAt = _clock.UtcNow;
+            // Persist usage without rebuilding content — the run view stays on screen.
+            await _store.SaveAsync(_document).ConfigureAwait(true);
+        }
+
+        /// <summary>The current title for a Snip id, for the history list (placeholder if deleted).</summary>
+        public string ResolveSnipTitle(Guid snipId) =>
+            _document.Snips.FirstOrDefault(s => s.Id == snipId)?.Title ?? "(deleted snip)";
+
+        /// <summary>The current name for a CLI id, for the history list (placeholder if deleted).</summary>
+        public string ResolveCliName(Guid cliId) =>
+            _document.Clis.FirstOrDefault(c => c.Id == cliId)?.Name ?? "(deleted CLI)";
+
         [RelayCommand]
         private async Task EditSnipAsync(SnipCardViewModel? cardVm)
         {
@@ -561,6 +629,11 @@ namespace Snipdeck.Core.ViewModels
                     Description = saved.Description,
                     IconRef = await _iconStorage.SaveIconAsync(saved.Id, bytes).ConfigureAwait(true),
                     Parameters = saved.Parameters,
+                    Shell = saved.Shell,
+                    CustomShellPath = saved.CustomShellPath,
+                    CustomShellArgsTemplate = saved.CustomShellArgsTemplate,
+                    ExecutablePath = saved.ExecutablePath,
+                    WorkingDirectory = saved.WorkingDirectory,
                 };
             }
 
@@ -607,6 +680,11 @@ namespace Snipdeck.Core.ViewModels
                     Description = updated.Description,
                     IconRef = await _iconStorage.SaveIconAsync(updated.Id, bytes).ConfigureAwait(true),
                     Parameters = updated.Parameters,
+                    Shell = updated.Shell,
+                    CustomShellPath = updated.CustomShellPath,
+                    CustomShellArgsTemplate = updated.CustomShellArgsTemplate,
+                    ExecutablePath = updated.ExecutablePath,
+                    WorkingDirectory = updated.WorkingDirectory,
                 };
             }
 

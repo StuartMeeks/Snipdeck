@@ -70,6 +70,8 @@ namespace Snipdeck.Core.ViewModels
             StorageDirectory = config.StoragePath ?? pathProvider.DefaultStorageDirectory;
             BackupDirectory = config.BackupDirectory ?? pathProvider.DefaultBackupDirectory;
             BackupRetention = config.BackupRetention;
+            HistoryRetentionPerSnip = config.HistoryRetentionPerSnip;
+            MaxCapturedOutputMb = (int)Math.Max(1, config.MaxCapturedOutputBytes / (1024 * 1024));
             _suppressPersist = false;
 
             var assembly = typeof(SettingsViewModel).Assembly;
@@ -111,6 +113,12 @@ namespace Snipdeck.Core.ViewModels
         public partial int BackupRetention { get; set; }
 
         [ObservableProperty]
+        public partial int HistoryRetentionPerSnip { get; set; }
+
+        [ObservableProperty]
+        public partial int MaxCapturedOutputMb { get; set; }
+
+        [ObservableProperty]
         public partial CloseBehaviour CloseBehaviour { get; set; }
 
         [ObservableProperty]
@@ -143,6 +151,26 @@ namespace Snipdeck.Core.ViewModels
             {
                 // Re-entrant set lands back here with a valid value, which persists.
                 BackupRetention = 1;
+                return;
+            }
+            _ = PersistAsync();
+        }
+
+        partial void OnHistoryRetentionPerSnipChanged(int value)
+        {
+            if (value < 1)
+            {
+                HistoryRetentionPerSnip = 1;
+                return;
+            }
+            _ = PersistAsync();
+        }
+
+        partial void OnMaxCapturedOutputMbChanged(int value)
+        {
+            if (value < 1)
+            {
+                MaxCapturedOutputMb = 1;
                 return;
             }
             _ = PersistAsync();
@@ -314,6 +342,8 @@ namespace Snipdeck.Core.ViewModels
             _config.Theme = Theme;
             _config.CloseBehaviour = CloseBehaviour;
             _config.BackupRetention = BackupRetention;
+            _config.HistoryRetentionPerSnip = HistoryRetentionPerSnip;
+            _config.MaxCapturedOutputBytes = (long)MaxCapturedOutputMb * 1024 * 1024;
             // _config.Hotkey is set directly by RebindHotkey before this runs.
             await _settingsStore.SaveAsync(_config).ConfigureAwait(true);
         }

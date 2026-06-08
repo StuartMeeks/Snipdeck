@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-06-07
+### Added
+- **Run a Snip, not just copy it.** Snip cards gain a **Run** action beside Copy.
+  Running walks the same parameter-fill flow, then shows a dry-run preview of the
+  exact resolved command — alongside the shell and working directory it will execute
+  under — before anything runs.
+- **Live terminal with full fidelity.** Runs execute under a real pseudo-terminal
+  (ConPTY), so colours, spinners, progress bars and interactive prompts (e.g.
+  Spectre.Console selection/confirmation prompts) all behave as in a real terminal.
+  Output streams into an embedded terminal you can type into; a Cancel button stops
+  the run, and an exit-code badge and elapsed time appear when it finishes.
+- **Clean, searchable run history.** Every run is recorded with a clean plain-text
+  transcript — no escape codes, no cursor artefacts, no stacked spinner frames — plus
+  the command, timestamp, duration and exit code. A new **History** view (next to
+  Settings) lists runs newest-first with text search; open one to replay its output in
+  full colour, or run it again.
+- **Per-CLI execution settings.** The CLI editor gains a **shell** (Command Prompt,
+  Windows PowerShell, PowerShell, Bash, or a custom shell), an optional **executable
+  path** and **working directory** (both with Browse…). All are optional and validated
+  only at Run time, so a CLI stays useful for authoring before its tool is installed.
+  A Snip can override its CLI's shell and working directory.
+- **History settings.** Configure how many runs to keep per Snip and the maximum
+  captured output size (runs are truncated beyond it).
 
 ### Added
 - **Snipdeck branding.** The app now ships with its own icon — a faceted green

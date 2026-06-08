@@ -15,11 +15,36 @@ namespace Snipdeck.Core.ViewModels
             Cli = cli;
             Name = cli.Name;
             Description = cli.Description;
+            ShellIndex = (int)cli.Shell;
+            CustomShellPath = cli.CustomShellPath ?? string.Empty;
+            CustomShellArgsTemplate = cli.CustomShellArgsTemplate ?? string.Empty;
+            ExecutablePath = cli.ExecutablePath ?? string.Empty;
+            WorkingDirectory = cli.WorkingDirectory ?? string.Empty;
             Parameters = new ObservableCollection<ParameterEditorRowViewModel>(
                 cli.Parameters.Select(p => new ParameterEditorRowViewModel(p)));
         }
 
         public Cli Cli { get; }
+
+        /// <summary>The shell, as a <see cref="ShellKind"/> backed combo-box index.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsCustomShell))]
+        public partial int ShellIndex { get; set; }
+
+        /// <summary>True when the custom shell is selected, revealing its path/args fields.</summary>
+        public bool IsCustomShell => ShellIndex == (int)ShellKind.Custom;
+
+        [ObservableProperty]
+        public partial string CustomShellPath { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string CustomShellArgsTemplate { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string ExecutablePath { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string WorkingDirectory { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial string Name { get; set; } = string.Empty;
@@ -57,7 +82,15 @@ namespace Snipdeck.Core.ViewModels
                 Description = Description.Trim(),
                 IconRef = Cli.IconRef,
                 Parameters = [.. Parameters.Select(r => r.BuildParameter())],
+                Shell = (ShellKind)ShellIndex,
+                CustomShellPath = NullIfBlank(CustomShellPath),
+                CustomShellArgsTemplate = NullIfBlank(CustomShellArgsTemplate),
+                ExecutablePath = NullIfBlank(ExecutablePath),
+                WorkingDirectory = NullIfBlank(WorkingDirectory),
             };
         }
+
+        private static string? NullIfBlank(string value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

@@ -17,6 +17,10 @@ namespace Snipdeck.App.Controls
             DependencyProperty.Register(nameof(CopyCommand), typeof(ICommand), typeof(SnipCard),
                 new PropertyMetadata(null));
 
+        public static readonly DependencyProperty RunCommandProperty =
+            DependencyProperty.Register(nameof(RunCommand), typeof(ICommand), typeof(SnipCard),
+                new PropertyMetadata(null));
+
         public static readonly DependencyProperty EditCommandProperty =
             DependencyProperty.Register(nameof(EditCommand), typeof(ICommand), typeof(SnipCard),
                 new PropertyMetadata(null));
@@ -44,6 +48,12 @@ namespace Snipdeck.App.Controls
         {
             get => (ICommand?)GetValue(CopyCommandProperty);
             set => SetValue(CopyCommandProperty, value);
+        }
+
+        public ICommand? RunCommand
+        {
+            get => (ICommand?)GetValue(RunCommandProperty);
+            set => SetValue(RunCommandProperty, value);
         }
 
         public ICommand? EditCommand

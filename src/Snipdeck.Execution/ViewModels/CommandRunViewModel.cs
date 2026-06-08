@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -37,14 +38,17 @@ namespace Snipdeck.Execution.ViewModels
         [NotifyPropertyChangedFor(nameof(IsFinished))]
         [NotifyPropertyChangedFor(nameof(CanCancel))]
         [NotifyPropertyChangedFor(nameof(CanRunAgain))]
+        [NotifyPropertyChangedFor(nameof(StatusSummary))]
         public partial RunStatus Status { get; set; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HasExitCode))]
         [NotifyPropertyChangedFor(nameof(IsSuccess))]
+        [NotifyPropertyChangedFor(nameof(StatusSummary))]
         public partial int? ExitCode { get; set; }
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusSummary))]
         public partial int? DurationMs { get; set; }
 
         /// <summary>Live-run constructor. The run begins when <see cref="StartAsync"/> is called.</summary>
@@ -147,6 +151,18 @@ namespace Snipdeck.Execution.ViewModels
         /// <summary>True when the run exited with code 0.</summary>
         public bool IsSuccess => ExitCode == 0;
 
+        /// <summary>A one-line status for the run header (running, exit code + duration, or cancelled).</summary>
+        public string StatusSummary => Status switch
+        {
+            RunStatus.Pending => "Starting…",
+            RunStatus.Running => "Running…",
+            RunStatus.Cancelled => "Cancelled",
+            RunStatus.Finished => DurationMs is { } ms
+                ? string.Create(CultureInfo.InvariantCulture, $"Exit {ExitCode} · {FormatDuration(ms)}")
+                : string.Create(CultureInfo.InvariantCulture, $"Exit {ExitCode}"),
+            _ => string.Empty,
+        };
+
         /// <summary>Runs the command, streaming output and persisting the run when it ends.</summary>
         public async Task StartAsync()
         {
@@ -232,6 +248,11 @@ namespace Snipdeck.Execution.ViewModels
 
         /// <summary>Resizes the pseudo-terminal to match the rendered terminal.</summary>
         public void ResizeTerminal(int columns, int rows) => _runner?.Resize(columns, rows);
+
+        private static string FormatDuration(int ms) =>
+            ms < 1000
+                ? string.Create(CultureInfo.InvariantCulture, $"{ms} ms")
+                : string.Create(CultureInfo.InvariantCulture, $"{ms / 1000.0:0.0} s");
 
         private void Capture(List<byte> captured, byte[] chunk, ref bool truncated)
         {

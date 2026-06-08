@@ -13,6 +13,8 @@ using Microsoft.UI.Xaml.Media;
 
 using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.ViewModels;
+using Snipdeck.Execution.Abstractions;
+using Snipdeck.Execution.ViewModels;
 
 using Windows.UI;
 
@@ -56,10 +58,27 @@ namespace Snipdeck.App.Views
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is nameof(ShellViewModel.SelectedTagItem) or nameof(ShellViewModel.CurrentContent))
+            if (e.PropertyName == nameof(ShellViewModel.CurrentContent))
+            {
+                // Wire "Run again" on whichever run view became current (live or replay),
+                // re-subscribing idempotently.
+                if (ViewModel.CurrentContent is CommandRunViewModel runViewModel)
+                {
+                    runViewModel.RunAgainRequested -= OnRunAgainRequested;
+                    runViewModel.RunAgainRequested += OnRunAgainRequested;
+                }
+
+                SyncSelectionFromViewModel();
+            }
+            else if (e.PropertyName == nameof(ShellViewModel.SelectedTagItem))
             {
                 SyncSelectionFromViewModel();
             }
+        }
+
+        private async void OnRunAgainRequested(object? sender, Guid snipId)
+        {
+            await ViewModel.RunSnipByIdAsync(snipId);
         }
 
         private void RebuildTagNavItems()
@@ -108,6 +127,9 @@ namespace Snipdeck.App.Views
                 // reached from the CLI view, so it leaves the footer unselected.
                 SharedParametersViewModel { IsGlobal: true } => SharedParametersNavItem,
                 TagIconsViewModel => TagsNavItem,
+                HistoryViewModel => HistoryNavItem,
+                // A live/replay run is a transient destination with no nav entry.
+                CommandRunViewModel => null,
                 CliViewModel => _tagItems.FirstOrDefault(i => ReferenceEquals(i.Tag, ViewModel.SelectedTagItem)),
                 _ => null,
             };
@@ -140,6 +162,10 @@ namespace Snipdeck.App.Views
             {
                 ViewModel.OpenTrash();
             }
+            else if (ReferenceEquals(item, HistoryNavItem))
+            {
+                OpenHistory();
+            }
             else if (ReferenceEquals(item, SettingsNavItem))
             {
                 ViewModel.OpenSettings(App.Services.GetRequiredService<SettingsViewModel>());
@@ -147,6 +173,41 @@ namespace Snipdeck.App.Views
             else if (item.Tag is TagItemViewModel tag)
             {
                 ViewModel.SelectTag(tag);
+            }
+        }
+
+        // History view models hold Execution types, so they're built here (the App
+        // references Execution) rather than in the Core ShellViewModel. The current
+        // snip/CLI names are resolved live from the document via the shell.
+        private void OpenHistory()
+        {
+            var store = App.Services.GetRequiredService<ICommandHistoryStore>();
+            var interactions = App.Services.GetRequiredService<IShellInteractions>();
+            var history = new HistoryViewModel(store, interactions, ViewModel.ResolveSnipTitle, ViewModel.ResolveCliName);
+            history.OpenRequested += OnHistoryOpenRequested;
+            ViewModel.CurrentContent = history;
+            _ = history.LoadAsync();
+        }
+
+        private async void OnHistoryOpenRequested(object? sender, Guid entryId)
+        {
+            var store = App.Services.GetRequiredService<ICommandHistoryStore>();
+            var clipboard = App.Services.GetRequiredService<IClipboardService>();
+            var entry = await store.GetAsync(entryId);
+            if (entry is null)
+            {
+                return;
+            }
+
+            // Same view as a live run, in replay mode (Cancel disabled, Run again enabled).
+            ViewModel.CurrentContent = new CommandRunViewModel(ViewModel.ResolveSnipTitle(entry.SnipId), entry, clipboard);
+        }
+
+        private void OnHistorySearchSubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            if (ViewModel.CurrentContent is HistoryViewModel history)
+            {
+                _ = history.LoadAsync();
             }
         }
 

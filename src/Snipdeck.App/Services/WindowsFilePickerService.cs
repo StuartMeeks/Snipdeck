@@ -42,6 +42,28 @@ namespace Snipdeck.App.Services
             return new PickedFile(file.Name, bytes);
         }
 
+        public async Task<string?> PickExecutablePathAsync()
+        {
+            var picker = new FileOpenPicker
+            {
+                SuggestedStartLocation = PickerLocationId.ComputerFolder,
+                ViewMode = PickerViewMode.List,
+            };
+            // Common Windows executable/script types, plus a catch-all so anything
+            // on disk can be chosen.
+            picker.FileTypeFilter.Add(".exe");
+            picker.FileTypeFilter.Add(".cmd");
+            picker.FileTypeFilter.Add(".bat");
+            picker.FileTypeFilter.Add(".ps1");
+            picker.FileTypeFilter.Add("*");
+
+            var hwnd = GetMainWindowHandle();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+            var file = await picker.PickSingleFileAsync();
+            return file?.Path;
+        }
+
         private IntPtr GetMainWindowHandle()
         {
             var mainWindow = (MainWindow)_services.GetService(typeof(MainWindow))!;

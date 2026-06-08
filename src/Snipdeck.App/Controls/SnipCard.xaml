@@ -96,6 +96,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -106,8 +107,21 @@
                 Command="{x:Bind CopyCommand, Mode=OneWay}"
                 CommandParameter="{x:Bind ViewModel, Mode=OneWay}" />
 
+            <!-- Run sits next to Copy; Copy stays the accent primary action. -->
             <Button
                 Grid.Column="1"
+                Margin="8,0,0,0"
+                ToolTipService.ToolTip="Run"
+                Command="{x:Bind RunCommand, Mode=OneWay}"
+                CommandParameter="{x:Bind ViewModel, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE768;" FontSize="14" />
+                    <TextBlock Text="Run" />
+                </StackPanel>
+            </Button>
+
+            <Button
+                Grid.Column="2"
                 Margin="8,0,0,0"
                 ToolTipService.ToolTip="Edit"
                 Command="{x:Bind EditCommand, Mode=OneWay}"
@@ -116,7 +130,7 @@
             </Button>
 
             <Button
-                Grid.Column="2"
+                Grid.Column="3"
                 Margin="8,0,0,0"
                 ToolTipService.ToolTip="Delete"
                 Command="{x:Bind DeleteCommand, Mode=OneWay}"

@@ -6,7 +6,8 @@
 
 A native Windows desktop app for managing parameterised CLI command snippets
 ("Snips"), organised by the CLI they belong to. Browse a CLI, pick a Snip, fill
-its arguments, and copy the resolved command to the clipboard.
+its arguments, and copy the resolved command to the clipboard — or run it in place
+and watch it live, with a clean, searchable run history.
 
 Conceptually inspired by
 [SnipCommand](https://github.com/gurayyarar/SnipCommand), with one defining
@@ -24,6 +25,12 @@ Pre-1.0. **v0.2.0** is the latest release — see
 the full v1 feature set: browse CLIs and Snips, author Snips with structured
 parameters, fill and copy resolved commands, global hotkey, system tray with
 close-to-tray, theme switching, and Velopack-backed self-update.
+
+An unreleased update adds **command execution**: run a Snip in its configured shell
+(via a real pseudo-terminal, so colours, spinners, progress bars and interactive
+prompts all work), watch it live, and keep a clean plain-text run history you can
+search and replay. Per-CLI shell, executable path and working directory configure
+how runs launch. See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Install
 

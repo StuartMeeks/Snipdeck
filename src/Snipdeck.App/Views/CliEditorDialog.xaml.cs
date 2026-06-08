@@ -10,18 +10,22 @@ namespace Snipdeck.App.Views
     {
         private readonly IIconNormaliser _iconNormaliser;
         private readonly IFilePickerService _filePicker;
+        private readonly IFolderPickerService _folderPicker;
 
         public CliEditorDialog(
             CliEditorViewModel viewModel,
             IIconNormaliser iconNormaliser,
-            IFilePickerService filePicker)
+            IFilePickerService filePicker,
+            IFolderPickerService folderPicker)
         {
             ArgumentNullException.ThrowIfNull(viewModel);
             ArgumentNullException.ThrowIfNull(iconNormaliser);
             ArgumentNullException.ThrowIfNull(filePicker);
+            ArgumentNullException.ThrowIfNull(folderPicker);
             ViewModel = viewModel;
             _iconNormaliser = iconNormaliser;
             _filePicker = filePicker;
+            _folderPicker = folderPicker;
             InitializeComponent();
             UpdatePrimaryButtonEnabled();
             viewModel.PropertyChanged += (_, _) => UpdatePrimaryButtonEnabled();
@@ -44,6 +48,24 @@ namespace Snipdeck.App.Views
             var normalised = await _iconNormaliser.NormaliseAsync(picked.Bytes);
             ViewModel.PickedIconBytes = normalised;
             ViewModel.PickedIconFileName = picked.FileName;
+        }
+
+        private async void OnBrowseExecutableClicked(object sender, RoutedEventArgs e)
+        {
+            var path = await _filePicker.PickExecutablePathAsync();
+            if (!string.IsNullOrEmpty(path))
+            {
+                ViewModel.ExecutablePath = path;
+            }
+        }
+
+        private async void OnBrowseWorkingDirectoryClicked(object sender, RoutedEventArgs e)
+        {
+            var path = await _folderPicker.PickFolderAsync();
+            if (!string.IsNullOrEmpty(path))
+            {
+                ViewModel.WorkingDirectory = path;
+            }
         }
     }
 }
