@@ -63,8 +63,6 @@ namespace Snipdeck.App
                 .AddSingleton<IBackupService>(backupService)
                 .AddSingleton<IIconAssetStorage>(iconStorage)
                 .AddSingleton<ICommandHistoryStore>(historyStore)
-                // A fresh runner per run (stateful, single-use); the coordinator
-                // resolves one via the factory each time a run starts.
                 .AddTransient<ICommandRunner, PortaPtyCommandRunner>()
                 .AddSingleton<Func<ICommandRunner>>(sp => sp.GetRequiredService<ICommandRunner>)
                 .AddSingleton<IRunCoordinator, RunCoordinator>()
