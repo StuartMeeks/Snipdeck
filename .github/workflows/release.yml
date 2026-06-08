@@ -130,4 +130,11 @@ jobs:
         run: dotnet pack tools/Snipdeck.Importer/Snipdeck.Importer.csproj --configuration Release --no-restore --output nuget
 
       - name: Push snipdeck-importer to NuGet.org
-        run: dotnet nuget push "nuget/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        # Resolve the package explicitly — PowerShell does not glob-expand
+        # arguments to native commands, and `dotnet nuget push` treats the
+        # pattern literally, so "nuget/*.nupkg" fails with "File does not exist".
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem nuget -Filter *.nupkg | Select-Object -First 1
+          if (-not $pkg) { Write-Error "No .nupkg found in nuget/"; exit 1 }
+          dotnet nuget push $pkg.FullName --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
