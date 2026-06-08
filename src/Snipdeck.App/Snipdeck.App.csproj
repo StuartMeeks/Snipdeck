@@ -11,6 +11,18 @@
 		<WinUISDKReferences>false</WinUISDKReferences>
 		<WindowsPackageType>None</WindowsPackageType>
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<!-- Imports the WinUI PRI/packaging targets. Without it the app's PRI is
+		     generated into bin but never copied to the publish output, so a
+		     published build ships with no app resources.pri at all. Required for
+		     unpackaged self-contained WinUI per the Windows App SDK docs. -->
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<!-- Unpackaged + self-contained WinUI auto-loads only "resources.pri" from
+		     the exe directory; the build otherwise names the app's PRI after the
+		     assembly (Snipdeck.App.pri), which the runtime never loads — so every
+		     ms-appx:/// lookup for the app's own XAML/Assets fails and the first
+		     app-specific page throws XamlParseException ("Cannot locate resource").
+		     Forcing the conventional name fixes it. See microsoft-ui-xaml#10856. -->
+		<ProjectPriFileName>resources.pri</ProjectPriFileName>
 		<Platforms>x64</Platforms>
 		<!-- Use the explicit entry point in Program.cs instead of the
 		     XAML-generated Main, so Velopack + single-instance run first.
