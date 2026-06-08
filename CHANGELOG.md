@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-06-08
+
 ### Fixed
 - Installed (Velopack) builds crashed on launch with a blank window — the published app
   was missing its resource index (`resources.pri`), so the first screen failed with a
