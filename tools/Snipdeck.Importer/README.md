@@ -11,8 +11,11 @@ for bulk-prepping an import on a non-Windows box before opening Snipdeck.
 ## Install
 
 ```bash
-dotnet tool install -g Snipdeck.Importer
+dotnet tool install -g NextIteration.Snipdeck.Importer
 ```
+
+The package id is `NextIteration.Snipdeck.Importer`; the installed command is
+`snipdeck-importer`.
 
 Or run it straight from the repo without installing:
 
