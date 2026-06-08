@@ -24,8 +24,12 @@ Snipdeck groups every Snip under exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv
 - Windows 11 is the real target. Mica requires Win11; on Win10 it falls back to a
   solid colour. Do not depend on Mica rendering on Win10.
 - MVVM via `CommunityToolkit.Mvvm`. DI via `Microsoft.Extensions.DependencyInjection`.
-- Persistence is a single JSON document via `System.Text.Json`. **Not** SQLite, not
-  LiteDB — the data is small, and JSON is human-readable and sync-friendly.
+- Persistence: the **snip store** (definitions) is a single JSON document via
+  `System.Text.Json` — **not** SQLite, not LiteDB; the data is small, and JSON is
+  human-readable and sync-friendly. **Execution history** is the deliberate
+  exception: run output is *not* small, so it lives in a separate SQLite database
+  (`history.db`) — see command execution. The JSON-only rule still governs the snip
+  store; don't migrate definitions to SQLite.
 - Install + self-update via Velopack, releasing off GitHub releases.
 
 ## Architecture
