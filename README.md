@@ -23,6 +23,10 @@ Conceptually inspired by
 difference: **the CLI is the top-level organising axis** — every Snip belongs
 to exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv-app`).
 
+<p align="center">
+  <img src="docs/quick-start-shell.png" alt="Snipdeck Home — the CLI launcher, tag rail and most-used Snips with Copy and Run actions" width="820">
+</p>
+
 ## Status
 
 Snipdeck has shipped its **v1 release** and is stable — see
