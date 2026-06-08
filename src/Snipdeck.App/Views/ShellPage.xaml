@@ -55,6 +55,11 @@
         <converters:CountToVisibilityConverter x:Key="InvertedCountToVisibility" Invert="True" />
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
+        <!-- One shared max width for the list/content pages (Settings, Trash, Shared
+             parameters, Tags, History) so they all use the same horizontal band. They
+             left-align and fill up to this width, then squash when narrower. -->
+        <x:Double x:Key="ContentMaxWidth">720</x:Double>
+
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
@@ -268,7 +273,7 @@
 
         <DataTemplate x:Key="SettingsContentTemplate" x:DataType="vm:SettingsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="8" MaxWidth="720" HorizontalAlignment="Stretch">
+                <StackPanel Padding="24" Spacing="8" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
                     <TextBlock Text="Settings"
                                Style="{ThemeResource TitleTextBlockStyle}"
                                Margin="0,0,0,8" />
@@ -429,7 +434,7 @@
 
         <DataTemplate x:Key="TrashContentTemplate" x:DataType="vm:TrashViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
                     <TextBlock Text="Trash"
                                Style="{ThemeResource TitleTextBlockStyle}" />
                     <TextBlock Text="Deleted snips are kept here. Restore a snip to put it back in its CLI, or delete it permanently."
@@ -499,26 +504,28 @@
 
         <DataTemplate x:Key="SharedParametersContentTemplate" x:DataType="vm:SharedParametersViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="{x:Bind Title}"
-                                       Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="{x:Bind Description}"
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Content="Add parameter"
-                                Style="{ThemeResource AccentButtonStyle}"
-                                VerticalAlignment="Top"
-                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.AddSharedParameterCommand}" />
-                    </Grid>
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{x:Bind Title}"
+                                       Style="{ThemeResource TitleTextBlockStyle}"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    Content="Add parameter"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.AddSharedParameterCommand}" />
+                        </Grid>
+                        <TextBlock Text="{x:Bind Description}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
 
                     <TextBlock Text="No shared parameters yet. Click Add parameter to define one."
                                Style="{ThemeResource BodyTextBlockStyle}"
@@ -603,25 +610,28 @@
 
         <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Tags"
-                                       Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Give a tag an icon. Choose one from the picker, or type its name (e.g. Settings) or a Segoe Fluent Icons code directly. Shown beside the tag in the left navigation; blank uses the default tag icon."
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Content="Save"
-                                Style="{ThemeResource AccentButtonStyle}"
-                                Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveTagIconsCommand}" />
-                    </Grid>
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Tags"
+                                       Style="{ThemeResource TitleTextBlockStyle}"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    Content="Save"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding ElementName=ShellRoot, Path=ViewModel.SaveTagIconsCommand}" />
+                        </Grid>
+                        <TextBlock Text="Give a tag an icon. Choose one from the picker, or type its name (e.g. Settings) or a Segoe Fluent Icons code directly. Shown beside the tag in the left navigation; blank uses the default tag icon."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
 
                     <TextBlock Text="{x:Bind StatusMessage, Mode=OneWay}"
                                Style="{ThemeResource CaptionTextBlockStyle}"
@@ -740,33 +750,29 @@
         </DataTemplate>
 
         <DataTemplate x:Key="HistoryContentTemplate" x:DataType="exec:HistoryViewModel">
-            <!-- HorizontalScrollMode="Disabled" (not just the scrollbar) forces the
-                 ScrollViewer to measure its content at the viewport width. Without it,
-                 the content is measured unconstrained, the StackPanel ends up centred in
-                 a region wider than the window, and the page spills off the right edge. -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          HorizontalScrollMode="Disabled">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="860" HorizontalAlignment="Stretch">
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="History"
-                                       Style="{ThemeResource TitleTextBlockStyle}" />
-                            <TextBlock Text="Past runs, newest first. Open one to view its output, or run it again."
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Content="Clear all"
-                                Style="{StaticResource DangerButtonStyle}"
-                                VerticalAlignment="Top"
-                                Command="{x:Bind ClearAllCommand}" />
-                    </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="History"
+                                       Style="{ThemeResource TitleTextBlockStyle}"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    Content="Clear all"
+                                    Style="{StaticResource DangerButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Command="{x:Bind ClearAllCommand}" />
+                        </Grid>
+                        <TextBlock Text="Past runs, newest first. Open one to view its output, or run it again."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
 
                     <AutoSuggestBox PlaceholderText="Search command or output"
                                     QueryIcon="Find"
