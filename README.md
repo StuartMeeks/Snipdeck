@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="designs/snipdeck-tile.svg" alt="Snipdeck" width="160">
-</p>
-
 # Snipdeck
 
 <p align="center">
