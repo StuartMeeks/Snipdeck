@@ -740,7 +740,13 @@
         </DataTemplate>
 
         <DataTemplate x:Key="HistoryContentTemplate" x:DataType="exec:HistoryViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <!-- HorizontalScrollMode="Disabled" (not just the scrollbar) forces the
+                 ScrollViewer to measure its content at the viewport width. Without it,
+                 the content is measured unconstrained, the StackPanel ends up centred in
+                 a region wider than the window, and the page spills off the right edge. -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          HorizontalScrollMode="Disabled">
                 <StackPanel Padding="24" Spacing="16" MaxWidth="860" HorizontalAlignment="Stretch">
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
