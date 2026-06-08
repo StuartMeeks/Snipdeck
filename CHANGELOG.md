@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The SnipCommand importer is now published to NuGet as a .NET global tool. Install it
+  with `dotnet tool install --global NextIteration.Snipdeck.Importer`; the command stays
+  `snipdeck-importer`. The release pipeline packs and pushes it to NuGet.org on each
+  version tag.
+
 ## [1.0.1] - 2026-06-08
 
 ### Fixed

@@ -122,3 +122,12 @@ jobs:
           generate_release_notes: true
           files: |
             Releases/*
+
+      # The SnipCommand importer ships independently of the desktop app as a
+      # .NET global tool on NuGet.org. NBGV stamps the same version as the app
+      # at build time, so no explicit -p:Version is needed here either.
+      - name: Pack snipdeck-importer (.NET global tool)
+        run: dotnet pack tools/Snipdeck.Importer/Snipdeck.Importer.csproj --configuration Release --no-restore --output nuget
+
+      - name: Push snipdeck-importer to NuGet.org
+        run: dotnet nuget push "nuget/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
