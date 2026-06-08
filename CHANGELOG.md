@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was missing its resource index (`resources.pri`), so the first screen failed with a
   XAML parsing error. The published build now ships the app's resources correctly, and
   launches as expected. Running from Visual Studio was unaffected.
+- The system tray menu's "Show Snipdeck" and "Exit" entries did nothing when clicked.
+  They now work.
 
 ## [1.0.2] - 2026-06-08
 

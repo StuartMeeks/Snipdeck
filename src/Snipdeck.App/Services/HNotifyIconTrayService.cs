@@ -57,36 +57,38 @@ namespace Snipdeck.App.Services
 
         private MenuFlyout BuildContextMenu()
         {
-            var showItem = new MenuFlyoutItem { Text = "Show Snipdeck" };
-            showItem.Click += OnShowItemClick;
-
-            var exitItem = new MenuFlyoutItem { Text = "Exit" };
-            exitItem.Click += OnExitItemClick;
-
+            // In an unpackaged app H.NotifyIcon's default context menu is a native
+            // Win32 PopupMenu, built from this MenuFlyout by invoking each item's
+            // Command — it does NOT raise the WinUI routed Click event. So the menu
+            // items must use Command (like LeftClickCommand does), not Click, or
+            // they silently do nothing.
             return new MenuFlyout
             {
                 Items =
                 {
-                    showItem,
+                    new MenuFlyoutItem
+                    {
+                        Text = "Show Snipdeck",
+                        Command = new RelayCommand(RaiseShowRequested),
+                    },
                     new MenuFlyoutSeparator(),
-                    exitItem,
+                    new MenuFlyoutItem
+                    {
+                        Text = "Exit",
+                        Command = new RelayCommand(RaiseExitRequested),
+                    },
                 },
             };
-        }
-
-        private void OnShowItemClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-        {
-            RaiseShowRequested();
-        }
-
-        private void OnExitItemClick(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-        {
-            ExitRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void RaiseShowRequested()
         {
             ShowRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void RaiseExitRequested()
+        {
+            ExitRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private sealed partial class RelayCommand(Action execute) : System.Windows.Input.ICommand
