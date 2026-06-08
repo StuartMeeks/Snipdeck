@@ -47,6 +47,14 @@ namespace Snipdeck.App.Controls
             try
             {
                 await WebView.EnsureCoreWebView2Async();
+
+                // The terminal owns the keyboard: stop the WebView grabbing accelerators
+                // (Ctrl+F find, Ctrl+P print, F5 reload, …) so keys reach xterm/the PTY.
+                var settings = WebView.CoreWebView2.Settings;
+                settings.AreBrowserAcceleratorKeysEnabled = false;
+                settings.IsZoomControlEnabled = false;
+                settings.AreDefaultContextMenusEnabled = false;
+
                 var assetsDirectory = Path.Combine(AppContext.BaseDirectory, "Assets", "terminal");
                 WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
                     "snipdeck.terminal",

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 
 using Porta.Pty;
 
@@ -17,6 +18,11 @@ namespace Snipdeck.Execution.Services
     public sealed class PortaPtyCommandRunner : ICommandRunner
     {
         private const int _readBufferSize = 4096;
+
+        // ConPTY keeps the output pipe open until the pseudoconsole is closed, so after
+        // the child exits there is no EOF until we close. On exit we wait this long for
+        // the reader to drain trailing output, then close to end the stream.
+        private const int _drainGraceMs = 150;
 
         private IPtyConnection? _connection;
         private int _columns = 120;
@@ -51,52 +57,81 @@ namespace Snipdeck.Execution.Services
                 Environment = CaptureEnvironment(),
             };
 
-            _connection = await PtyProvider.SpawnAsync(options, cancellationToken).ConfigureAwait(false);
-            var reader = _connection.ReaderStream;
-            var buffer = new byte[_readBufferSize];
+            var connection = await PtyProvider.SpawnAsync(options, cancellationToken).ConfigureAwait(false);
+            _connection = connection;
+
+            var channel = Channel.CreateUnbounded<byte[]>(
+                new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
+
+            // The process exiting is the authoritative "done" signal (the pipe won't
+            // EOF on its own). Record the code, let the reader drain, then close.
+            void OnExited(object? sender, PtyExitedEventArgs e)
+            {
+                LastExitCode = e.ExitCode;
+                _ = CloseAfterGraceAsync(connection);
+            }
+
+            connection.ProcessExited += OnExited;
+
+            // User cancel: kill the tree, then close to unblock the blocking reader.
+            await using var cancelReg = cancellationToken.Register(() =>
+            {
+                KillQuietly();
+                _ = CloseAfterGraceAsync(connection);
+            }).ConfigureAwait(false);
+
+            // ReaderStream is a synchronous pipe FileStream, so read on a background
+            // thread and hand chunks to the channel; the iterator drains the channel.
+            var readerTask = Task.Run(() =>
+            {
+                var buffer = new byte[_readBufferSize];
+                try
+                {
+                    while (true)
+                    {
+                        var read = connection.ReaderStream.Read(buffer, 0, buffer.Length);
+                        if (read <= 0)
+                        {
+                            break;
+                        }
+
+                        _ = channel.Writer.TryWrite(buffer[..read]);
+                    }
+                }
+                catch (IOException)
+                {
+                    // Pipe closed (we closed the connection on exit/cancel).
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Stream disposed concurrently with close.
+                }
+                finally
+                {
+                    _ = channel.Writer.TryComplete();
+                }
+            }, CancellationToken.None);
 
             try
             {
-                while (true)
+                await foreach (var chunk in channel.Reader.ReadAllAsync(CancellationToken.None).ConfigureAwait(false))
                 {
-                    var read = 0;
-                    var stop = false;
-                    try
-                    {
-                        read = await reader.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        KillQuietly();
-                        stop = true;
-                    }
-                    catch (IOException)
-                    {
-                        // Reader closed as the process exited.
-                        stop = true;
-                    }
-
-                    if (stop || read <= 0)
-                    {
-                        break;
-                    }
-
-                    yield return buffer[..read];
+                    yield return chunk;
                 }
             }
             finally
             {
-                _ = _connection.WaitForExit(2000);
+                connection.ProcessExited -= OnExited;
+                CloseQuietly();
                 try
                 {
-                    LastExitCode = _connection.ExitCode;
+                    await readerTask.ConfigureAwait(false);
                 }
-                catch (InvalidOperationException)
+                catch (Exception)
                 {
-                    LastExitCode = -1;
+                    // Reader teardown errors are not actionable.
                 }
 
-                (_connection as IDisposable)?.Dispose();
                 _connection = null;
             }
         }
@@ -147,6 +182,39 @@ namespace Snipdeck.Execution.Services
             catch (InvalidOperationException)
             {
                 // Terminal already gone.
+            }
+        }
+
+        private static async Task CloseAfterGraceAsync(IPtyConnection connection)
+        {
+            try
+            {
+                await Task.Delay(_drainGraceMs).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Ignore.
+            }
+
+            try
+            {
+                (connection as IDisposable)?.Dispose();
+            }
+            catch (Exception)
+            {
+                // Disposal is best-effort and idempotent.
+            }
+        }
+
+        private void CloseQuietly()
+        {
+            try
+            {
+                (_connection as IDisposable)?.Dispose();
+            }
+            catch (Exception)
+            {
+                // Disposal is best-effort and idempotent.
             }
         }
 
