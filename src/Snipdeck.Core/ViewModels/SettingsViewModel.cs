@@ -93,10 +93,13 @@ namespace Snipdeck.Core.ViewModels
         public string CopyrightDisplay { get; }
 
         /// <summary>
-        /// The third-party projects Snipdeck is built on, credited in Settings → About.
-        /// Keep in sync with the Acknowledgements section of the README.
+        /// The third-party projects Snipdeck is built on, credited in Settings → About,
+        /// alphabetised by name. Keep in sync with the README's Acknowledgements section.
         /// </summary>
         public IReadOnlyList<Acknowledgement> Acknowledgements { get; } =
+            [.. _acknowledgements.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)];
+
+        private static readonly Acknowledgement[] _acknowledgements =
         [
             new("Windows App SDK & WinUI 3", "The native Windows UI framework.", new Uri("https://github.com/microsoft/WindowsAppSDK"), "MIT"),
             new("WebView2", "Hosts the xterm.js live terminal.", new Uri("https://learn.microsoft.com/microsoft-edge/webview2/"), "Microsoft"),

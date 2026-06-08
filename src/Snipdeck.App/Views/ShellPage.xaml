@@ -375,23 +375,6 @@
                         </StackPanel>
                     </tk:SettingsCard>
 
-                    <tk:SettingsExpander Header="Acknowledgements"
-                                         Description="The open-source projects Snipdeck is built on."
-                                         ItemsSource="{x:Bind Acknowledgements}">
-                        <tk:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xE928;" />
-                        </tk:SettingsExpander.HeaderIcon>
-                        <tk:SettingsExpander.ItemTemplate>
-                            <DataTemplate x:DataType="models:Acknowledgement">
-                                <tk:SettingsCard Header="{x:Bind Name}"
-                                                 Description="{x:Bind Purpose}">
-                                    <HyperlinkButton Content="{x:Bind Licence}"
-                                                     NavigateUri="{x:Bind Url}" />
-                                </tk:SettingsCard>
-                            </DataTemplate>
-                        </tk:SettingsExpander.ItemTemplate>
-                    </tk:SettingsExpander>
-
                     <tk:SettingsExpander Header="Snipdeck"
                                          Description="{x:Bind CopyrightDisplay}">
                         <!-- Collapsed: version shows on the right of the header. -->
@@ -416,6 +399,29 @@
                                                  NavigateUri="https://github.com/StuartMeeks/Snipdeck/issues" />
                             </tk:SettingsCard>
                         </tk:SettingsExpander.Items>
+                    </tk:SettingsExpander>
+
+                    <tk:SettingsExpander Header="Acknowledgements"
+                                         Description="The open-source projects Snipdeck is built on."
+                                         ItemsSource="{x:Bind Acknowledgements}">
+                        <tk:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE928;" />
+                        </tk:SettingsExpander.HeaderIcon>
+                        <tk:SettingsExpander.ItemTemplate>
+                            <DataTemplate x:DataType="models:Acknowledgement">
+                                <tk:SettingsCard Header="{x:Bind Name}"
+                                                 Description="{x:Bind Purpose}">
+                                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Licence}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <HyperlinkButton Content="View project"
+                                                         NavigateUri="{x:Bind Url}" />
+                                    </StackPanel>
+                                </tk:SettingsCard>
+                            </DataTemplate>
+                        </tk:SettingsExpander.ItemTemplate>
                     </tk:SettingsExpander>
                 </StackPanel>
             </ScrollViewer>

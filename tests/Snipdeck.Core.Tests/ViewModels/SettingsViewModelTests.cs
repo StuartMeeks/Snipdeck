@@ -27,6 +27,22 @@ namespace Snipdeck.Core.Tests.ViewModels
                 config ?? new AppConfig());
         }
 
+        [Fact]
+        public void Acknowledgements_are_present_and_alphabetised_by_name()
+        {
+            var vm = Build(out _, out _);
+
+            Assert.NotEmpty(vm.Acknowledgements);
+            var names = vm.Acknowledgements.Select(a => a.Name).ToList();
+            Assert.Equal(names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase), names);
+            Assert.All(vm.Acknowledgements, a =>
+            {
+                Assert.False(string.IsNullOrWhiteSpace(a.Name));
+                Assert.False(string.IsNullOrWhiteSpace(a.Licence));
+                Assert.True(a.Url.IsAbsoluteUri);
+            });
+        }
+
         private static SettingsViewModel BuildForStorage(
             string currentDirectory,
             out FakeFolderPickerService folderPicker,
