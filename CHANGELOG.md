@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-08
+
 ### Fixed
 - The list/content pages (Settings, Trash, Shared parameters, Tags, History) now share
   one layout with a consistent maximum content width — centred at wider window sizes and
