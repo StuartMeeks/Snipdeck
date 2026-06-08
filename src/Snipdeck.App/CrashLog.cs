@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -88,11 +87,8 @@ namespace Snipdeck.App
             var indent = new string(' ', depth * 2);
 
             _ = sb.Append(indent).Append("Type: ").AppendLine(ex.GetType().FullName ?? ex.GetType().Name);
-            if (ex is COMException)
-            {
-                _ = sb.Append(indent).Append("HRESULT: 0x")
-                      .AppendLine(ex.HResult.ToString("X8", CultureInfo.InvariantCulture));
-            }
+            _ = sb.Append(indent).Append("HRESULT: 0x")
+                  .AppendLine(ex.HResult.ToString("X8", CultureInfo.InvariantCulture));
             _ = sb.Append(indent).Append("Message: ").AppendLine(ex.Message);
             if (!string.IsNullOrEmpty(ex.Source))
             {
@@ -105,6 +101,13 @@ namespace Snipdeck.App
                 {
                     _ = sb.Append(indent).Append("  ").AppendLine(line.TrimEnd('\r'));
                 }
+            }
+            // WinRT-sourced exceptions (e.g. XamlParseException) carry the real
+            // detail here, not in Message — the RestrictedDescription is what
+            // names the missing resource / failing element.
+            foreach (System.Collections.DictionaryEntry entry in ex.Data)
+            {
+                _ = sb.Append(indent).Append("Data[").Append(entry.Key).Append("]: ").AppendLine(entry.Value?.ToString());
             }
             if (ex.InnerException is not null)
             {

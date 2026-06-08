@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Installed (Velopack) builds crashed on launch with a blank window — the published app
+  was missing its resource index (`resources.pri`), so the first screen failed with a
+  XAML parsing error. The published build now ships the app's resources correctly, and
+  launches as expected. Running from Visual Studio was unaffected.
+
 ## [1.0.2] - 2026-06-08
 
 ### Added
