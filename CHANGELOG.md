@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- History view no longer overflows to the right and clips at narrower window widths —
+  a run's metadata line now wraps instead of forcing the card wider than the viewport.
+
 ## [1.0.0] - 2026-06-08
 
 ### Added

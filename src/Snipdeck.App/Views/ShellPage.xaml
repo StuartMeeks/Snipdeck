@@ -740,7 +740,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="HistoryContentTemplate" x:DataType="exec:HistoryViewModel">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Padding="24" Spacing="16" MaxWidth="860" HorizontalAlignment="Stretch">
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -818,8 +818,13 @@
                                                        TextWrapping="Wrap"
                                                        MaxLines="2"
                                                        TextTrimming="CharacterEllipsis" />
+                                            <!-- Wrap (not the TextBlock default of NoWrap): a
+                                                 non-wrapping multi-Run line in a star column refuses
+                                                 to shrink and pushes the card past the right edge at
+                                                 narrow widths. -->
                                             <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
-                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       TextWrapping="Wrap">
                                                 <Run Text="{x:Bind CliName}" />
                                                 <Run Text="·" />
                                                 <Run Text="{x:Bind ExecutedAtDisplay}" />
