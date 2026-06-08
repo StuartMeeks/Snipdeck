@@ -1,5 +1,11 @@
 # snipdeck-importer
 
+[![NuGet](https://img.shields.io/nuget/v/NextIteration.Snipdeck.Importer)](https://www.nuget.org/packages/NextIteration.Snipdeck.Importer)
+[![NuGet downloads](https://img.shields.io/nuget/dt/NextIteration.Snipdeck.Importer)](https://www.nuget.org/packages/NextIteration.Snipdeck.Importer)
+[![CI status](https://github.com/StuartMeeks/Snipdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/StuartMeeks/Snipdeck/actions/workflows/ci.yml)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](../../LICENSE)
+
 A small cross-platform console tool that imports command snippets from other tools
 into a [Snipdeck](../../README.md) store. The first supported source is
 **SnipCommand**; the design leaves room for more sources as subcommands later.

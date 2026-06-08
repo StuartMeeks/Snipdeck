@@ -4,6 +4,15 @@
 
 # Snipdeck
 
+<p align="center">
+  <a href="https://github.com/StuartMeeks/Snipdeck/actions/workflows/ci.yml"><img src="https://github.com/StuartMeeks/Snipdeck/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/StuartMeeks/Snipdeck/releases/latest"><img src="https://img.shields.io/github/v/release/StuartMeeks/Snipdeck?sort=semver" alt="Latest release"></a>
+  <a href="https://github.com/StuartMeeks/Snipdeck/releases"><img src="https://img.shields.io/github/downloads/StuartMeeks/Snipdeck/total" alt="Downloads"></a>
+  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2011-0078D6?logo=windows11&logoColor=white" alt="Platform: Windows 11">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/StuartMeeks/Snipdeck" alt="Licence: Apache-2.0"></a>
+</p>
+
 A native Windows desktop app for managing parameterised CLI command snippets
 ("Snips"), organised by the CLI they belong to. Browse a CLI, pick a Snip, fill
 its arguments, and copy the resolved command to the clipboard — or run it in place
@@ -14,23 +23,34 @@ Conceptually inspired by
 difference: **the CLI is the top-level organising axis** — every Snip belongs
 to exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv-app`).
 
-> Snipdeck is pre-1.0 software. The list below describes what's actually
-> implemented today, not what's planned. See [`TODO.md`](TODO.md) for the
-> backlog and [`CHANGELOG.md`](CHANGELOG.md) for what's shipped.
+<p align="center">
+  <img src="docs/quick-start-shell.png" alt="Snipdeck Home — the CLI launcher, tag rail and most-used Snips with Copy and Run actions" width="820">
+</p>
 
 ## Status
 
-**v1.0.0** is the latest release — see
-[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains the full
-v1 feature set: browse CLIs and Snips, author Snips with structured parameters, fill
-and copy resolved commands, global hotkey, system tray with close-to-tray, theme
-switching, and Velopack-backed self-update.
+Snipdeck has shipped its **v1 release** and is stable — see
+[Releases](https://github.com/StuartMeeks/Snipdeck/releases) for the current
+build, or [`CHANGELOG.md`](CHANGELOG.md) for the full history. The installed app
+self-updates from then on.
 
-It also runs Snips: execute one in its configured shell via a real pseudo-terminal —
-so colours, spinners, progress bars and interactive prompts all work — watch it live,
-and keep a clean plain-text run history you can search and replay. Per-CLI shell,
-executable path and working directory configure how runs launch. See
-[`CHANGELOG.md`](CHANGELOG.md).
+The v1 feature set:
+
+- Browse CLIs and Snips; author Snips with structured Text and Choice parameters,
+  tags, favourites, and a Markdown description.
+- Fill a Snip's parameters from a flyout with a live preview, and copy the resolved
+  command to the clipboard.
+- **Run** a Snip in its configured shell via a real pseudo-terminal (ConPTY) — so
+  colours, spinners, progress bars and interactive prompts all work — watch it live,
+  and keep a clean, searchable plain-text run history you can replay. Per-CLI shell,
+  executable path and working directory configure how runs launch.
+- Global hotkey (default **Ctrl+Alt+S**, rebindable), system tray with
+  configurable close-to-tray, Light/Dark/System theme, and per-write plus
+  pre-update store backups.
+- Migrate from SnipCommand with the [`snipdeck-importer`](tools/Snipdeck.Importer)
+  .NET global tool.
+
+See [`TODO.md`](TODO.md) for the backlog of deferred and v2 ideas.
 
 ## Install
 
@@ -75,8 +95,15 @@ interface defined in Core and implemented in App.
 
 Migrating from SnipCommand? The cross-platform `snipdeck-importer` console tool
 reads a SnipCommand export and merges its snippets into your Snipdeck store,
-grouping them under a CLI per command. It defaults to a dry-run preview; see
-[`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md).
+grouping them under a CLI per command. It defaults to a dry-run preview. Install
+it as a .NET global tool:
+
+```bash
+dotnet tool install -g NextIteration.Snipdeck.Importer
+```
+
+See [`tools/Snipdeck.Importer/README.md`](tools/Snipdeck.Importer/README.md) for
+the full options.
 
 ## Building
 
