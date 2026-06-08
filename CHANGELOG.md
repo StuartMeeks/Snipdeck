@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A Snip can override its CLI's shell and working directory.
 - **History settings.** Configure how many runs to keep per Snip and the maximum
   captured output size (runs are truncated beyond it).
+- **Acknowledgements.** Settings → About lists the open-source projects Snipdeck is
+  built on, each linking to its repository; the README carries the same list.
 
 ### Added
 - **Snipdeck branding.** The app now ships with its own icon — a faceted green

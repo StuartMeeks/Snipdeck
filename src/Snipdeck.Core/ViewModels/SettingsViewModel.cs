@@ -92,6 +92,30 @@ namespace Snipdeck.Core.ViewModels
 
         public string CopyrightDisplay { get; }
 
+        /// <summary>
+        /// The third-party projects Snipdeck is built on, credited in Settings → About.
+        /// Keep in sync with the Acknowledgements section of the README.
+        /// </summary>
+        public IReadOnlyList<Acknowledgement> Acknowledgements { get; } =
+        [
+            new("Windows App SDK & WinUI 3", "The native Windows UI framework.", new Uri("https://github.com/microsoft/WindowsAppSDK"), "MIT"),
+            new("WebView2", "Hosts the xterm.js live terminal.", new Uri("https://learn.microsoft.com/microsoft-edge/webview2/"), "Microsoft"),
+            new("xterm.js", "Renders the live terminal output.", new Uri("https://github.com/xtermjs/xterm.js"), "MIT"),
+            new("Porta.Pty", "Cross-platform pseudo-terminal (ConPTY) for running commands.", new Uri("https://github.com/tomlm/Porta.Pty"), "MIT"),
+            new("SQLite & Microsoft.Data.Sqlite", "Stores execution history.", new Uri("https://github.com/dotnet/efcore"), "MIT / Public Domain"),
+            new(".NET Community Toolkit (MVVM)", "MVVM source generators and helpers.", new Uri("https://github.com/CommunityToolkit/dotnet"), "MIT"),
+            new("Windows Community Toolkit", "SettingsCard / SettingsExpander controls.", new Uri("https://github.com/CommunityToolkit/Windows"), "MIT"),
+            new("H.NotifyIcon", "System tray icon and menu.", new Uri("https://github.com/HavenDV/H.NotifyIcon"), "MIT"),
+            new("Velopack", "Installer and self-update.", new Uri("https://github.com/velopack/velopack"), "MIT"),
+            new("Markdig", "Renders Snip descriptions written in Markdown.", new Uri("https://github.com/xoofx/markdig"), "BSD-2-Clause"),
+            new("Jdenticon", "Generates identicons for CLIs without a custom icon.", new Uri("https://github.com/dmester/jdenticon-net"), "MIT"),
+            new("Microsoft.Extensions.DependencyInjection", "Dependency injection container.", new Uri("https://github.com/dotnet/runtime"), "MIT"),
+            new("Spectre.Console", "Console UI for the SnipCommand import tool.", new Uri("https://github.com/spectreconsole/spectre.console"), "MIT"),
+            new("Nerdbank.GitVersioning", "Derives the version from git history.", new Uri("https://github.com/dotnet/Nerdbank.GitVersioning"), "MIT"),
+            new("xUnit", "Unit-testing framework.", new Uri("https://github.com/xunit/xunit"), "Apache-2.0"),
+            new("Coverlet", "Code-coverage collection for tests.", new Uri("https://github.com/coverlet-coverage/coverlet"), "MIT"),
+        ];
+
         [ObservableProperty]
         public partial string StorageDirectory { get; set; } = string.Empty;
 

@@ -110,6 +110,26 @@ command templates are day to day. Snipdeck reimagines that idea as a native
 Windows app organised around the CLI each command belongs to. A
 [SnipCommand import tool](tools/Snipdeck.Importer) ships in this repo.
 
+Snipdeck is built on the work of these open-source projects, with thanks to
+their authors and maintainers:
+
+- [Windows App SDK & WinUI 3](https://github.com/microsoft/WindowsAppSDK) — the native Windows UI framework (MIT)
+- [WebView2](https://learn.microsoft.com/microsoft-edge/webview2/) — hosts the xterm.js live terminal (Microsoft)
+- [xterm.js](https://github.com/xtermjs/xterm.js) — renders the live terminal output (MIT)
+- [Porta.Pty](https://github.com/tomlm/Porta.Pty) — cross-platform pseudo-terminal (ConPTY) for running commands (MIT)
+- [SQLite](https://www.sqlite.org) & [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore) — execution-history storage (Public Domain / MIT)
+- [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) — MVVM source generators and helpers (MIT)
+- [Windows Community Toolkit](https://github.com/CommunityToolkit/Windows) — `SettingsCard` / `SettingsExpander` controls (MIT)
+- [H.NotifyIcon](https://github.com/HavenDV/H.NotifyIcon) — system-tray icon and menu (MIT)
+- [Velopack](https://github.com/velopack/velopack) — installer and self-update (MIT)
+- [Markdig](https://github.com/xoofx/markdig) — Markdown rendering for Snip descriptions (BSD-2-Clause)
+- [Jdenticon](https://github.com/dmester/jdenticon-net) — identicons for CLIs without a custom icon (MIT)
+- [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime) — dependency injection (MIT)
+- [Spectre.Console](https://github.com/spectreconsole/spectre.console) — console UI for the import tool (MIT)
+- [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) — git-derived versioning (MIT)
+- [xUnit](https://github.com/xunit/xunit) — unit-testing framework (Apache-2.0)
+- [Coverlet](https://github.com/coverlet-coverage/coverlet) — code-coverage collection (MIT)
+
 ## Licence
 
 Licensed under the Apache Licence, Version 2.0. See [`LICENSE`](LICENSE).

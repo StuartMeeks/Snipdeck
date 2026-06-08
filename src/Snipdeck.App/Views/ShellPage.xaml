@@ -8,6 +8,7 @@
     xmlns:local="using:Snipdeck.App.Views"
     xmlns:tk="using:CommunityToolkit.WinUI.Controls"
     xmlns:vm="using:Snipdeck.Core.ViewModels"
+    xmlns:models="using:Snipdeck.Core.Models"
     xmlns:exec="using:Snipdeck.Execution.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -373,6 +374,23 @@
                                     Visibility="{x:Bind UpdateAvailable, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                     </tk:SettingsCard>
+
+                    <tk:SettingsExpander Header="Acknowledgements"
+                                         Description="The open-source projects Snipdeck is built on."
+                                         ItemsSource="{x:Bind Acknowledgements}">
+                        <tk:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE928;" />
+                        </tk:SettingsExpander.HeaderIcon>
+                        <tk:SettingsExpander.ItemTemplate>
+                            <DataTemplate x:DataType="models:Acknowledgement">
+                                <tk:SettingsCard Header="{x:Bind Name}"
+                                                 Description="{x:Bind Purpose}">
+                                    <HyperlinkButton Content="{x:Bind Licence}"
+                                                     NavigateUri="{x:Bind Url}" />
+                                </tk:SettingsCard>
+                            </DataTemplate>
+                        </tk:SettingsExpander.ItemTemplate>
+                    </tk:SettingsExpander>
 
                     <tk:SettingsExpander Header="Snipdeck"
                                          Description="{x:Bind CopyrightDisplay}">
