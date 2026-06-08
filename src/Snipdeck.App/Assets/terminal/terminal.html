@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="xterm.css" />
+  <script src="xterm.js"></script>
+  <script src="addon-fit.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0d0d0d; overflow: hidden; }
+    #terminal { height: 100%; width: 100%; padding: 6px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div id="terminal"></div>
+  <script>
+    (function () {
+      // Always-dark terminal regardless of the app theme, so ANSI palettes render
+      // as intended. Font matches the app's monospace stack.
+      var term = new Terminal({
+        convertEol: false,
+        cursorBlink: true,
+        scrollback: 10000,
+        fontFamily: 'Cascadia Mono, Consolas, monospace',
+        fontSize: 13,
+        theme: { background: '#0d0d0d', foreground: '#e6e6e6' }
+      });
+      var fit = new FitAddon.FitAddon();
+      term.loadAddon(fit);
+      term.open(document.getElementById('terminal'));
+
+      function post(obj) {
+        try { window.chrome.webview.postMessage(JSON.stringify(obj)); } catch (e) { }
+      }
+
+      function b64encode(bytes) {
+        var s = '';
+        for (var i = 0; i < bytes.length; i++) { s += String.fromCharCode(bytes[i]); }
+        return btoa(s);
+      }
+
+      function b64decode(b64) {
+        var bin = atob(b64);
+        var arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) { arr[i] = bin.charCodeAt(i); }
+        return arr;
+      }
+
+      function doFit() {
+        try {
+          fit.fit();
+          post({ t: 'r', c: term.cols, r: term.rows });
+        } catch (e) { }
+      }
+
+      // Ctrl+C is "interrupt" in a terminal, not "copy". With a selection it copies;
+      // otherwise it sends ETX (0x03) to the PTY. Ctrl+Shift+C copies explicitly.
+      term.attachCustomKeyEventHandler(function (e) {
+        if (e.type !== 'keydown') { return true; }
+        var isC = e.key === 'c' || e.key === 'C';
+        if (e.ctrlKey && e.shiftKey && isC) {
+          try { navigator.clipboard.writeText(term.getSelection()); } catch (x) { }
+          e.preventDefault();
+          return false;
+        }
+        if (e.ctrlKey && !e.shiftKey && isC) {
+          if (term.hasSelection()) {
+            try { navigator.clipboard.writeText(term.getSelection()); } catch (x) { }
+            e.preventDefault();
+            return false;
+          }
+          post({ t: 'i', d: b64encode(new Uint8Array([3])) });
+          e.preventDefault();
+          return false;
+        }
+        return true;
+      });
+
+      // Host -> page.
+      window.chrome.webview.addEventListener('message', function (e) {
+        var m;
+        try { m = JSON.parse(e.data); } catch (_) { return; }
+        if (m.t === 'w' && m.d) { term.write(b64decode(m.d)); }
+        else if (m.t === 'focus') { term.focus(); }
+      });
+
+      // Page -> host: keystrokes, forwarded verbatim to the PTY's stdin so
+      // interactive prompts (arrows, space, enter, typed text) work.
+      term.onData(function (data) {
+        post({ t: 'i', d: b64encode(new TextEncoder().encode(data)) });
+      });
+
+      window.addEventListener('resize', doFit);
+
+      // Size first, then signal readiness so the host starts the run only once
+      // the terminal can receive output (no early bytes are lost).
+      requestAnimationFrame(function () {
+        doFit();
+        term.focus();
+        post({ t: 'ready' });
+      });
+    })();
+  </script>
+</body>
+</html>

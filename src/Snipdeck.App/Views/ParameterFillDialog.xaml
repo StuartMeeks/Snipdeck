@@ -66,5 +66,24 @@
                            IsTextSelectionEnabled="True" />
             </Border>
         </StackPanel>
+
+        <!-- Run mode only: the dry-run safety gate shows exactly where and how the
+             resolved command will execute before it runs. -->
+        <StackPanel Spacing="2"
+                    Visibility="{x:Bind ViewModel.IsRunMode, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="Shell"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+            <TextBlock Text="{x:Bind ViewModel.ShellDisplay}"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Working directory"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Margin="0,6,0,0" />
+            <TextBlock Text="{x:Bind ViewModel.WorkingDirectory}"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
     </StackPanel>
 </ContentDialog>

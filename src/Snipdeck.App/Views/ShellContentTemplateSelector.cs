@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 using Snipdeck.Core.ViewModels;
+using Snipdeck.Execution.ViewModels;
 
 namespace Snipdeck.App.Views
 {
@@ -23,6 +24,10 @@ namespace Snipdeck.App.Views
 
         public DataTemplate? TagIconsTemplate { get; set; }
 
+        public DataTemplate? CommandRunTemplate { get; set; }
+
+        public DataTemplate? HistoryTemplate { get; set; }
+
         protected override DataTemplate? SelectTemplateCore(object item)
         {
             return item switch
@@ -33,6 +38,8 @@ namespace Snipdeck.App.Views
                 TrashViewModel => TrashTemplate,
                 SharedParametersViewModel => SharedParametersTemplate,
                 TagIconsViewModel => TagIconsTemplate,
+                CommandRunViewModel => CommandRunTemplate,
+                HistoryViewModel => HistoryTemplate,
                 _ => null,
             };
         }

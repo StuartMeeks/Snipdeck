@@ -98,5 +98,70 @@ namespace Snipdeck.Core.Tests.Services
             Assert.True(restored.Snips[0].IsFavourite);
             Assert.Equal(doc.Snips[0].LastUsedAt, restored.Snips[0].LastUsedAt);
         }
+
+        [Fact]
+        public void Schema_version_is_v5()
+        {
+            Assert.Equal(5, SnipStoreDocument.CurrentSchemaVersion);
+        }
+
+        [Fact]
+        public void V5_execution_fields_round_trip_through_the_source_gen_context()
+        {
+            var cli = new Cli
+            {
+                Name = "pl-app",
+                Shell = ShellKind.Custom,
+                CustomShellPath = @"C:\tools\nu.exe",
+                CustomShellArgsTemplate = "-c {command}",
+                ExecutablePath = @"C:\tools\pl-app.exe",
+                WorkingDirectory = @"C:\work",
+            };
+            var doc = new SnipStoreDocument
+            {
+                Clis = [cli],
+                Snips =
+                [
+                    new Snip
+                    {
+                        CliId = cli.Id,
+                        Title = "Deploy",
+                        CommandTemplate = "pl-app deploy",
+                        ShellOverride = ShellKind.PwshCore,
+                        WorkingDirectoryOverride = @"C:\work\sub",
+                    },
+                ],
+            };
+
+            var json = JsonSerializer.Serialize(doc, StoreJsonContext.Default.SnipStoreDocument);
+            var restored = JsonSerializer.Deserialize(json, StoreJsonContext.Default.SnipStoreDocument);
+
+            Assert.NotNull(restored);
+            var restoredCli = restored!.Clis[0];
+            Assert.Equal(ShellKind.Custom, restoredCli.Shell);
+            Assert.Equal(@"C:\tools\nu.exe", restoredCli.CustomShellPath);
+            Assert.Equal("-c {command}", restoredCli.CustomShellArgsTemplate);
+            Assert.Equal(@"C:\tools\pl-app.exe", restoredCli.ExecutablePath);
+            Assert.Equal(@"C:\work", restoredCli.WorkingDirectory);
+
+            var restoredSnip = restored.Snips[0];
+            Assert.Equal(ShellKind.PwshCore, restoredSnip.ShellOverride);
+            Assert.Equal(@"C:\work\sub", restoredSnip.WorkingDirectoryOverride);
+
+            // Shell enums persist as the camelCase member names declared on ShellKind.
+            Assert.Contains("\"custom\"", json);
+            Assert.Contains("\"pwshCore\"", json);
+        }
+
+        [Fact]
+        public void Default_cli_shell_is_powershell_and_omitted_overrides_are_null()
+        {
+            var cli = new Cli { Name = "x" };
+            Assert.Equal(ShellKind.PowerShell, cli.Shell);
+
+            var snip = new Snip { Title = "y" };
+            Assert.Null(snip.ShellOverride);
+            Assert.Null(snip.WorkingDirectoryOverride);
+        }
     }
 }

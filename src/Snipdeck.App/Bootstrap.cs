@@ -6,6 +6,8 @@ using Snipdeck.Core.Abstractions;
 using Snipdeck.Core.Models;
 using Snipdeck.Core.Services;
 using Snipdeck.Core.ViewModels;
+using Snipdeck.Execution.Abstractions;
+using Snipdeck.Execution.Services;
 
 namespace Snipdeck.App
 {
@@ -17,6 +19,7 @@ namespace Snipdeck.App
     internal static class Bootstrap
     {
         private const string _snipStoreFileName = "store.json";
+        private const string _historyDbFileName = "history.db";
 
         public static IServiceProvider Build()
         {
@@ -33,6 +36,9 @@ namespace Snipdeck.App
             var snipStore = new JsonSnipStore(snipStoreFilePath);
             var backupService = new BackupService(snipStoreFilePath, backupDirectory, clock, () => config.BackupRetention);
             var iconStorage = new IconAssetStorage(storageDirectory);
+            // Execution history lives in its own SQLite database alongside the store —
+            // run output is not "small", so it stays out of the JSON document.
+            var historyStore = new SqliteCommandHistoryStore(Path.Combine(storageDirectory, _historyDbFileName));
 
             var services = new ServiceCollection();
             _ = services
@@ -56,6 +62,10 @@ namespace Snipdeck.App
                 .AddSingleton<ISnipStore>(snipStore)
                 .AddSingleton<IBackupService>(backupService)
                 .AddSingleton<IIconAssetStorage>(iconStorage)
+                .AddSingleton<ICommandHistoryStore>(historyStore)
+                .AddTransient<ICommandRunner, PortaPtyCommandRunner>()
+                .AddSingleton<Func<ICommandRunner>>(sp => sp.GetRequiredService<ICommandRunner>)
+                .AddSingleton<IRunCoordinator, RunCoordinator>()
                 .AddSingleton(config)
                 .AddTransient<SettingsViewModel>()
                 .AddSingleton<ShellViewModel>()

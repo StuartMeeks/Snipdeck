@@ -23,5 +23,13 @@ namespace Snipdeck.Core.Models
         public int UsageCount { get; set; }
 
         public DateTimeOffset? LastUsedAt { get; set; }
+
+        // --- Execution overrides (schema v5) ---
+
+        /// <summary>Overrides the CLI's <see cref="Cli.Shell"/> for this Snip when set.</summary>
+        public ShellKind? ShellOverride { get; set; }
+
+        /// <summary>Overrides the CLI's <see cref="Cli.WorkingDirectory"/> for this Snip when set.</summary>
+        public string? WorkingDirectoryOverride { get; set; }
     }
 }

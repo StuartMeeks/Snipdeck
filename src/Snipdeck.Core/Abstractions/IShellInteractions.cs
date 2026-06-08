@@ -35,6 +35,20 @@ namespace Snipdeck.Core.Abstractions
         Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters);
 
         /// <summary>
+        /// The Run variant of the parameter-fill flow: same live preview, but the
+        /// primary button reads "Run", the resolved command is shown alongside the
+        /// <paramref name="shellDisplay"/> and <paramref name="workingDirectoryDisplay"/>
+        /// it will execute under (the dry-run safety gate), and the dialog is shown
+        /// even when the Snip has no parameters. Returns the resolved command, or
+        /// <c>null</c> if the user cancelled.
+        /// </summary>
+        Task<ParameterFillResult?> FillParametersForRunAsync(
+            Snip snip,
+            IReadOnlyList<Parameter> parameters,
+            string shellDisplay,
+            string workingDirectoryDisplay);
+
+        /// <summary>
         /// Opens the glyph picker so the user can browse and choose an icon.
         /// Pass <paramref name="currentGlyph"/> to pre-select the glyph in effect.
         /// Returns the chosen glyph character, or <c>null</c> if the user cancelled.

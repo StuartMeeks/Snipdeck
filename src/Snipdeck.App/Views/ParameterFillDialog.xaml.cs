@@ -11,6 +11,13 @@ namespace Snipdeck.App.Views
             ArgumentNullException.ThrowIfNull(viewModel);
             ViewModel = viewModel;
             InitializeComponent();
+            if (viewModel.IsRunMode)
+            {
+                // Same dialog, repurposed as the dry-run safety gate before execution.
+                Title = "Run snip";
+                PrimaryButtonText = "Run";
+            }
+
             UpdatePrimaryButtonEnabled();
             viewModel.PropertyChanged += (_, _) => UpdatePrimaryButtonEnabled();
         }

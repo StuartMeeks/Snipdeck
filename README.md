@@ -6,7 +6,8 @@
 
 A native Windows desktop app for managing parameterised CLI command snippets
 ("Snips"), organised by the CLI they belong to. Browse a CLI, pick a Snip, fill
-its arguments, and copy the resolved command to the clipboard.
+its arguments, and copy the resolved command to the clipboard — or run it in place
+and watch it live, with a clean, searchable run history.
 
 Conceptually inspired by
 [SnipCommand](https://github.com/gurayyarar/SnipCommand), with one defining
@@ -19,11 +20,17 @@ to exactly one CLI (e.g. `pl-app`, `mpt-app`, `inv-app`).
 
 ## Status
 
-Pre-1.0. **v0.2.0** is the latest release — see
-[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains
-the full v1 feature set: browse CLIs and Snips, author Snips with structured
-parameters, fill and copy resolved commands, global hotkey, system tray with
-close-to-tray, theme switching, and Velopack-backed self-update.
+**v1.0.0** is the latest release — see
+[Releases](https://github.com/StuartMeeks/Snipdeck/releases). It contains the full
+v1 feature set: browse CLIs and Snips, author Snips with structured parameters, fill
+and copy resolved commands, global hotkey, system tray with close-to-tray, theme
+switching, and Velopack-backed self-update.
+
+It also runs Snips: execute one in its configured shell via a real pseudo-terminal —
+so colours, spinners, progress bars and interactive prompts all work — watch it live,
+and keep a clean plain-text run history you can search and replay. Per-CLI shell,
+executable path and working directory configure how runs launch. See
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## Install
 
@@ -102,6 +109,26 @@ snippet manager that demonstrated how useful parameterised, fill-in-and-copy
 command templates are day to day. Snipdeck reimagines that idea as a native
 Windows app organised around the CLI each command belongs to. A
 [SnipCommand import tool](tools/Snipdeck.Importer) ships in this repo.
+
+Snipdeck is built on the work of these open-source projects, with thanks to
+their authors and maintainers:
+
+- [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) — MVVM source generators and helpers (MIT)
+- [Coverlet](https://github.com/coverlet-coverage/coverlet) — code-coverage collection (MIT)
+- [H.NotifyIcon](https://github.com/HavenDV/H.NotifyIcon) — system-tray icon and menu (MIT)
+- [Jdenticon](https://github.com/dmester/jdenticon-net) — identicons for CLIs without a custom icon (MIT)
+- [Markdig](https://github.com/xoofx/markdig) — Markdown rendering for Snip descriptions (BSD-2-Clause)
+- [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime) — dependency injection (MIT)
+- [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) — git-derived versioning (MIT)
+- [Porta.Pty](https://github.com/tomlm/Porta.Pty) — cross-platform pseudo-terminal (ConPTY) for running commands (MIT)
+- [Spectre.Console](https://github.com/spectreconsole/spectre.console) — console UI for the import tool (MIT)
+- [SQLite](https://www.sqlite.org) & [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore) — execution-history storage (Public Domain / MIT)
+- [Velopack](https://github.com/velopack/velopack) — installer and self-update (MIT)
+- [WebView2](https://learn.microsoft.com/microsoft-edge/webview2/) — hosts the xterm.js live terminal (Microsoft)
+- [Windows App SDK & WinUI 3](https://github.com/microsoft/WindowsAppSDK) — the native Windows UI framework (MIT)
+- [Windows Community Toolkit](https://github.com/CommunityToolkit/Windows) — `SettingsCard` / `SettingsExpander` controls (MIT)
+- [xterm.js](https://github.com/xtermjs/xterm.js) — renders the live terminal output (MIT)
+- [xUnit](https://github.com/xunit/xunit) — unit-testing framework (Apache-2.0)
 
 ## Licence
 

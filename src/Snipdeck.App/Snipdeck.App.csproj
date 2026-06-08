@@ -48,6 +48,12 @@
 		<Content Include="Assets\TitleBarGlyph.png" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<!-- Vendored xterm.js terminal assets, served to the WebView2 via a virtual host
+	     mapping (offline; no CDN). -->
+	<ItemGroup>
+		<Content Include="Assets\terminal\**\*" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<!-- Theme hero images are optional: packaged only once the user drops them in. -->
 	<ItemGroup Condition="Exists('Assets\HomeHeroLight.png')">
 		<Content Include="Assets\HomeHeroLight.png" CopyToOutputDirectory="PreserveNewest" />
@@ -67,6 +73,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Snipdeck.Core\Snipdeck.Core.csproj" />
+		<ProjectReference Include="..\Snipdeck.Execution\Snipdeck.Execution.csproj" />
 	</ItemGroup>
 
 	<!-- Publish properties -->

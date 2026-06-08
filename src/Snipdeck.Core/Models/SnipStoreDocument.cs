@@ -5,9 +5,13 @@ namespace Snipdeck.Core.Models
         // v2 adds shared parameter definitions (Cli.Parameters + GlobalParameters).
         // v3 adds per-tag icon glyphs (Cli.TagIcons).
         // v4 adds Cli.Description.
+        // v5 adds per-CLI execution config (Cli.Shell/CustomShell*/ExecutablePath/
+        //    WorkingDirectory) and per-Snip overrides (Snip.ShellOverride/
+        //    WorkingDirectoryOverride). Execution *history* is NOT here — it lives in
+        //    a separate SQLite database (see Snipdeck.Execution).
         // Additive and forward-incompatible: an older build refuses a newer store
         // rather than silently dropping the new fields.
-        public const int CurrentSchemaVersion = 4;
+        public const int CurrentSchemaVersion = 5;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
