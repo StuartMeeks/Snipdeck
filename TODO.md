@@ -1,7 +1,7 @@
 # TODO
 
 A backlog of ideas worth building but not yet scheduled. Not a commitment — the
-canonical list of *parked* features is the "Out of scope for v1" section in
+canonical list of *parked* features is the "Not building yet" section in
 [CLAUDE.md](CLAUDE.md).
 
 > **Command execution** — run a Snip in its configured shell, watch it live with full

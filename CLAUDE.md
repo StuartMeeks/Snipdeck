@@ -171,17 +171,21 @@ Conventions:
   Changelog format). `README.md` is the public-facing intro and stays in sync
   with what the app actually does today, not aspirational.
 
-## Out of scope for v1 — do not build speculatively
+## Not building yet — do not build speculatively
 
-- **Command-palette quick picker.** In v1 the hotkey simply foregrounds the main
-  window. The palette is a strong v2 candidate, not a v1 deliverable.
+v1.0.0 has shipped (command execution included). These remain deliberately unbuilt:
+
+- **Command-palette quick picker.** The global hotkey just foregrounds the main
+  window. A quick pick-fill-run/copy palette is a strong v2 candidate — more
+  compelling now that execution exists — but not yet scheduled.
 - **macOS / cross-platform head.** Preserve the *option* via the view-model purity
   discipline above, but do **not** add Avalonia scaffolding now. The existing split
   already buys ~90% of the future-proofing for free.
-- **Secret / masked parameters.** Parked. Revisit only if storing credentials in
-  Snips becomes a real, stated use case.
-- **SnipCommand import** (future nicety): a SnipCommand JSON could be imported, and
-  the CLI auto-suggested from the first token of each command string.
+
+Two items that used to sit here are resolved: **SnipCommand import** shipped as the
+`snipdeck-importer` tool, and **secret / masked parameters** is now a planned
+follow-on (per-CLI/Snip environment variables with DPAPI) — see [TODO.md](TODO.md)
+for it and the other deferred command-execution work.
 
 ## Working agreement
 
