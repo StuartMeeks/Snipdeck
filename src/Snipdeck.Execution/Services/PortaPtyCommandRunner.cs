@@ -36,6 +36,13 @@ namespace Snipdeck.Execution.Services
             {
                 App = spec.Launch.FileName,
                 CommandLine = [.. spec.Launch.Arguments],
+                // Verbatim: join the arguments raw rather than quoting each one. The
+                // default quotes every argument, which wraps the resolved command in
+                // quotes and makes `cmd /c "the whole command"` look for a program by
+                // that literal name. ShellCommandBuilder already lays out each shell's
+                // command line so a raw space-join is correct (quoting the command
+                // itself only where the shell needs it, e.g. bash -lc).
+                VerbatimCommandLine = true,
                 Cwd = string.IsNullOrWhiteSpace(spec.WorkingDirectory)
                     ? Environment.CurrentDirectory
                     : spec.WorkingDirectory,

@@ -30,11 +30,20 @@ namespace Snipdeck.Execution.Tests.Engine
         }
 
         [Fact]
-        public void Bash_uses_login_command()
+        public void Bash_uses_login_command_and_quotes_the_command_as_one_token()
         {
             var launch = ShellCommandBuilder.Build(ShellKind.Bash, null, null, "ls -la");
             Assert.Equal("bash", launch.FileName);
-            Assert.Equal(["-lc", "ls -la"], launch.Arguments);
+            // Quoted so the verbatim space-join keeps the whole command as bash -lc's
+            // single argument rather than splitting it into positional parameters.
+            Assert.Equal(["-lc", "\"ls -la\""], launch.Arguments);
+        }
+
+        [Fact]
+        public void Bash_escapes_embedded_quotes_and_backslashes()
+        {
+            var launch = ShellCommandBuilder.Build(ShellKind.Bash, null, null, "echo \"a\\b\"");
+            Assert.Equal(["-lc", "\"echo \\\"a\\\\b\\\"\""], launch.Arguments);
         }
 
         [Fact]

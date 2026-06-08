@@ -182,6 +182,7 @@ namespace Snipdeck.Execution.ViewModels
             var captured = new List<byte>();
             var truncated = false;
             var cancelled = false;
+            string? failure = null;
 
             try
             {
@@ -196,6 +197,15 @@ namespace Snipdeck.Execution.ViewModels
             {
                 cancelled = true;
             }
+            catch (Exception ex)
+            {
+                // The shell couldn't be started (e.g. not installed) or the stream
+                // faulted. Surface it in the terminal and record it rather than leaving
+                // an unobserved exception.
+                failure = ex.Message;
+                var notice = Encoding.UTF8.GetBytes($"\r\n[Snipdeck] Couldn't run: {ex.Message}\r\n");
+                _dispatcher.Enqueue(() => OutputReceived?.Invoke(notice));
+            }
 
             cancelled = cancelled || _cts.IsCancellationRequested;
 
@@ -206,9 +216,16 @@ namespace Snipdeck.Execution.ViewModels
                 cleaned += "\n\n[output truncated at the capture limit]";
             }
 
+            if (failure is not null)
+            {
+                cleaned = string.IsNullOrEmpty(cleaned)
+                    ? $"[Couldn't run: {failure}]"
+                    : $"{cleaned}\n\n[Couldn't run: {failure}]";
+            }
+
             var finishedAt = _clock.UtcNow;
             var duration = (int)Math.Max(0, (finishedAt - _startedAt).TotalMilliseconds);
-            var exit = _runner.LastExitCode;
+            var exit = failure is not null ? -1 : _runner.LastExitCode;
 
             var entry = new CommandHistoryEntry
             {

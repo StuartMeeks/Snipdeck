@@ -18,6 +18,12 @@ namespace Snipdeck.Execution.Engine
         /// <paramref name="shell"/>. For <see cref="ShellKind.Custom"/>, uses
         /// <paramref name="customShellPath"/> and substitutes the command into
         /// <paramref name="customShellArgsTemplate"/> at the <see cref="CommandToken"/>.
+        ///
+        /// The runner joins the returned <see cref="ShellLaunch.Arguments"/> verbatim
+        /// (space-separated, no per-argument quoting) into the ConPTY command line, so
+        /// each shell's layout is chosen to be correct under a raw join: <c>cmd /c</c>
+        /// and <c>-Command</c> take the command raw (the shell re-parses the tail),
+        /// whereas <c>bash -lc</c> needs the command as a single quoted token.
         /// </summary>
         public static ShellLaunch Build(
             ShellKind shell,
@@ -36,7 +42,7 @@ namespace Snipdeck.Execution.Engine
                 ShellKind.PwshCore => new ShellLaunch(
                     "pwsh",
                     ["-NoLogo", "-NoProfile", "-Command", resolvedCommand]),
-                ShellKind.Bash => new ShellLaunch("bash", ["-lc", resolvedCommand]),
+                ShellKind.Bash => new ShellLaunch("bash", ["-lc", QuoteForBash(resolvedCommand)]),
                 ShellKind.Custom => BuildCustom(customShellPath, customShellArgsTemplate, resolvedCommand),
                 _ => throw new ArgumentOutOfRangeException(nameof(shell), shell, "Unknown shell kind."),
             };
@@ -60,6 +66,16 @@ namespace Snipdeck.Execution.Engine
                 ShellKind.Custom => DescribeCustom(customShellPath, customShellArgsTemplate),
                 _ => shell.ToString(),
             };
+        }
+
+        // bash -lc takes the command as a single argument, so it must survive the
+        // runner's verbatim space-join as one token: wrap in double quotes and escape
+        // embedded backslashes and quotes (bash honours \" and \\ inside "…").
+        private static string QuoteForBash(string command)
+        {
+            var escaped = command.Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("\"", "\\\"", StringComparison.Ordinal);
+            return "\"" + escaped + "\"";
         }
 
         private static ShellLaunch BuildCustom(
