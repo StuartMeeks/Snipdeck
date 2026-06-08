@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The list/content pages (Settings, Trash, Shared parameters, Tags, History) now share
+  one layout with a consistent maximum content width — centred at wider window sizes and
+  squashing when narrower — so every page's list uses the same horizontal band. History
+  previously used a wider band, which made it drift right and clip at narrower widths.
+  Each page's primary action (Save, Add parameter, Clear all) is aligned to its heading
+  row, with the description beneath.
+
 ## [1.0.0] - 2026-06-08
 
 ### Added
