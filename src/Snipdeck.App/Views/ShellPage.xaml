@@ -56,8 +56,8 @@
         <converters:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility" />
 
         <!-- One shared max width for the list/content pages (Settings, Trash, Shared
-             parameters, Tags, History) so they all use the same horizontal band. They
-             left-align and fill up to this width, then squash when narrower. -->
+             parameters, Tags, History) so they all use the same band: filled and
+             centred up to this width, squashing when the window is narrower. -->
         <x:Double x:Key="ContentMaxWidth">720</x:Double>
 
         <DataTemplate x:Key="HomeContentTemplate" x:DataType="vm:HomeViewModel">
@@ -273,7 +273,7 @@
 
         <DataTemplate x:Key="SettingsContentTemplate" x:DataType="vm:SettingsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="8" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                <StackPanel Padding="24" Spacing="8" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Stretch">
                     <TextBlock Text="Settings"
                                Style="{ThemeResource TitleTextBlockStyle}"
                                Margin="0,0,0,8" />
@@ -434,7 +434,7 @@
 
         <DataTemplate x:Key="TrashContentTemplate" x:DataType="vm:TrashViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Stretch">
                     <TextBlock Text="Trash"
                                Style="{ThemeResource TitleTextBlockStyle}" />
                     <TextBlock Text="Deleted snips are kept here. Restore a snip to put it back in its CLI, or delete it permanently."
@@ -504,7 +504,7 @@
 
         <DataTemplate x:Key="SharedParametersContentTemplate" x:DataType="vm:SharedParametersViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Stretch">
                     <StackPanel Spacing="4">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -610,7 +610,7 @@
 
         <DataTemplate x:Key="TagIconsContentTemplate" x:DataType="vm:TagIconsViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Stretch">
                     <StackPanel Spacing="4">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -751,7 +751,7 @@
 
         <DataTemplate x:Key="HistoryContentTemplate" x:DataType="exec:HistoryViewModel">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Left">
+                <StackPanel Padding="24" Spacing="16" MaxWidth="{StaticResource ContentMaxWidth}" HorizontalAlignment="Stretch">
                     <StackPanel Spacing="4">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
