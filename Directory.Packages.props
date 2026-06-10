@@ -34,12 +34,11 @@
     <PackageVersion Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
-  <!-- Importer tool (console). Spectre.Console and Spectre.Console.Cli are a
-       coupled pair and must move together. Held at 0.55.0: Spectre.Console has a
-       0.56.0 but Spectre.Console.Cli does not yet, so bumping only the former
-       would desync them. Bump both once Cli 0.56.0 ships. -->
+  <!-- Importer tool (console). Spectre.Console.Cli trails Spectre.Console by a
+       release (no 0.56.0 yet), so it stays at 0.55.0 — its latest stable — while
+       Spectre.Console moves to 0.56.0. Realign them when Cli 0.56.0 ships. -->
   <ItemGroup>
-    <PackageVersion Include="Spectre.Console" Version="0.55.0" />
+    <PackageVersion Include="Spectre.Console" Version="0.56.0" />
     <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
   </ItemGroup>
 
