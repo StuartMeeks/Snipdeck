@@ -6,7 +6,6 @@
 		<RootNamespace>Snipdeck.App</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 		<UseWinUI>true</UseWinUI>
 		<WinUISDKReferences>false</WinUISDKReferences>
 		<WindowsPackageType>None</WindowsPackageType>
