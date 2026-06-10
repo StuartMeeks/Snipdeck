@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-06-10
+
+### Changed
+- Refreshed bundled dependencies to their latest stable releases, including the
+  Windows App SDK (2.2.0) and the Velopack updater (1.2.0).
+
+### Security
+- The release pipeline now publishes the `snipdeck-importer` .NET tool to NuGet.org
+  using trusted publishing — short-lived OIDC credentials issued per run — in place
+  of a long-lived API key.
+
 ## [1.0.3] - 2026-06-08
 
 ### Fixed
