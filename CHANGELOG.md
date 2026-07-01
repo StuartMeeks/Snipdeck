@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-01
+
+### Added
+- Settings now has an **Enabled** checkbox for the global hotkey. Clearing it
+  turns the hotkey off immediately and disables the shortcut-capture box; the
+  choice persists across restarts, and the stored chord is kept so re-enabling
+  restores it. The Reset button turns the hotkey back on and restores the
+  Ctrl+Alt+S default.
+
 ## [1.0.4] - 2026-06-10
 
 ### Changed

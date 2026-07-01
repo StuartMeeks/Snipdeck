@@ -40,7 +40,7 @@ The v1 feature set:
   colours, spinners, progress bars and interactive prompts all work — watch it live,
   and keep a clean, searchable plain-text run history you can replay. Per-CLI shell,
   executable path and working directory configure how runs launch.
-- Global hotkey (default **Ctrl+Alt+S**, rebindable), system tray with
+- Global hotkey (default **Ctrl+Alt+S**, rebindable, and switchable off), system tray with
   configurable close-to-tray, Light/Dark/System theme, and per-write plus
   pre-update store backups.
 - Migrate from SnipCommand with the [`snipdeck-importer`](tools/Snipdeck.Importer)

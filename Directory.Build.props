@@ -22,4 +22,15 @@
     <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Suppress the SQLitePCLRaw.lib.e_sqlite3 advisory pulled in transitively by
+       Microsoft.Data.Sqlite (history.db). The fix is a SQLitePCLRaw 2.x->3.x major
+       jump that Microsoft.Data.Sqlite 10.x doesn't yet bind, and TreatWarningsAsErrors
+       turns the NuGetAudit warning into a hard restore failure. The advisory concerns
+       native SQLite parsing of untrusted database files; Snipdeck only ever opens its
+       own local history.db, so the practical exposure is minimal. Remove this once a
+       Microsoft.Data.Sqlite release ships a patched native library. -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
+
 </Project>

@@ -310,12 +310,17 @@
                                            TextWrapping="Wrap"
                                            MaxWidth="200"
                                            Visibility="{x:Bind HotkeyError, Mode=OneWay, Converter={StaticResource EmptyStringToVisibility}}" />
+                                <CheckBox Content="Enabled"
+                                          IsChecked="{x:Bind HotkeyEnabled, Mode=TwoWay}"
+                                          VerticalAlignment="Center"
+                                          ToolTipService.ToolTip="Turn the global hotkey on or off" />
                                 <controls:HotkeyCaptureBox
                                     CurrentText="{x:Bind HotkeyDisplay, Mode=OneWay}"
-                                    Command="{x:Bind RebindHotkeyCommand}" />
+                                    Command="{x:Bind RebindHotkeyCommand}"
+                                    IsEnabled="{x:Bind HotkeyEnabled, Mode=OneWay}" />
                                 <Button Content="Reset"
                                         Command="{x:Bind ResetHotkeyCommand}"
-                                        ToolTipService.ToolTip="Reset to Ctrl+Alt+S" />
+                                        ToolTipService.ToolTip="Turn the hotkey on and reset to Ctrl+Alt+S" />
                             </StackPanel>
                         </tk:SettingsCard>
 

@@ -24,6 +24,14 @@ namespace Snipdeck.Core.Models
 
         public HotkeyBinding Hotkey { get; set; } = HotkeyBinding.Default;
 
+        /// <summary>
+        /// Whether the global hotkey is registered. When false the app runs
+        /// without a system-wide shortcut; the stored <see cref="Hotkey"/> chord
+        /// is retained so re-enabling restores it. Defaults to true so existing
+        /// settings files (written before this option existed) keep their hotkey.
+        /// </summary>
+        public bool HotkeyEnabled { get; set; } = true;
+
         public CloseBehaviour CloseBehaviour { get; set; } = CloseBehaviour.HideToTray;
 
         /// <summary>

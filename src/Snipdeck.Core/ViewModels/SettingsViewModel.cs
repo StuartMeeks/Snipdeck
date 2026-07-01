@@ -67,6 +67,7 @@ namespace Snipdeck.Core.ViewModels
             CloseBehaviour = config.CloseBehaviour;
             CloseBehaviourIndex = CloseBehaviourIndexFor(config.CloseBehaviour);
             HotkeyDisplay = config.Hotkey.ToDisplayString();
+            HotkeyEnabled = config.HotkeyEnabled;
             StorageDirectory = config.StoragePath ?? pathProvider.DefaultStorageDirectory;
             BackupDirectory = config.BackupDirectory ?? pathProvider.DefaultBackupDirectory;
             BackupRetention = config.BackupRetention;
@@ -129,6 +130,14 @@ namespace Snipdeck.Core.ViewModels
 
         [ObservableProperty]
         public partial string HotkeyError { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Whether the global hotkey is on. Toggling this registers or
+        /// unregisters the hotkey immediately and persists the choice. When
+        /// false the hotkey-capture box is disabled in the UI.
+        /// </summary>
+        [ObservableProperty]
+        public partial bool HotkeyEnabled { get; set; }
 
         [ObservableProperty]
         public partial ThemePreference Theme { get; set; }
@@ -209,6 +218,33 @@ namespace Snipdeck.Core.ViewModels
             _ = PersistAsync();
         }
 
+        partial void OnHotkeyEnabledChanged(bool value)
+        {
+            // During construction the hotkey is already in the state App set at
+            // startup; only react to genuine user toggles.
+            if (_suppressPersist)
+            {
+                return;
+            }
+            if (value)
+            {
+                if (_hotkeyService.TryRegister(_config.Hotkey))
+                {
+                    HotkeyError = string.Empty;
+                }
+                else
+                {
+                    HotkeyError = $"Couldn't set {_config.Hotkey.ToDisplayString()} — it may already be in use by another app.";
+                }
+            }
+            else
+            {
+                _hotkeyService.Unregister();
+                HotkeyError = string.Empty;
+            }
+            _ = PersistAsync();
+        }
+
         [RelayCommand]
         private async Task CheckForUpdatesAsync()
         {
@@ -267,6 +303,11 @@ namespace Snipdeck.Core.ViewModels
         [RelayCommand]
         private void ResetHotkey()
         {
+            // Reset also re-enables the hotkey if it was switched off. Setting the
+            // property first flips the UI and (when it was off) registers the
+            // stored chord; RebindHotkey then swaps in the default and persists,
+            // so the final state is enabled + Ctrl+Alt+S regardless of the start.
+            HotkeyEnabled = true;
             RebindHotkey(HotkeyBinding.Default);
         }
 
@@ -371,6 +412,7 @@ namespace Snipdeck.Core.ViewModels
             _config.BackupRetention = BackupRetention;
             _config.HistoryRetentionPerSnip = HistoryRetentionPerSnip;
             _config.MaxCapturedOutputBytes = (long)MaxCapturedOutputMb * 1024 * 1024;
+            _config.HotkeyEnabled = HotkeyEnabled;
             // _config.Hotkey is set directly by RebindHotkey before this runs.
             await _settingsStore.SaveAsync(_config).ConfigureAwait(true);
         }
