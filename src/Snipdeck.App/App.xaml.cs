@@ -94,7 +94,10 @@ namespace Snipdeck.App
         {
             _hotkey = Services.GetRequiredService<IHotkeyService>();
             _hotkey.Pressed += OnHotkeyPressed;
-            _ = _hotkey.TryRegister(config.Hotkey);
+            if (config.HotkeyEnabled)
+            {
+                _ = _hotkey.TryRegister(config.Hotkey);
+            }
         }
 
         private void OnTrayShowRequested(object? sender, EventArgs e) => BringToFront();

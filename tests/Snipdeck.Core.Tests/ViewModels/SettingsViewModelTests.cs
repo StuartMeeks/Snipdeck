@@ -135,6 +135,82 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public void Initial_hotkey_enabled_reflects_config()
+        {
+            var enabled = Build(out _, out _, new AppConfig { HotkeyEnabled = true });
+            Assert.True(enabled.HotkeyEnabled);
+
+            var disabled = Build(out _, out _, new AppConfig { HotkeyEnabled = false });
+            Assert.False(disabled.HotkeyEnabled);
+        }
+
+        [Fact]
+        public void Disabling_the_hotkey_unregisters_and_persists_the_off_state()
+        {
+            var vm = Build(out var hotkey, out var store, new AppConfig { HotkeyEnabled = true });
+
+            vm.HotkeyEnabled = false;
+
+            Assert.Equal(1, hotkey.UnregisterCount);
+            Assert.Equal(string.Empty, vm.HotkeyError);
+            Assert.Equal(1, store.SaveCount);
+            Assert.False(store.Current.HotkeyEnabled);
+        }
+
+        [Fact]
+        public void Enabling_the_hotkey_registers_the_stored_chord_and_persists()
+        {
+            var vm = Build(out var hotkey, out var store, new AppConfig
+            {
+                HotkeyEnabled = false,
+                Hotkey = HotkeyBinding.Default,
+            });
+
+            vm.HotkeyEnabled = true;
+
+            Assert.Equal(HotkeyBinding.Default.Key, hotkey.LastRegistered!.Key);
+            Assert.Equal(1, hotkey.RegisterCount);
+            Assert.Equal(string.Empty, vm.HotkeyError);
+            Assert.Equal(1, store.SaveCount);
+            Assert.True(store.Current.HotkeyEnabled);
+        }
+
+        [Fact]
+        public void Enabling_the_hotkey_reports_an_error_when_registration_fails()
+        {
+            var vm = Build(out var hotkey, out var store, new AppConfig
+            {
+                HotkeyEnabled = false,
+                Hotkey = HotkeyBinding.Default,
+            });
+            hotkey.NextRegisterResult = false;
+
+            vm.HotkeyEnabled = true;
+
+            Assert.Contains("in use", vm.HotkeyError);
+            // The choice is still persisted even though registration failed.
+            Assert.True(store.Current.HotkeyEnabled);
+        }
+
+        [Fact]
+        public void ResetHotkey_reenables_the_hotkey_when_it_was_switched_off()
+        {
+            var vm = Build(out var hotkey, out var store, new AppConfig
+            {
+                HotkeyEnabled = false,
+                Hotkey = new HotkeyBinding { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Shift, Key = "K" },
+            });
+
+            vm.ResetHotkeyCommand.Execute(null);
+
+            Assert.True(vm.HotkeyEnabled);
+            Assert.True(store.Current.HotkeyEnabled);
+            Assert.Equal("Ctrl+Alt+S", vm.HotkeyDisplay);
+            Assert.Equal(HotkeyBinding.Default.Modifiers, hotkey.LastRegistered!.Modifiers);
+            Assert.Equal("S", hotkey.LastRegistered.Key);
+        }
+
+        [Fact]
         public async Task ChangeStoragePath_moves_the_store_to_an_empty_target_then_restarts()
         {
             var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
