@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   restores it. The Reset button turns the hotkey back on and restores the
   Ctrl+Alt+S default.
 
+### Changed
+- Refreshed dependencies to their latest stable releases (Markdig, WebView2,
+  Windows SDK build tools, Spectre.Console, the test SDK and the versioning tool).
+
+### Fixed
+- The release pipeline no longer fails to install the pinned Nerdbank.GitVersioning
+  CLI when the hosted runner ships a newer build.
+
 ## [1.0.4] - 2026-06-10
 
 ### Changed
