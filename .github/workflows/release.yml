@@ -45,7 +45,11 @@ jobs:
             **/*.csproj
 
       - name: Install Nerdbank.GitVersioning CLI
-        run: dotnet tool install --global nbgv --version 3.9.50
+        # --allow-downgrade: the hosted runner now preinstalls a newer nbgv than
+        # the version pinned here (kept in sync with the Nerdbank.GitVersioning
+        # package for reproducible stamping), and a plain install refuses to
+        # downgrade. The flag lets us pin the exact version regardless.
+        run: dotnet tool install --global nbgv --version 3.9.50 --allow-downgrade
 
       - name: Derive version + channel from NBGV
         id: meta
