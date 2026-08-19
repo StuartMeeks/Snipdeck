@@ -19,8 +19,11 @@ namespace Snipdeck.Core.ViewModels
     {
         public const string AllTagsSentinel = "All";
 
-        /// <summary>The project documentation opened by the "Documentation" nav item.</summary>
-        public const string DocumentationUrl = "https://github.com/StuartMeeks/Snipdeck#readme";
+        /// <summary>
+        /// The project documentation opened by the "Documentation" nav item. The wiki
+        /// is the home for user-facing docs; the README is only the project intro.
+        /// </summary>
+        public const string DocumentationUrl = "https://github.com/StuartMeeks/Snipdeck/wiki";
 
         // Glyph for the "All" tag entry (Segoe Fluent Icons "Filter").
         private const string _allTagsGlyph = "\uE71C";

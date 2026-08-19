@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- The **Documentation** navigation item now opens the project wiki rather than the
+  README, so it lands on the user-facing documentation.
 - Migrated the test suites to xUnit v3 on Microsoft Testing Platform, replacing
   the VSTest stack. Development-only; the shipped app is unaffected.
 - Refreshed dependencies to their latest stable releases, including the Windows

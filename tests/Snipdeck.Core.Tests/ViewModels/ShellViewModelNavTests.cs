@@ -175,14 +175,16 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
-        public async Task OpenDocumentation_opens_the_readme_url()
+        public async Task OpenDocumentation_opens_the_wiki_url()
         {
             var (vm, links, _, _) = await BuildAsync();
 
             await vm.OpenDocumentationAsync();
 
             Assert.Equal(1, links.OpenCount);
-            Assert.Equal(ShellViewModel.DocumentationUrl, links.LastOpenedUrl);
+            // Asserted as a literal, not against the constant: comparing the constant
+            // to itself would pass whatever the nav item actually pointed at.
+            Assert.Equal("https://github.com/StuartMeeks/Snipdeck/wiki", links.LastOpenedUrl);
         }
     }
 }
