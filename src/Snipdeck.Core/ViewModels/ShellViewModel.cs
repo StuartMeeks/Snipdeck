@@ -893,7 +893,17 @@ namespace Snipdeck.Core.ViewModels
                 _suppressShellRefresh = false;
             }
 
-            CurrentContent = BuildTrashViewModel();
+            // Refresh the Trash list in place when it is the live view, rather than
+            // swapping in a replacement: the content area binds a template per
+            // view-model type, so a same-type swap leaves the old list on screen.
+            if (CurrentContent is TrashViewModel trash)
+            {
+                trash.Load(_document.Snips.Where(s => s.IsTrash));
+            }
+            else
+            {
+                CurrentContent = BuildTrashViewModel();
+            }
         }
 
         private async Task SaveAndRefreshAsync()

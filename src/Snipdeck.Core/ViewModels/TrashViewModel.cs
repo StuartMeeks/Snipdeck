@@ -16,18 +16,35 @@ namespace Snipdeck.Core.ViewModels
     {
         public TrashViewModel(IEnumerable<Snip> trashedSnips)
         {
-            ArgumentNullException.ThrowIfNull(trashedSnips);
-
-            Snips = new ObservableCollection<SnipCardViewModel>(
-                trashedSnips
-                    .OrderBy(s => s.Title, StringComparer.OrdinalIgnoreCase)
-                    .Select(s => new SnipCardViewModel(s)));
+            Load(trashedSnips);
         }
 
-        public ObservableCollection<SnipCardViewModel> Snips { get; }
+        /// <summary>The trashed snips currently shown, ordered by title.</summary>
+        public ObservableCollection<SnipCardViewModel> Snips { get; } = [];
 
         public bool HasSnips => Snips.Count > 0;
 
         public bool IsEmpty => Snips.Count == 0;
+
+        /// <summary>
+        /// Repopulates the list in place. The shell reuses the live instance after a
+        /// restore or a permanent delete rather than building a replacement, so the
+        /// content area sees collection-change notifications: its bindings resolve
+        /// once per template instantiation, and swapping in a new view model of the
+        /// same type leaves the stale list on screen until the user navigates away.
+        /// </summary>
+        public void Load(IEnumerable<Snip> trashedSnips)
+        {
+            ArgumentNullException.ThrowIfNull(trashedSnips);
+
+            Snips.Clear();
+            foreach (var snip in trashedSnips.OrderBy(s => s.Title, StringComparer.OrdinalIgnoreCase))
+            {
+                Snips.Add(new SnipCardViewModel(snip));
+            }
+
+            OnPropertyChanged(nameof(HasSnips));
+            OnPropertyChanged(nameof(IsEmpty));
+        }
     }
 }

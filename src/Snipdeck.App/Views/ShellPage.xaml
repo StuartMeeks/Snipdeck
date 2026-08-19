@@ -453,7 +453,7 @@
                         <TextBlock Text="Trash is empty."
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                                   Visibility="{x:Bind IsEmpty, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
                         <ItemsControl ItemsSource="{x:Bind Snips}">
                             <ItemsControl.ItemsPanel>
