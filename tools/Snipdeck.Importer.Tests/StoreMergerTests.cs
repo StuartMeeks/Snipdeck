@@ -243,8 +243,8 @@ namespace Snipdeck.Importer.Tests
             StoreMerger.Apply(doc, plan);
 
             // Only one "Run" snip lands (they were the same command once unified).
-            Assert.Single(doc.Snips);
-            Assert.Equal("x run {authId}", doc.Snips[0].CommandTemplate);
+            var snip = Assert.Single(doc.Snips);
+            Assert.Equal("x run {authId}", snip.CommandTemplate);
         }
 
         [Fact]

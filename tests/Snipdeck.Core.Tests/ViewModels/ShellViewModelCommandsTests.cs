@@ -274,8 +274,8 @@ namespace Snipdeck.Core.Tests.ViewModels
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
             await vm.NewSnipCommand.ExecuteAsync(null);
 
-            Assert.Single(store.Document.Snips);
-            Assert.Equal("New", store.Document.Snips[0].Title);
+            var created = Assert.Single(store.Document.Snips);
+            Assert.Equal("New", created.Title);
         }
 
         [Fact]
@@ -348,7 +348,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var store = new InMemorySnipStore(doc);
             var ix = new FakeShellInteractions { NextConfirmResult = true };
             var vm = new ShellViewModel(store, new FakeClipboardService(), new FakeClock(DateTimeOffset.UtcNow), ix, icons, new FakeExternalLinkService());
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == cli.Id);
 
             await vm.DeleteCurrentCliCommand.ExecuteAsync(null);
@@ -560,8 +560,8 @@ namespace Snipdeck.Core.Tests.ViewModels
             vm.OpenTrash();
 
             var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
-            Assert.Single(trash.Snips);
-            Assert.Equal("Binned", trash.Snips[0].Title);
+            var binned = Assert.Single(trash.Snips);
+            Assert.Equal("Binned", binned.Title);
         }
 
         [Fact]
@@ -659,14 +659,14 @@ namespace Snipdeck.Core.Tests.ViewModels
             var clip = new FakeClipboardService();
             var clock = new FakeClock(DateTimeOffset.UtcNow);
             var vmWithIcons = new ShellViewModel(store, clip, clock, ix, icons, new FakeExternalLinkService());
-            await vmWithIcons.LoadAsync();
+            await vmWithIcons.LoadAsync(TestContext.Current.CancellationToken);
 
             await vmWithIcons.NewCliCommand.ExecuteAsync(null);
 
-            Assert.Single(store.Document.Clis);
-            Assert.Equal("inv-app", store.Document.Clis[0].Name);
+            var created = Assert.Single(store.Document.Clis);
+            Assert.Equal("inv-app", created.Name);
             Assert.True(icons.Saved.ContainsKey(newCli.Id));
-            Assert.StartsWith("icons/", store.Document.Clis[0].IconRef);
+            Assert.StartsWith("icons/", created.IconRef);
         }
     }
 }

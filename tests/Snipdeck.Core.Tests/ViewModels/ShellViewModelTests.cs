@@ -83,7 +83,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var doc = SampleDocument(out _, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
 
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.NotNull(vm.SelectedCliChoice);
             Assert.True(vm.SelectedCliChoice!.IsAll);
@@ -96,7 +96,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var doc = SampleDocument(out _, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
 
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(3, vm.CliChoices.Count);
             Assert.True(vm.CliChoices[0].IsAll);
@@ -109,7 +109,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var doc = SampleDocument(out var plAppId, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
 
@@ -128,7 +128,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var doc = SampleDocument(out var plAppId, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);
             vm.ShowHome();
@@ -145,7 +145,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var doc = SampleDocument(out _, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             var first = vm.CurrentContent;
             vm.SearchText = "deploy";
@@ -159,7 +159,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var doc = SampleDocument(out _, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             vm.OpenSettings(NewSettingsViewModel());
 
@@ -171,7 +171,7 @@ namespace Snipdeck.Core.Tests.ViewModels
         {
             var doc = SampleDocument(out var plAppId, out _);
             var vm = NewShellViewModel(new InMemorySnipStore(doc));
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             vm.OpenSettings(NewSettingsViewModel());
             vm.SelectedCliChoice = vm.CliChoices.Single(c => c.Cli?.Id == plAppId);

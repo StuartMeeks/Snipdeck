@@ -81,8 +81,8 @@ namespace Snipdeck.Core.Tests.Engine
                 new Dictionary<string, string?>());
 
             Assert.Equal("{missing} and {missing} again", result.Text);
-            Assert.Single(result.UnresolvedTokens);
-            Assert.Equal("missing", result.UnresolvedTokens[0]);
+            var token = Assert.Single(result.UnresolvedTokens);
+            Assert.Equal("missing", token);
         }
 
         [Fact]

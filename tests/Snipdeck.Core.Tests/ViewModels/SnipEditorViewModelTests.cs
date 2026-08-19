@@ -69,8 +69,8 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             vm.RemoveParameter(vm.Parameters[0]);
 
-            Assert.Single(vm.Parameters);
-            Assert.Equal("b", vm.Parameters[0].Name);
+            var remaining = Assert.Single(vm.Parameters);
+            Assert.Equal("b", remaining.Name);
         }
 
         [Fact]
@@ -104,8 +104,8 @@ namespace Snipdeck.Core.Tests.ViewModels
             Assert.Equal(2, built.Tags.Count);
             Assert.True(built.IsFavourite);
             Assert.Equal(3, built.UsageCount);
-            Assert.Single(built.Parameters);
-            Assert.Equal("x", built.Parameters[0].Name);
+            var parameter = Assert.Single(built.Parameters);
+            Assert.Equal("x", parameter.Name);
         }
 
         [Fact]

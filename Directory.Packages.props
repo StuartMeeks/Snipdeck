@@ -42,12 +42,14 @@
     <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
   </ItemGroup>
 
-  <!-- Tests -->
+  <!-- Tests. xunit v3 ships under the xunit.v3 package ID (the old `xunit` ID is
+       the feature-frozen v2 line) and self-hosts on Microsoft Testing Platform v2,
+       so it replaces the whole VSTest stack: no Microsoft.NET.Test.Sdk, no
+       xunit.runner.visualstudio, and coverage comes from the MTP extension rather
+       than coverlet.collector (a VSTest data collector, inert under MTP). -->
   <ItemGroup>
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
 
 </Project>

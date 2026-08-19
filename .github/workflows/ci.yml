@@ -20,7 +20,7 @@ env:
 
 jobs:
   core-tests:
-    name: Core build + tests (ubuntu)
+    name: Core + Execution build + tests (ubuntu)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,13 +39,20 @@ jobs:
       - name: Restore Core projects
         run: |
           dotnet restore src/Snipdeck.Core/Snipdeck.Core.csproj
+          dotnet restore src/Snipdeck.Execution/Snipdeck.Execution.csproj
           dotnet restore tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj
+          dotnet restore tests/Snipdeck.Execution.Tests/Snipdeck.Execution.Tests.csproj
 
       - name: Build Core
-        run: dotnet build src/Snipdeck.Core/Snipdeck.Core.csproj --configuration Release --no-restore
+        run: |
+          dotnet build src/Snipdeck.Core/Snipdeck.Core.csproj --configuration Release --no-restore
+          dotnet build src/Snipdeck.Execution/Snipdeck.Execution.csproj --configuration Release --no-restore
 
       - name: Build + run Core tests
-        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore --logger "trx;LogFileName=core-tests.trx" --results-directory TestResults
+        run: dotnet test --project tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore --report-xunit-trx --report-xunit-trx-filename core-tests.trx --results-directory TestResults
+
+      - name: Build + run Execution tests
+        run: dotnet test --project tests/Snipdeck.Execution.Tests/Snipdeck.Execution.Tests.csproj --configuration Release --no-restore --report-xunit-trx --report-xunit-trx-filename execution-tests.trx --results-directory TestResults
 
       - name: Upload test results
         if: always()
@@ -80,7 +87,7 @@ jobs:
         run: dotnet build tools/Snipdeck.Importer/Snipdeck.Importer.csproj --configuration Release --no-restore
 
       - name: Build + run importer tests
-        run: dotnet test tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj --configuration Release --no-restore --logger "trx;LogFileName=importer-tests.trx" --results-directory TestResults
+        run: dotnet test --project tools/Snipdeck.Importer.Tests/Snipdeck.Importer.Tests.csproj --configuration Release --no-restore --report-xunit-trx --report-xunit-trx-filename importer-tests.trx --results-directory TestResults
 
       - name: Upload test results
         if: always()
@@ -113,7 +120,12 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Run Core tests (sanity check on Windows)
-        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=core-tests-windows.trx" --results-directory TestResults
+        run: dotnet test --project tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-build --report-xunit-trx --report-xunit-trx-filename core-tests-windows.trx --results-directory TestResults
+
+      # Execution wraps ConPTY and process launching, so Windows is the platform
+      # that actually matters for it — the ubuntu run only proves it is portable.
+      - name: Run Execution tests (ConPTY + process launching are platform-specific)
+        run: dotnet test --project tests/Snipdeck.Execution.Tests/Snipdeck.Execution.Tests.csproj --configuration Release --no-build --report-xunit-trx --report-xunit-trx-filename execution-tests-windows.trx --results-directory TestResults
 
       - name: Upload test results
         if: always()

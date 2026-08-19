@@ -95,8 +95,8 @@ namespace Snipdeck.Core.Tests.Services
                 var store = new JsonSnipStore(Path.Combine(tempDir, "store.json"));
                 var original = ExamplesSeed.Build();
 
-                await store.SaveAsync(original);
-                var loaded = await store.LoadAsync();
+                await store.SaveAsync(original, TestContext.Current.CancellationToken);
+                var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
 
                 Assert.Equal(original.Clis.Count, loaded.Clis.Count);
                 Assert.Equal(original.Snips.Count, loaded.Snips.Count);

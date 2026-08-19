@@ -114,8 +114,9 @@ Requirements:
 # Restore + build everything
 dotnet build
 
-# Run Core unit tests
-dotnet test tests/Snipdeck.Core.Tests
+# Run the unit tests
+dotnet test --project tests/Snipdeck.Core.Tests
+dotnet test --project tests/Snipdeck.Execution.Tests
 ```
 
 The `Snipdeck.Core` project targets `net10.0` and is fully portable, so
@@ -137,10 +138,10 @@ Snipdeck is built on the work of these open-source projects, with thanks to
 their authors and maintainers:
 
 - [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) — MVVM source generators and helpers (MIT)
-- [Coverlet](https://github.com/coverlet-coverage/coverlet) — code-coverage collection (MIT)
 - [H.NotifyIcon](https://github.com/HavenDV/H.NotifyIcon) — system-tray icon and menu (MIT)
 - [Jdenticon](https://github.com/dmester/jdenticon-net) — identicons for CLIs without a custom icon (MIT)
 - [Markdig](https://github.com/xoofx/markdig) — Markdown rendering for Snip descriptions (BSD-2-Clause)
+- [Microsoft Testing Platform](https://github.com/microsoft/testfx) — runs the test suites and collects code coverage (MIT)
 - [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime) — dependency injection (MIT)
 - [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) — git-derived versioning (MIT)
 - [Porta.Pty](https://github.com/tomlm/Porta.Pty) — cross-platform pseudo-terminal (ConPTY) for running commands (MIT)

@@ -124,7 +124,7 @@ namespace Snipdeck.Core.Tests.ViewModels
                 new FakeShellInteractions(),
                 new FakeIconAssetStorage(),
                 new FakeExternalLinkService());
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             var result = vm.GetSearchSuggestions("deploy").Single(r => r.SnipId == second.Id);
             vm.SelectSearchResult(result);

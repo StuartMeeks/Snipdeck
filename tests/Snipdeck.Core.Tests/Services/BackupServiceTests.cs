@@ -54,7 +54,7 @@ namespace Snipdeck.Core.Tests.Services
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
             var service = BuildService(clock);
 
-            var info = await service.CreateBackupAsync();
+            var info = await service.CreateBackupAsync(TestContext.Current.CancellationToken);
 
             Assert.Null(info);
             Assert.False(Directory.Exists(_backupDirectory) && Directory.EnumerateFiles(_backupDirectory).Any());
@@ -67,12 +67,12 @@ namespace Snipdeck.Core.Tests.Services
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 34, 56, 789, TimeSpan.Zero));
             var service = BuildService(clock);
 
-            var info = await service.CreateBackupAsync();
+            var info = await service.CreateBackupAsync(TestContext.Current.CancellationToken);
 
             Assert.NotNull(info);
             Assert.True(File.Exists(info!.FilePath));
             Assert.EndsWith("snipstore_20260529_123456789.json", info.FilePath);
-            Assert.Equal("hello", await File.ReadAllTextAsync(info.FilePath));
+            Assert.Equal("hello", await File.ReadAllTextAsync(info.FilePath, TestContext.Current.CancellationToken));
             Assert.Equal(5, info.SizeBytes);
             Assert.Equal(clock.UtcNow, info.CreatedAtUtc);
         }
@@ -84,7 +84,7 @@ namespace Snipdeck.Core.Tests.Services
             Assert.False(Directory.Exists(_backupDirectory));
 
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
-            await BuildService(clock).CreateBackupAsync();
+            await BuildService(clock).CreateBackupAsync(TestContext.Current.CancellationToken);
 
             Assert.True(Directory.Exists(_backupDirectory));
         }
@@ -97,9 +97,9 @@ namespace Snipdeck.Core.Tests.Services
             var clock = new FakeClock(fixedTime);
             var service = BuildService(clock);
 
-            var first = await service.CreateBackupAsync();
-            var second = await service.CreateBackupAsync();
-            var third = await service.CreateBackupAsync();
+            var first = await service.CreateBackupAsync(TestContext.Current.CancellationToken);
+            var second = await service.CreateBackupAsync(TestContext.Current.CancellationToken);
+            var third = await service.CreateBackupAsync(TestContext.Current.CancellationToken);
 
             Assert.NotEqual(first!.FilePath, second!.FilePath);
             Assert.NotEqual(second.FilePath, third!.FilePath);
@@ -117,7 +117,7 @@ namespace Snipdeck.Core.Tests.Services
 
             for (var i = 0; i < 5; i++)
             {
-                await service.CreateBackupAsync();
+                await service.CreateBackupAsync(TestContext.Current.CancellationToken);
                 clock.Advance(TimeSpan.FromSeconds(1));
             }
 
@@ -143,14 +143,14 @@ namespace Snipdeck.Core.Tests.Services
             // Fill up under the initial retention of 5.
             for (var i = 0; i < 5; i++)
             {
-                await service.CreateBackupAsync();
+                await service.CreateBackupAsync(TestContext.Current.CancellationToken);
                 clock.Advance(TimeSpan.FromSeconds(1));
             }
             Assert.Equal(5, Directory.GetFiles(_backupDirectory, "snipstore_*.json").Length);
 
             // Tighten retention and back up again: the next prune honours the new value.
             retention = 2;
-            await service.CreateBackupAsync();
+            await service.CreateBackupAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(2, Directory.GetFiles(_backupDirectory, "snipstore_*.json").Length);
         }
@@ -164,7 +164,7 @@ namespace Snipdeck.Core.Tests.Services
 
             for (var i = 0; i < 4; i++)
             {
-                await service.CreateBackupAsync();
+                await service.CreateBackupAsync(TestContext.Current.CancellationToken);
                 clock.Advance(TimeSpan.FromSeconds(1));
             }
 
@@ -186,19 +186,19 @@ namespace Snipdeck.Core.Tests.Services
             WriteSource();
             Directory.CreateDirectory(_backupDirectory);
             var sibling = Path.Combine(_backupDirectory, "not-a-backup.txt");
-            await File.WriteAllTextAsync(sibling, "untouched");
+            await File.WriteAllTextAsync(sibling, "untouched", TestContext.Current.CancellationToken);
 
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
             var service = BuildService(clock, retention: 1);
 
             for (var i = 0; i < 5; i++)
             {
-                await service.CreateBackupAsync();
+                await service.CreateBackupAsync(TestContext.Current.CancellationToken);
                 clock.Advance(TimeSpan.FromSeconds(1));
             }
 
             Assert.True(File.Exists(sibling));
-            Assert.Equal("untouched", await File.ReadAllTextAsync(sibling));
+            Assert.Equal("untouched", await File.ReadAllTextAsync(sibling, TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -208,13 +208,13 @@ namespace Snipdeck.Core.Tests.Services
             var clock = new FakeClock(new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
             var service = BuildService(clock);
 
-            await service.CreateBackupAsync();
+            await service.CreateBackupAsync(TestContext.Current.CancellationToken);
             clock.Advance(TimeSpan.FromSeconds(5));
-            await service.CreateBackupAsync();
+            await service.CreateBackupAsync(TestContext.Current.CancellationToken);
             clock.Advance(TimeSpan.FromSeconds(5));
-            await service.CreateBackupAsync();
+            await service.CreateBackupAsync(TestContext.Current.CancellationToken);
 
-            var list = await service.ListBackupsAsync();
+            var list = await service.ListBackupsAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(3, list.Count);
             Assert.True(list[0].CreatedAtUtc > list[1].CreatedAtUtc);
@@ -227,7 +227,7 @@ namespace Snipdeck.Core.Tests.Services
             var clock = new FakeClock(DateTimeOffset.UtcNow);
             var service = BuildService(clock);
 
-            var list = await service.ListBackupsAsync();
+            var list = await service.ListBackupsAsync(TestContext.Current.CancellationToken);
 
             Assert.Empty(list);
         }

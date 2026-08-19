@@ -136,8 +136,8 @@ namespace Snipdeck.Importer.Tests
             AnalyzeAndApply(cli, a, b);
 
             // No second [x,y] choice is added to the CLI; imported snips keep their local "auth".
-            Assert.Single(cli.Parameters);
-            Assert.Equal("authId", cli.Parameters[0].Name);
+            var shared = Assert.Single(cli.Parameters);
+            Assert.Equal("authId", shared.Name);
             Assert.Equal("auth", Assert.Single(a.Parameters).Name);
             Assert.Equal("auth", Assert.Single(b.Parameters).Name);
         }
@@ -188,8 +188,8 @@ namespace Snipdeck.Importer.Tests
             Assert.Equal("cp {source} {dest}", a.CommandTemplate);
             Assert.Equal("cp {source} {dest}", b.CommandTemplate);
             // "source" is promoted; "dest" stays local on each snip.
-            Assert.Single(cli.Parameters);
-            Assert.Equal("source", cli.Parameters[0].Name);
+            var shared = Assert.Single(cli.Parameters);
+            Assert.Equal("source", shared.Name);
             Assert.Equal("dest", Assert.Single(a.Parameters).Name);
             Assert.Equal("dest", Assert.Single(b.Parameters).Name);
         }

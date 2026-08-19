@@ -38,7 +38,7 @@ namespace Snipdeck.Core.Tests.Services
         {
             var store = new JsonSnipStore(PathIn("store.json"));
 
-            var document = await store.LoadAsync();
+            var document = await store.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(SnipStoreDocument.CurrentSchemaVersion, document.SchemaVersion);
             Assert.Empty(document.Clis);
@@ -88,8 +88,8 @@ namespace Snipdeck.Core.Tests.Services
                 },
             };
 
-            await store.SaveAsync(original);
-            var loaded = await store.LoadAsync();
+            await store.SaveAsync(original, TestContext.Current.CancellationToken);
+            var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(SnipStoreDocument.CurrentSchemaVersion, loaded.SchemaVersion);
 
@@ -123,7 +123,7 @@ namespace Snipdeck.Core.Tests.Services
             var nested = PathIn("a/b/c/store.json");
             var store = new JsonSnipStore(nested);
 
-            await store.SaveAsync(new SnipStoreDocument());
+            await store.SaveAsync(new SnipStoreDocument(), TestContext.Current.CancellationToken);
 
             Assert.True(File.Exists(nested));
         }
@@ -134,7 +134,7 @@ namespace Snipdeck.Core.Tests.Services
             var path = PathIn("store.json");
             var store = new JsonSnipStore(path);
 
-            await store.SaveAsync(new SnipStoreDocument());
+            await store.SaveAsync(new SnipStoreDocument(), TestContext.Current.CancellationToken);
 
             Assert.False(File.Exists(path + ".tmp"));
             Assert.True(File.Exists(path));
@@ -149,14 +149,14 @@ namespace Snipdeck.Core.Tests.Services
             await store.SaveAsync(new SnipStoreDocument
             {
                 Clis = { new Cli { Name = "first" } },
-            });
+            }, TestContext.Current.CancellationToken);
 
             await store.SaveAsync(new SnipStoreDocument
             {
                 Clis = { new Cli { Name = "second" } },
-            });
+            }, TestContext.Current.CancellationToken);
 
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
             var cli = Assert.Single(loaded.Clis);
             Assert.Equal("second", cli.Name);
         }
@@ -172,11 +172,11 @@ namespace Snipdeck.Core.Tests.Services
                   "snips": []
                 }
                 """;
-            await File.WriteAllTextAsync(path, futureJson);
+            await File.WriteAllTextAsync(path, futureJson, TestContext.Current.CancellationToken);
 
             var store = new JsonSnipStore(path);
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() => store.LoadAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => store.LoadAsync(TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -184,7 +184,7 @@ namespace Snipdeck.Core.Tests.Services
         {
             var store = new JsonSnipStore(PathIn("store.json"));
 
-            await Assert.ThrowsAsync<ArgumentNullException>(() => store.SaveAsync(null!));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => store.SaveAsync(null!, TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -200,7 +200,7 @@ namespace Snipdeck.Core.Tests.Services
 
             await Task.WhenAll(tasks);
 
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
             var cli = Assert.Single(loaded.Clis);
             Assert.StartsWith("cli-", cli.Name);
             Assert.False(File.Exists(path + ".tmp"));
@@ -224,9 +224,9 @@ namespace Snipdeck.Core.Tests.Services
                         },
                     },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
 
-            var json = await File.ReadAllTextAsync(path);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             Assert.Contains("\"type\": \"choice\"", json);
         }
     }

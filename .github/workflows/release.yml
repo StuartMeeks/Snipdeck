@@ -87,7 +87,7 @@ jobs:
         run: dotnet restore
 
       - name: Run Core tests
-        run: dotnet test tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore
+        run: dotnet test --project tests/Snipdeck.Core.Tests/Snipdeck.Core.Tests.csproj --configuration Release --no-restore
 
       - name: Publish Snipdeck.App (win-x64)
         # No -p:Version here — Nerdbank.GitVersioning stamps the assemblies at

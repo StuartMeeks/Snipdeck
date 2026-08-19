@@ -72,8 +72,8 @@ namespace Snipdeck.Core.Tests.Services
 
             var result = SnipFilter.Apply(snips, "users", null).ToList();
 
-            Assert.Single(result);
-            Assert.Equal("b", result[0].Title);
+            var match = Assert.Single(result);
+            Assert.Equal("b", match.Title);
         }
 
         [Fact]
@@ -87,8 +87,8 @@ namespace Snipdeck.Core.Tests.Services
 
             var result = SnipFilter.Apply(snips, "deploy", null).ToList();
 
-            Assert.Single(result);
-            Assert.Equal("a", result[0].Title);
+            var match = Assert.Single(result);
+            Assert.Equal("a", match.Title);
         }
 
         [Fact]
@@ -120,8 +120,8 @@ namespace Snipdeck.Core.Tests.Services
 
             var result = SnipFilter.Apply(snips, "logs", "read").ToList();
 
-            Assert.Single(result);
-            Assert.Equal("Read logs", result[0].Title);
+            var match = Assert.Single(result);
+            Assert.Equal("Read logs", match.Title);
         }
 
         [Fact]
