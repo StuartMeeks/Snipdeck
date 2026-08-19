@@ -648,6 +648,89 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public async Task DeleteForever_refreshes_the_live_trash_view_in_place()
+        {
+            // Regression: the shell used to swap in a replacement TrashViewModel, which
+            // the content area does not re-read for a same-type change — the deleted
+            // snip stayed on screen until the user navigated away and back.
+            Cli cli = null!;
+            var (vm, _, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Keep", CommandTemplate = "k", IsTrash = true });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Purge", CommandTemplate = "p", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            var snips = trash.Snips;
+            var card = trash.Snips.Single(c => c.Title == "Purge");
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteForeverCommand.ExecuteAsync(card);
+
+            // Same view model and same collection instance, so the bound list updates.
+            Assert.Same(trash, vm.CurrentContent);
+            Assert.Same(snips, trash.Snips);
+            var remaining = Assert.Single(trash.Snips);
+            Assert.Equal("Keep", remaining.Title);
+        }
+
+        [Fact]
+        public async Task Deleting_the_last_trashed_snip_announces_the_empty_state()
+        {
+            Cli cli = null!;
+            var (vm, _, _, ix, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Last", CommandTemplate = "l", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            Assert.False(trash.IsEmpty);
+
+            var changed = new List<string>();
+            trash.PropertyChanged += (_, e) => changed.Add(e.PropertyName!);
+
+            ix.NextConfirmResult = true;
+            await vm.DeleteForeverCommand.ExecuteAsync(trash.Snips[0]);
+
+            Assert.Empty(trash.Snips);
+            Assert.True(trash.IsEmpty);
+            Assert.False(trash.HasSnips);
+            // Without these the "Trash is empty" placeholder never appears.
+            Assert.Contains(nameof(TrashViewModel.IsEmpty), changed);
+            Assert.Contains(nameof(TrashViewModel.HasSnips), changed);
+        }
+
+        [Fact]
+        public async Task RestoreSnip_refreshes_the_live_trash_view_in_place()
+        {
+            Cli cli = null!;
+            var (vm, _, _, _, _) = await BuildAsync(d =>
+            {
+                cli = new Cli { Name = "pl-app" };
+                d.Clis.Add(cli);
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Keep", CommandTemplate = "k", IsTrash = true });
+                d.Snips.Add(new Snip { CliId = cli.Id, Title = "Restore me", CommandTemplate = "r", IsTrash = true });
+            });
+
+            vm.OpenTrash();
+            var trash = Assert.IsType<TrashViewModel>(vm.CurrentContent);
+            var snips = trash.Snips;
+
+            await vm.RestoreSnipCommand.ExecuteAsync(trash.Snips.Single(c => c.Title == "Restore me"));
+
+            Assert.Same(trash, vm.CurrentContent);
+            Assert.Same(snips, trash.Snips);
+            var remaining = Assert.Single(trash.Snips);
+            Assert.Equal("Keep", remaining.Title);
+        }
+
+        [Fact]
         public async Task NewCli_adds_the_cli_and_writes_icon_bytes_when_provided()
         {
             var (vm, store, _, ix, _) = await BuildAsync();
