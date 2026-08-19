@@ -30,7 +30,7 @@ namespace Snipdeck.Core.Tests.Services
         {
             var store = new JsonSettingsStore(PathIn("settings.json"));
 
-            var config = await store.LoadAsync();
+            var config = await store.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(AppConfig.CurrentSchemaVersion, config.SchemaVersion);
             Assert.Null(config.StoragePath);
@@ -58,9 +58,9 @@ namespace Snipdeck.Core.Tests.Services
                     Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Shift,
                     Key = "Space",
                 },
-            });
+            }, TestContext.Current.CancellationToken);
 
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal("/data/store", loaded.StoragePath);
             Assert.Equal("/data/backups", loaded.BackupDirectory);
@@ -76,7 +76,7 @@ namespace Snipdeck.Core.Tests.Services
             var nested = PathIn("a/b/settings.json");
             var store = new JsonSettingsStore(nested);
 
-            await store.SaveAsync(new AppConfig());
+            await store.SaveAsync(new AppConfig(), TestContext.Current.CancellationToken);
 
             Assert.True(File.Exists(nested));
         }
@@ -87,7 +87,7 @@ namespace Snipdeck.Core.Tests.Services
             var path = PathIn("settings.json");
             var store = new JsonSettingsStore(path);
 
-            await store.SaveAsync(new AppConfig());
+            await store.SaveAsync(new AppConfig(), TestContext.Current.CancellationToken);
 
             Assert.False(File.Exists(path + ".tmp"));
             Assert.True(File.Exists(path));
@@ -100,21 +100,21 @@ namespace Snipdeck.Core.Tests.Services
             var futureJson = $$"""
                 { "schemaVersion": {{AppConfig.CurrentSchemaVersion + 1}} }
                 """;
-            await File.WriteAllTextAsync(path, futureJson);
+            await File.WriteAllTextAsync(path, futureJson, TestContext.Current.CancellationToken);
 
             var store = new JsonSettingsStore(path);
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() => store.LoadAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => store.LoadAsync(TestContext.Current.CancellationToken));
         }
 
         [Fact]
         public async Task LoadAsync_repairs_a_missing_hotkey_with_the_default()
         {
             var path = PathIn("settings.json");
-            await File.WriteAllTextAsync(path, "{}");
+            await File.WriteAllTextAsync(path, "{}", TestContext.Current.CancellationToken);
 
             var store = new JsonSettingsStore(path);
-            var loaded = await store.LoadAsync();
+            var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.NotNull(loaded.Hotkey);
             Assert.Equal(HotkeyModifiers.Control | HotkeyModifiers.Alt, loaded.Hotkey.Modifiers);
@@ -126,7 +126,7 @@ namespace Snipdeck.Core.Tests.Services
         {
             var store = new JsonSettingsStore(PathIn("settings.json"));
 
-            await Assert.ThrowsAsync<ArgumentNullException>(() => store.SaveAsync(null!));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => store.SaveAsync(null!, TestContext.Current.CancellationToken));
         }
     }
 }

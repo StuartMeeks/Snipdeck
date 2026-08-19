@@ -117,7 +117,7 @@ namespace Snipdeck.Core.ViewModels
             new("Spectre.Console", "Console UI for the SnipCommand import tool.", new Uri("https://github.com/spectreconsole/spectre.console"), "MIT"),
             new("Nerdbank.GitVersioning", "Derives the version from git history.", new Uri("https://github.com/dotnet/Nerdbank.GitVersioning"), "MIT"),
             new("xUnit", "Unit-testing framework.", new Uri("https://github.com/xunit/xunit"), "Apache-2.0"),
-            new("Coverlet", "Code-coverage collection for tests.", new Uri("https://github.com/coverlet-coverage/coverlet"), "MIT"),
+            new("Microsoft Testing Platform", "Runs the test suites and collects code coverage.", new Uri("https://github.com/microsoft/testfx"), "MIT"),
         ];
 
         [ObservableProperty]

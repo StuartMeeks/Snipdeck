@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Migrated the test suites to xUnit v3 on Microsoft Testing Platform, replacing
+  the VSTest stack. Development-only; the shipped app is unaffected.
+
+### Fixed
+- CI now runs the `Snipdeck.Execution` test suite, on both Ubuntu and Windows.
+  It was built but never executed, so 61 tests were only ever run locally.
+
+### Changed
 - Refreshed dependencies to their latest stable releases, including the Windows
   App SDK (2.4.0), WebView2, the Windows SDK build tools, SQLite, the dependency
   injection container, Spectre.Console and the test tooling.

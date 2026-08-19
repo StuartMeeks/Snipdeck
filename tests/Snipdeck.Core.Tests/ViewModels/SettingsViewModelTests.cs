@@ -217,9 +217,9 @@ namespace Snipdeck.Core.Tests.ViewModels
             var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}", TestContext.Current.CancellationToken);
                 _ = Directory.CreateDirectory(Path.Combine(current, "icons"));
-                await File.WriteAllTextAsync(Path.Combine(current, "icons", "a.png"), "x");
+                await File.WriteAllTextAsync(Path.Combine(current, "icons", "a.png"), "x", TestContext.Current.CancellationToken);
                 Directory.Delete(target); // target must not exist yet for a clean "move"
 
                 var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
@@ -250,8 +250,8 @@ namespace Snipdeck.Core.Tests.ViewModels
             var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
-                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}"); // target already has a store
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}", TestContext.Current.CancellationToken);
+                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}", TestContext.Current.CancellationToken); // target already has a store
 
                 var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
                 picker.NextFolder = target;
@@ -278,7 +278,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}", TestContext.Current.CancellationToken);
 
                 var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
                 picker.NextFolder = target;
@@ -304,7 +304,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var target = Directory.CreateTempSubdirectory("snipdeck-tgt-").FullName;
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}"); // adopt path, no file ops
+                await File.WriteAllTextAsync(Path.Combine(target, "store.json"), "{}", TestContext.Current.CancellationToken); // adopt path, no file ops
 
                 var vm = BuildForStorage(current, out var picker, out var ix, out var restart, out var store);
                 picker.NextFolder = target;
@@ -333,7 +333,7 @@ namespace Snipdeck.Core.Tests.ViewModels
             var current = Directory.CreateTempSubdirectory("snipdeck-cur-").FullName;
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}");
+                await File.WriteAllTextAsync(Path.Combine(current, "store.json"), "{}", TestContext.Current.CancellationToken);
                 var nested = Path.Combine(current, "icons");
                 _ = Directory.CreateDirectory(nested);
 

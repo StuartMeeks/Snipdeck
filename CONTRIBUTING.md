@@ -21,9 +21,16 @@ dotnet build
 # Build Core only (works on Linux / macOS)
 dotnet build src/Snipdeck.Core
 
-# Run Core tests
-dotnet test tests/Snipdeck.Core.Tests
+# Run the tests (Core, Execution, importer)
+dotnet test --project tests/Snipdeck.Core.Tests
+dotnet test --project tests/Snipdeck.Execution.Tests
+dotnet test --project tools/Snipdeck.Importer.Tests
 ```
+
+The test projects are **xUnit v3**, which runs on Microsoft Testing Platform
+rather than VSTest. The repo-root `global.json` opts `dotnet test` into that
+runner, which is why the project is passed as `--project <path>` rather than as a
+bare argument. TRX reports come from `--report-xunit-trx`, not `--logger trx`.
 
 On a non-Windows machine, restoring the `Snipdeck.App` project requires
 `EnableWindowsTargeting=true`:

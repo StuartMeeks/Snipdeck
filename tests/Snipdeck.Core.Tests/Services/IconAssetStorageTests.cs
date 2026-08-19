@@ -51,7 +51,7 @@ namespace Snipdeck.Core.Tests.Services
         {
             // A file outside the icons directory that a malformed IconRef tries to reach.
             var victim = Path.Combine(_baseDirectory, "important.txt");
-            await File.WriteAllTextAsync(victim, "keep me");
+            await File.WriteAllTextAsync(victim, "keep me", TestContext.Current.CancellationToken);
 
             await _storage.DeleteIconAsync("../important.txt");
 
@@ -62,7 +62,7 @@ namespace Snipdeck.Core.Tests.Services
         public async Task DeleteIconAsync_ignores_absolute_paths()
         {
             var victim = Path.Combine(_baseDirectory, "outside.txt");
-            await File.WriteAllTextAsync(victim, "keep me");
+            await File.WriteAllTextAsync(victim, "keep me", TestContext.Current.CancellationToken);
 
             // Path.Combine(base, absolute) discards base — an unguarded delete would hit this.
             await _storage.DeleteIconAsync(victim);

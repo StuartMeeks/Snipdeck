@@ -35,7 +35,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             store.Entries.Add(Entry());
             var vm = Build(store, new FakeShellInteractions());
 
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             var item = Assert.Single(vm.Items);
             Assert.Equal("My Snip", item.SnipTitle);
@@ -49,7 +49,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
         {
             var vm = Build(new FakeCommandHistoryStore(), new FakeShellInteractions());
 
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.True(vm.IsEmpty);
             Assert.Empty(vm.Items);
@@ -61,7 +61,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             var store = new FakeCommandHistoryStore();
             store.Entries.Add(Entry());
             var vm = Build(store, new FakeShellInteractions());
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             Guid? requested = null;
             vm.OpenRequested += (_, id) => requested = id;
@@ -77,7 +77,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             store.Entries.Add(Entry());
             var interactions = new FakeShellInteractions { NextConfirmResult = true };
             var vm = Build(store, interactions);
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             await vm.DeleteCommand.ExecuteAsync(vm.Items[0]);
 
@@ -92,7 +92,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             store.Entries.Add(Entry());
             var interactions = new FakeShellInteractions { NextConfirmResult = false };
             var vm = Build(store, interactions);
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             await vm.DeleteCommand.ExecuteAsync(vm.Items[0]);
 
@@ -107,7 +107,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             store.Entries.Add(Entry("b"));
             var interactions = new FakeShellInteractions { NextConfirmResult = true };
             var vm = Build(store, interactions);
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             await vm.ClearAllCommand.ExecuteAsync(null);
 
@@ -121,7 +121,7 @@ namespace Snipdeck.Execution.Tests.ViewModels
             var vm = Build(store, new FakeShellInteractions());
             vm.SearchText = "kubectl";
 
-            await vm.LoadAsync();
+            await vm.LoadAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal("kubectl", store.LastSearch);
         }
