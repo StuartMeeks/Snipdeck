@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # NuGet packages (src + tests)
+  #
+  # Minor and patch bumps are grouped into a single PR. Major bumps are
+  # deliberately left OUT of the group, so each arrives as its own PR for
+  # manual review. Adapted from NextIteration.Standards (no auto-merge here).
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - nuget
+    # No ignore block: the per-TFM floor ignores in the Standards template are for
+    # multi-targeted libraries. Snipdeck is an app with no floors to protect.
+    groups:
+      nuget-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions used by ci.yml, release.yml and codeql.yml. Same grouping
+  # rule as NuGet.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(actions)"
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

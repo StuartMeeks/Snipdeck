@@ -1,0 +1,70 @@
+# CodeQL code scanning. Modelled on NextIteration.Standards' codeql.yml.
+name: CodeQL
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Weekly, so a newly published query pack finds existing code even when
+    # nothing has been pushed. Offset off the hour to avoid the scheduling spike.
+    - cron: '37 4 * * 1'
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      security-events: write   # required to upload results
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          # build-mode: none analyses the C# source directly, without a build.
+          # Snipdeck.App targets net10.0-windows and needs the Windows App SDK
+          # to compile, which an ubuntu runner can't do; buildless extraction
+          # still reads its source alongside Core, Execution and the tools.
+          # It is also the only mode in which paths-ignore (below) applies.
+          build-mode: none
+          # security-and-quality is broader than the default security-extended;
+          # the codebase is small, so the extra findings are affordable.
+          queries: security-and-quality
+          # Analyse source only. obj/ and bin/ hold generated and compiled
+          # output (e.g. the xUnit auto-generated entry point and XAML
+          # code-behind), so findings there are noise against code no human
+          # maintains.
+          #
+          # query-filters excludes the two audit queries that fire on every
+          # P/Invoke declaration and call site. WindowsHotkeyService calls
+          # user32 on purpose, so these are pure noise; every other query still
+          # runs on that file.
+          config: |
+            paths-ignore:
+              - "**/obj/**"
+              - "**/bin/**"
+            query-filters:
+              - exclude:
+                  id: cs/unmanaged-code
+              - exclude:
+                  id: cs/call-to-unmanaged-code
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:csharp"
