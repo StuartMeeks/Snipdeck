@@ -7,7 +7,7 @@
 
   <!-- Build-time, all projects -->
   <ItemGroup>
-    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.91" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
   </ItemGroup>
 
   <!-- Core -->
@@ -39,7 +39,7 @@
        Spectre.Console moves to 0.57.2. Realign them when a newer Cli ships. -->
   <ItemGroup>
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
-    <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
+    <PackageVersion Include="Spectre.Console.Cli" Version="0.57.2" />
   </ItemGroup>
 
   <!-- Tests. xunit v3 ships under the xunit.v3 package ID (the old `xunit` ID is
@@ -48,8 +48,8 @@
        xunit.runner.visualstudio, and coverage comes from the MTP extension rather
        than coverlet.collector (a VSTest data collector, inert under MTP). -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
 
 </Project>
