@@ -14,7 +14,7 @@ namespace Snipdeck.Importer.Commands
     /// </summary>
     public sealed class SnipCommandImportCommand : AsyncCommand<ImportCommandSettings>
     {
-        protected override async Task<int> ExecuteAsync(
+        public override async Task<int> ExecuteAsync(
             CommandContext context,
             ImportCommandSettings settings,
             CancellationToken cancellationToken)
