@@ -19,7 +19,7 @@
 
   <!-- Execution (command-execution feature; net10.0, no UI) -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="11.0.0" />
     <PackageVersion Include="Porta.Pty" Version="1.0.7" />
   </ItemGroup>
 
