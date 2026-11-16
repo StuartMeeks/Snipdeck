@@ -5,7 +5,9 @@ non-negotiables, and how to get a change to "green".
 
 ## Prerequisites
 
-- **.NET 10 SDK** (`dotnet --list-sdks` should show a `10.0.x` SDK).
+- **.NET 10 SDK** (`dotnet --list-sdks` should show a `10.0.x` SDK). The
+  repo-root `global.json` pins the build to the newest installed 10.0.x SDK, so a
+  newer major SDK (e.g. .NET 11) on the same machine is ignored.
 - **Windows 11** to build and run the WinUI 3 head (`Snipdeck.App`). The
   `Snipdeck.Core` project and its tests are pure `net10.0` and build/run on any
   platform the SDK supports.
