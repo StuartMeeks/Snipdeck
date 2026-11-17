@@ -49,6 +49,35 @@ namespace Snipdeck.Core.Tests.ViewModels
         }
 
         [Fact]
+        public void Initial_values_override_defaults_and_ignore_stale_entries()
+        {
+            var snip = new Snip
+            {
+                CommandTemplate = "deploy {env} {region} {tag}",
+                Parameters =
+                [
+                    new Parameter { Name = "env", Type = ParameterType.Choice, Options = ["dev", "prod"], Default = "dev" },
+                    new Parameter { Name = "region", Type = ParameterType.Choice, Options = ["uk", "us"], Default = "uk" },
+                    new Parameter { Name = "tag", Default = "latest" },
+                ],
+            };
+            var initial = new Dictionary<string, string?>
+            {
+                ["env"] = "prod",      // valid choice -> applied
+                ["region"] = "eu",     // no longer offered -> default kept
+                ["tag"] = "v1.2",      // text -> applied
+                ["removed"] = "gone",  // parameter no longer exists -> ignored
+            };
+
+            var vm = new ParameterFillViewModel(snip, snip.Parameters, isRunMode: true, "pwsh", "C:\\", initial);
+
+            Assert.Equal("deploy prod uk v1.2", vm.Preview);
+            Assert.Equal(
+                new Dictionary<string, string?> { ["env"] = "prod", ["region"] = "uk", ["tag"] = "v1.2" },
+                vm.Values);
+        }
+
+        [Fact]
         public void Missing_value_keeps_copy_disabled_and_leaves_token_in_preview()
         {
             var snip = new Snip

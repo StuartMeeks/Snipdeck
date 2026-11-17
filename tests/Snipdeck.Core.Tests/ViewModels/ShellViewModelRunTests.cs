@@ -108,6 +108,19 @@ namespace Snipdeck.Core.Tests.ViewModels
 
             Assert.Equal(1, runner.CallCount);
             Assert.Equal(snip.Id, runner.LastSnip!.Id);
+            Assert.Null(runner.LastInitialValues);
+        }
+
+        [Fact]
+        public async Task RunSnipById_passes_the_previous_values_to_the_coordinator()
+        {
+            var (vm, runner, _, _, _, snip) = await BuildAsync();
+            runner.NextResult = new object();
+            var values = new Dictionary<string, string?> { ["env"] = "prod" };
+
+            await vm.RunSnipByIdAsync(snip.Id, values);
+
+            Assert.Same(values, runner.LastInitialValues);
         }
 
         [Fact]

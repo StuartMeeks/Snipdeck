@@ -131,11 +131,13 @@ namespace Snipdeck.App.Services
             Snip snip,
             IReadOnlyList<Parameter> parameters,
             string shellDisplay,
-            string workingDirectoryDisplay)
+            string workingDirectoryDisplay,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
             ArgumentNullException.ThrowIfNull(snip);
             ArgumentNullException.ThrowIfNull(parameters);
-            var fill = new ParameterFillViewModel(snip, parameters, isRunMode: true, shellDisplay, workingDirectoryDisplay);
+            var fill = new ParameterFillViewModel(
+                snip, parameters, isRunMode: true, shellDisplay, workingDirectoryDisplay, initialValues);
             return await ShowFillAsync(fill).ConfigureAwait(true);
         }
 
@@ -148,7 +150,7 @@ namespace Snipdeck.App.Services
             };
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary && fill.IsCopyEnabled
-                ? new ParameterFillResult(fill.ResolvedCommand)
+                ? new ParameterFillResult(fill.ResolvedCommand, fill.Values)
                 : null;
         }
 

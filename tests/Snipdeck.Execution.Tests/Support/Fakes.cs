@@ -147,12 +147,16 @@ namespace Snipdeck.Execution.Tests.Support
 
         public string? LastRunWorkingDirectoryDisplay { get; private set; }
 
+        public IReadOnlyDictionary<string, string?>? LastRunInitialValues { get; private set; }
+
         public Task<ParameterFillResult?> FillParametersForRunAsync(
             Snip snip,
             IReadOnlyList<Parameter> parameters,
             string shellDisplay,
-            string workingDirectoryDisplay)
+            string workingDirectoryDisplay,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
+            LastRunInitialValues = initialValues;
             LastRunShellDisplay = shellDisplay;
             LastRunWorkingDirectoryDisplay = workingDirectoryDisplay;
             return Task.FromResult(NextRunFillResult);

@@ -24,7 +24,11 @@ namespace Snipdeck.Execution.Services
         AppConfig config) : IRunCoordinator
     {
         /// <inheritdoc/>
-        public async Task<object?> CreateRunAsync(Snip snip, Cli? cli, IReadOnlyList<Parameter> resolvedParameters)
+        public async Task<object?> CreateRunAsync(
+            Snip snip,
+            Cli? cli,
+            IReadOnlyList<Parameter> resolvedParameters,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
             ArgumentNullException.ThrowIfNull(snip);
 
@@ -56,7 +60,7 @@ namespace Snipdeck.Execution.Services
             var shellDisplay = ShellCommandBuilder.DescribeShell(shell, customPath, customArgs);
 
             var fill = await interactions
-                .FillParametersForRunAsync(snip, resolvedParameters, shellDisplay, workingDirectory)
+                .FillParametersForRunAsync(snip, resolvedParameters, shellDisplay, workingDirectory, initialValues)
                 .ConfigureAwait(false);
             if (fill is null)
             {
@@ -77,7 +81,8 @@ namespace Snipdeck.Execution.Services
                 clock,
                 clipboard,
                 config.HistoryRetentionPerSnip,
-                config.MaxCapturedOutputBytes);
+                config.MaxCapturedOutputBytes,
+                fill.Values);
         }
 
         private static string ResolveWorkingDirectory(Snip snip, Cli? cli, string? executablePath)

@@ -39,14 +39,17 @@ namespace Snipdeck.Core.Abstractions
         /// primary button reads "Run", the resolved command is shown alongside the
         /// <paramref name="shellDisplay"/> and <paramref name="workingDirectoryDisplay"/>
         /// it will execute under (the dry-run safety gate), and the dialog is shown
-        /// even when the Snip has no parameters. Returns the resolved command, or
-        /// <c>null</c> if the user cancelled.
+        /// even when the Snip has no parameters. <paramref name="initialValues"/>, when
+        /// supplied (e.g. "Run again" from a previous run), pre-fill the inputs in place
+        /// of the parameter defaults. Returns the resolved command, or <c>null</c> if the
+        /// user cancelled.
         /// </summary>
         Task<ParameterFillResult?> FillParametersForRunAsync(
             Snip snip,
             IReadOnlyList<Parameter> parameters,
             string shellDisplay,
-            string workingDirectoryDisplay);
+            string workingDirectoryDisplay,
+            IReadOnlyDictionary<string, string?>? initialValues = null);
 
         /// <summary>
         /// Opens the glyph picker so the user can browse and choose an icon.
@@ -60,5 +63,11 @@ namespace Snipdeck.Core.Abstractions
 
     public sealed record CliEditResult(Cli Cli, byte[]? RawIconBytes);
 
-    public sealed record ParameterFillResult(string ResolvedCommand);
+    /// <summary>
+    /// The outcome of a parameter fill: the resolved command and the values the user
+    /// supplied, keyed by parameter name (recorded with a run so it can be re-run).
+    /// </summary>
+    public sealed record ParameterFillResult(
+        string ResolvedCommand,
+        IReadOnlyDictionary<string, string?>? Values = null);
 }

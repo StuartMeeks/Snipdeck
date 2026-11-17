@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -63,7 +64,8 @@ namespace Snipdeck.Execution.ViewModels
             IClock clock,
             IClipboardService clipboard,
             int retentionPerSnip,
-            long maxCapturedBytes)
+            long maxCapturedBytes,
+            IReadOnlyDictionary<string, string?>? parameterValues = null)
         {
             ArgumentNullException.ThrowIfNull(spec);
             Title = snipTitle;
@@ -80,6 +82,7 @@ namespace Snipdeck.Execution.ViewModels
             _clipboard = clipboard;
             _retentionPerSnip = retentionPerSnip;
             _maxCapturedBytes = maxCapturedBytes;
+            ParameterValues = parameterValues;
             Status = RunStatus.Pending;
         }
 
@@ -97,6 +100,7 @@ namespace Snipdeck.Execution.ViewModels
             ExitCode = entry.Cancelled ? null : entry.ExitCode;
             DurationMs = entry.DurationMs;
             OutputTruncated = entry.OutputTruncated;
+            ParameterValues = DeserializeValues(entry.ParameterValuesJson);
             ReplayOutput = entry.RawStreamGz is { Length: > 0 }
                 ? GzipUtil.Decompress(entry.RawStreamGz)
                 : Encoding.UTF8.GetBytes(entry.CleanedOutput);
@@ -106,8 +110,8 @@ namespace Snipdeck.Execution.ViewModels
         /// <summary>Raised on the UI thread for each chunk of live output; the view feeds it to the terminal.</summary>
         public event Action<byte[]>? OutputReceived;
 
-        /// <summary>Raised when the user asks to re-run; the argument is the Snip to run again.</summary>
-        public event EventHandler<Guid>? RunAgainRequested;
+        /// <summary>Raised when the user asks to re-run; carries the Snip and this run's parameter values.</summary>
+        public event EventHandler<RunAgainRequestedEventArgs>? RunAgainRequested;
 
         /// <summary>The Snip's title, shown in the run header.</summary>
         public string Title { get; }
@@ -126,6 +130,12 @@ namespace Snipdeck.Execution.ViewModels
 
         /// <summary>Working directory for the run (empty in replay mode).</summary>
         public string WorkingDirectory { get; }
+
+        /// <summary>
+        /// The parameter values this run was launched with, keyed by name; <c>null</c> when
+        /// unknown (e.g. a run recorded before values were stored).
+        /// </summary>
+        public IReadOnlyDictionary<string, string?>? ParameterValues { get; }
 
         /// <summary>True when the stored output was truncated at the capture cap.</summary>
         public bool OutputTruncated { get; private set; }
@@ -232,6 +242,9 @@ namespace Snipdeck.Execution.ViewModels
                 CliId = CliId,
                 SnipId = SnipId,
                 ResolvedCommand = ResolvedCommand,
+                ParameterValuesJson = ParameterValues is { Count: > 0 }
+                    ? JsonSerializer.Serialize(ParameterValues)
+                    : null,
                 ExecutedAt = _startedAt,
                 DurationMs = duration,
                 ExitCode = cancelled ? -1 : exit,
@@ -265,6 +278,24 @@ namespace Snipdeck.Execution.ViewModels
 
         /// <summary>Resizes the pseudo-terminal to match the rendered terminal.</summary>
         public void ResizeTerminal(int columns, int rows) => _runner?.Resize(columns, rows);
+
+        private static Dictionary<string, string?>? DeserializeValues(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<Dictionary<string, string?>>(json);
+            }
+            catch (JsonException)
+            {
+                // A malformed record shouldn't break replay; Run again just falls back to defaults.
+                return null;
+            }
+        }
 
         private static string FormatDuration(int ms) =>
             ms < 1000
@@ -307,7 +338,7 @@ namespace Snipdeck.Execution.ViewModels
         {
             if (CanRunAgain)
             {
-                RunAgainRequested?.Invoke(this, SnipId);
+                RunAgainRequested?.Invoke(this, new RunAgainRequestedEventArgs(SnipId, ParameterValues));
             }
         }
 

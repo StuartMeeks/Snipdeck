@@ -17,10 +17,13 @@ namespace Snipdeck.Core.Abstractions
         /// The returned object is the run view model to set as the shell's current
         /// content; it is typed as <see cref="object"/> so Core stays free of any
         /// execution dependency. <c>null</c> means no run was started.
+        /// <paramref name="initialValues"/> pre-fill the parameter inputs (used by
+        /// "Run again" to start from a previous run's values).
         /// </summary>
         Task<object?> CreateRunAsync(
             Snip snip,
             Cli? cli,
-            IReadOnlyList<Parameter> resolvedParameters);
+            IReadOnlyList<Parameter> resolvedParameters,
+            IReadOnlyDictionary<string, string?>? initialValues = null);
     }
 }

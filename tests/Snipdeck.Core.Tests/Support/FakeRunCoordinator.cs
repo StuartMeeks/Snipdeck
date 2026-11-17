@@ -14,8 +14,15 @@ namespace Snipdeck.Core.Tests.Support
 
         public int CallCount { get; private set; }
 
-        public Task<object?> CreateRunAsync(Snip snip, Cli? cli, IReadOnlyList<Parameter> resolvedParameters)
+        public IReadOnlyDictionary<string, string?>? LastInitialValues { get; private set; }
+
+        public Task<object?> CreateRunAsync(
+            Snip snip,
+            Cli? cli,
+            IReadOnlyList<Parameter> resolvedParameters,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
+            LastInitialValues = initialValues;
             LastSnip = snip;
             LastCli = cli;
             CallCount++;

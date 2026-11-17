@@ -21,13 +21,17 @@ namespace Snipdeck.Core.ViewModels
         /// Run-mode constructor: the same live preview, but the dialog presents it as the
         /// dry-run safety gate — the resolved command alongside the <paramref name="shellDisplay"/>
         /// and <paramref name="workingDirectory"/> it will execute under.
+        /// <paramref name="initialValues"/>, when supplied, pre-fill the inputs in place of
+        /// the parameter defaults (names that no longer exist, and choice values that are
+        /// no longer offered, are ignored so the fill falls back to the default).
         /// </summary>
         public ParameterFillViewModel(
             Snip snip,
             IReadOnlyList<Parameter> parameters,
             bool isRunMode,
             string shellDisplay,
-            string workingDirectory)
+            string workingDirectory,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
             ArgumentNullException.ThrowIfNull(snip);
             ArgumentNullException.ThrowIfNull(parameters);
@@ -45,6 +49,13 @@ namespace Snipdeck.Core.ViewModels
 
             foreach (var input in Inputs)
             {
+                if (initialValues is not null
+                    && initialValues.TryGetValue(input.Name, out var initial)
+                    && IsAcceptable(input, initial))
+                {
+                    input.Value = initial;
+                }
+
                 _values[input.Name] = input.Value;
             }
 
@@ -75,6 +86,13 @@ namespace Snipdeck.Core.ViewModels
         public partial bool IsCopyEnabled { get; set; }
 
         public string ResolvedCommand => Preview;
+
+        /// <summary>A snapshot of the current input values, keyed by parameter name.</summary>
+        public IReadOnlyDictionary<string, string?> Values =>
+            Inputs.ToDictionary(i => i.Name, i => i.Value, StringComparer.Ordinal);
+
+        private static bool IsAcceptable(ParameterInputViewModel input, string? value) =>
+            !input.IsChoice || (value is not null && input.Options.Contains(value, StringComparer.Ordinal));
 
         private void OnInputValueChanged(ParameterInputViewModel input)
         {
