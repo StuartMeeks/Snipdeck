@@ -86,6 +86,8 @@ namespace Snipdeck.Core.Tests.Support
 
         public string? LastRunWorkingDirectoryDisplay { get; private set; }
 
+        public IReadOnlyDictionary<string, string?>? LastRunInitialValues { get; private set; }
+
         public Task<ParameterFillResult?> FillParametersAsync(Snip snip, IReadOnlyList<Parameter> parameters)
         {
             LastFilledSnip = snip;
@@ -97,8 +99,10 @@ namespace Snipdeck.Core.Tests.Support
             Snip snip,
             IReadOnlyList<Parameter> parameters,
             string shellDisplay,
-            string workingDirectoryDisplay)
+            string workingDirectoryDisplay,
+            IReadOnlyDictionary<string, string?>? initialValues = null)
         {
+            LastRunInitialValues = initialValues;
             LastFilledSnip = snip;
             LastFilledParameters = parameters;
             LastRunShellDisplay = shellDisplay;

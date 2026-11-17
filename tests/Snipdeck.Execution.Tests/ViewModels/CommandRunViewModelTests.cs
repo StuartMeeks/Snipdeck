@@ -180,10 +180,64 @@ namespace Snipdeck.Execution.Tests.ViewModels
             var vm = new CommandRunViewModel("History", entry, new FakeClipboardService());
 
             Guid? raised = null;
-            vm.RunAgainRequested += (_, id) => raised = id;
+            vm.RunAgainRequested += (_, e) => raised = e.SnipId;
             vm.RunAgainCommand.Execute(null);
 
             Assert.Equal(_snipId, raised);
+        }
+
+        [Fact]
+        public async Task StartAsync_records_the_parameter_values()
+        {
+            var history = new FakeCommandHistoryStore();
+            var values = new Dictionary<string, string?> { ["env"] = "prod", ["region"] = "uk" };
+            var vm = new CommandRunViewModel(
+                "Deploy", _snipId, _cliId, Spec(), new FakeCommandRunner([], exitCode: 0), history,
+                new InlineDispatcher(), new FakeClock(), new FakeClipboardService(), 10, 1_000_000, values);
+
+            await vm.StartAsync();
+
+            var entry = Assert.Single(history.Entries);
+            var replay = new CommandRunViewModel("History", entry, new FakeClipboardService());
+            Assert.Equal(values, replay.ParameterValues);
+        }
+
+        [Fact]
+        public void RunAgain_from_replay_carries_the_stored_parameter_values()
+        {
+            var entry = new CommandHistoryEntry
+            {
+                SnipId = _snipId,
+                ResolvedCommand = "x",
+                CleanedOutput = "y",
+                ParameterValuesJson = "{\"env\":\"prod\"}",
+            };
+            var vm = new CommandRunViewModel("History", entry, new FakeClipboardService());
+
+            RunAgainRequestedEventArgs? raised = null;
+            vm.RunAgainRequested += (_, e) => raised = e;
+            vm.RunAgainCommand.Execute(null);
+
+            Assert.NotNull(raised);
+            Assert.Equal("prod", raised!.ParameterValues!["env"]);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("not json")]
+        public void Replay_tolerates_missing_or_malformed_parameter_values(string? json)
+        {
+            var entry = new CommandHistoryEntry
+            {
+                SnipId = _snipId,
+                ResolvedCommand = "x",
+                CleanedOutput = "y",
+                ParameterValuesJson = json,
+            };
+
+            var vm = new CommandRunViewModel("History", entry, new FakeClipboardService());
+
+            Assert.Null(vm.ParameterValues);
         }
     }
 }

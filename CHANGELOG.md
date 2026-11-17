@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Run again** now opens the Run dialog pre-filled with the parameter values from
+  the run it was launched from, rather than the parameter defaults. This applies to
+  a live run and to a past run opened from History. Values that no longer apply
+  (a removed parameter, or a choice that is no longer offered) fall back to the
+  default. Runs recorded before this release carry no stored values, so they still
+  start from the defaults.
 - The **Documentation** navigation item now opens the project wiki rather than the
   README, so it lands on the user-facing documentation.
 - Migrated the test suites to xUnit v3 on Microsoft Testing Platform, replacing

@@ -458,8 +458,12 @@ namespace Snipdeck.Core.ViewModels
             await BeginRunAsync(cardVm.Snip).ConfigureAwait(true);
         }
 
-        /// <summary>Re-run a Snip by id (the history view's "Run again"). No-op if it's gone.</summary>
-        public async Task RunSnipByIdAsync(Guid snipId)
+        /// <summary>
+        /// Re-run a Snip by id (the run view's "Run again"), pre-filling the Run dialog
+        /// with <paramref name="parameterValues"/> from the earlier run when known.
+        /// No-op if the Snip is gone.
+        /// </summary>
+        public async Task RunSnipByIdAsync(Guid snipId, IReadOnlyDictionary<string, string?>? parameterValues = null)
         {
             var snip = _document.Snips.FirstOrDefault(s => s.Id == snipId && !s.IsTrash);
             if (snip is null)
@@ -470,10 +474,10 @@ namespace Snipdeck.Core.ViewModels
                 return;
             }
 
-            await BeginRunAsync(snip).ConfigureAwait(true);
+            await BeginRunAsync(snip, parameterValues).ConfigureAwait(true);
         }
 
-        private async Task BeginRunAsync(Snip snip)
+        private async Task BeginRunAsync(Snip snip, IReadOnlyDictionary<string, string?>? initialValues = null)
         {
             if (_runCoordinator is null)
             {
@@ -483,7 +487,7 @@ namespace Snipdeck.Core.ViewModels
             var cli = _document.Clis.FirstOrDefault(c => c.Id == snip.CliId);
             var parameters = ParameterResolver.Resolve(snip, cli, _document.GlobalParameters);
 
-            var runView = await _runCoordinator.CreateRunAsync(snip, cli, parameters).ConfigureAwait(true);
+            var runView = await _runCoordinator.CreateRunAsync(snip, cli, parameters, initialValues).ConfigureAwait(true);
             if (runView is null)
             {
                 return; // missing executable, or the user cancelled at the preview

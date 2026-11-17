@@ -40,6 +40,26 @@ namespace Snipdeck.Execution.Tests.Services
         }
 
         [Fact]
+        public async Task CreateRunAsync_prefills_the_dialog_and_carries_the_filled_values_onto_the_run()
+        {
+            var filled = new Dictionary<string, string?> { ["env"] = "staging" };
+            var interactions = new FakeShellInteractions
+            {
+                NextRunFillResult = new ParameterFillResult("pl-app deploy --env staging", filled),
+            };
+            var coordinator = Build(interactions);
+            var cli = new Cli { Name = "pl-app" };
+            var snip = new Snip { CliId = cli.Id, Title = "Deploy", CommandTemplate = "pl-app deploy --env {env}" };
+            var previous = new Dictionary<string, string?> { ["env"] = "prod" };
+
+            var result = await coordinator.CreateRunAsync(snip, cli, [], previous);
+
+            Assert.Same(previous, interactions.LastRunInitialValues);
+            var vm = Assert.IsType<CommandRunViewModel>(result);
+            Assert.Same(filled, vm.ParameterValues);
+        }
+
+        [Fact]
         public async Task CreateRunAsync_returns_null_when_preview_is_cancelled()
         {
             var interactions = new FakeShellInteractions { NextRunFillResult = null };

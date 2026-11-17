@@ -76,9 +76,9 @@ namespace Snipdeck.App.Views
             }
         }
 
-        private async void OnRunAgainRequested(object? sender, Guid snipId)
+        private async void OnRunAgainRequested(object? sender, RunAgainRequestedEventArgs e)
         {
-            await ViewModel.RunSnipByIdAsync(snipId);
+            await ViewModel.RunSnipByIdAsync(e.SnipId, e.ParameterValues);
         }
 
         private void RebuildTagNavItems()
