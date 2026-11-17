@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-17
+
 ### Changed
 - **Run again** now opens the Run dialog pre-filled with the parameter values from
   the run it was launched from, rather than the parameter defaults. This applies to
