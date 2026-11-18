@@ -40,7 +40,29 @@ namespace Snipdeck.App.Controls
         }
 
         private static void OnRunViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-            => ((TerminalView)d).TryWire();
+            => ((TerminalView)d).OnRunViewModelChanged(e.OldValue as CommandRunViewModel);
+
+        // The run DataTemplate is reused when one run view replaces another (e.g. Run
+        // again), so this control can be handed a new view model after it has already
+        // wired up. Detach the old run, then reset the terminal; the page re-reports its
+        // size and readiness, which wires (and starts) the new run.
+        private void OnRunViewModelChanged(CommandRunViewModel? oldViewModel)
+        {
+            if (oldViewModel is not null)
+            {
+                oldViewModel.OutputReceived -= OnOutput;
+            }
+
+            if (_wired)
+            {
+                _wired = false;
+                _webReady = false;
+                WebView.CoreWebView2?.PostWebMessageAsString("{\"t\":\"reset\"}");
+                return;
+            }
+
+            TryWire();
+        }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
