@@ -81,6 +81,14 @@
         try { m = JSON.parse(e.data); } catch (_) { return; }
         if (m.t === 'w' && m.d) { term.write(b64decode(m.d)); }
         else if (m.t === 'focus') { term.focus(); }
+        else if (m.t === 'reset') {
+          // A new run is reusing this terminal: clear it, then re-report size and
+          // readiness so the host wires and starts the new run.
+          term.reset();
+          doFit();
+          term.focus();
+          post({ t: 'ready' });
+        }
       });
 
       // Page -> host: keystrokes, forwarded verbatim to the PTY's stdin so
